@@ -19,7 +19,7 @@ base_url = 'http://crandb.r-pkg.org/'
 package_list_crandb = 'http://crandb.r-pkg.org/-/desc'
 package_list_cran_raw = 'https://cran.r-project.org/src/contrib/PACKAGES'
 # raw package: https://cran.r-project.org/package=knitr
-# citation raw information: "https://cran.r-project.org/web/packages/%s/citation.html"
+# bibliographical reference raw information: "https://cran.r-project.org/web/packages/%s/citation.html"
 
 class cran_harvester(Harvester):
 
@@ -40,11 +40,6 @@ class cran_harvester(Harvester):
             self.packages = self.db.collection('packages')
 
         if not self.db.has_collection('cache'):
-            self.packages = self.db.create_collection('cache')
-        else:
-            self.packages = self.db.collection('cache')
-
-        if not self.db.has_collection('cache'):
             self.cache = self.db.create_collection('cache')
         else:
             self.cache = self.db.collection('cache')
@@ -58,7 +53,7 @@ class cran_harvester(Harvester):
         all_packages = []
 
         # get the list of packages
-        local_path = self.access_file(package_list_cran_raw, use_cache=False)
+        local_path = self.access_file(package_list_cran_raw, use_cache=True)
         textResult = None
         if local_path is not None:
             # get the content from file
@@ -76,18 +71,61 @@ class cran_harvester(Harvester):
         print("total of available packages:", len(all_packages))
 
         for one_package in all_packages:
-            # get full raw package record
-            # https://cran.r-project.org/package=knitr
-            local_url = one_package["Package"]
-            local_path = self.access_file(local_url)
-            if local_path is not None:
-                # get the content from file
-                content_html = None
-                with open(local_path) as file:
-                    content_html = file.read()
-                json_package = _convert_raw_package_record(content_html, one_package)
+            # check if package version match already stored package and version
+            # if not, we will get the full raw package record via  https://cran.r-project.org/package=knitr
+            to_be_inserted = False
+            one_package['_id'] = 'packages/' + one_package['Package']
+            if self.packages.has(one_package['_id']):
+                # check version
+                stored_package = self.packages.get(one_package['_id'])
+                if stored_package is not None:
+                    version = stored_package["Version"]
+                    #this is a new version available
+                    if version != one_package["Version"]:
+                        to_be_inserted = True
+            else:
+                to_be_inserted = True
 
-                print(json.dumps(json_package))
+            if to_be_inserted:
+                local_url = "https://cran.r-project.org/package=" + one_package["Package"]
+                local_path = self.access_file(local_url)
+                if local_path is not None:
+                    # get the content from file
+                    content_html = None
+                    with open(local_path, "rb") as file:
+                        content_html = file.read()
+                    # the following should work, but apparently the CRAN html pages are a mixture of UTF-8 and windows-1252 encoding
+                    content_html = content_html.decode('utf-8','ignore')    
+                    json_package = _convert_raw_package_record(content_html, one_package)
+                    #print(json.dumps(json_package))
+
+                    # try to get bibliographical reference information
+                    references = self.import_reference_information(one_package['Package'])
+                    if references is not None and len(references)>0:
+                        json_package["References"] = references
+
+                    # insert
+                    json_package['_id'] = 'packages/' + one_package['Package']
+                    self.packages.insert(json_package)
+
+    def import_reference_information(self, package_name):
+        '''
+        Raw bibliographical reference information for a given package can be accessed at
+        "https://cran.r-project.org/web/packages/%s/citation.html"
+        '''
+        local_url = "https://cran.r-project.org/web/packages/" + package_name + "/citation.html"
+        local_path = self.access_file(local_url)
+        if local_path is not None:
+            # get the content from file
+            content_html = None
+            with open(local_path, "rb") as file:
+                content_html = file.read()
+            content_html = content_html.decode('utf-8','ignore')  
+
+            return convert_reference_information(content_html)
+        else:
+            return None
+
 
     def set_num_downloads(self):
         '''
@@ -118,7 +156,7 @@ def _convert_raw_package_summary(textResultPackage):
         MD5sum: 027ebdd8affce8f0effaecfcd5f5ade2
         NeedsCompilation: no
     '''
-    lines = textResultPackage.split("/n")
+    lines = textResultPackage.split("\n")
     package = {}
     package['Package'] = _val_line(lines[0])
     package['Version'] = _val_line(lines[1])
@@ -150,13 +188,17 @@ def _convert_raw_package_record(packageRecordHtml, json_package):
             break
 
     if table1 is not None:
-        rows = table1.find("tbody").find_all("tr")
+        tbody = table1.find("tbody")
+        if tbody == None:
+            rows = table1.find_all("tr")
+        else:
+            rows = table1.find("tbody").find_all("tr")
         for row in rows:
             cells = row.find_all("td")
             if len(cells) != 2:
                 continue
             field = cells[0].get_text()
-            print(field)
+            #print(field)
             if field == "Version:":
                 json_package["Version"] = clean_field(cells[1].get_text())
             elif field == "Maintainer:":
@@ -200,17 +242,25 @@ def _convert_raw_package_record(packageRecordHtml, json_package):
                 table2 = table
                 break
     if table2 is not None:
-        rows = table2.find("tbody").find_all("tr")
+        tbody = table2.find("tbody")
+        if tbody == None:
+            rows = table2.find_all("tr")
+        else:
+            rows = table2.find("tbody").find_all("tr")
         for row in rows:
             cells = row.find_all("td")
             if len(cells) != 2:
                 continue
             field = cells[0].get_text().strip()
-            print(field)
+            #print(field)
 
             if field == 'Reference manual:':
                 if cells[1].find("a") != None:
-                    json_package["Manual"] = cells[1].find("a")['href']
+                    link_manual = cells[1].find("a")['href']
+                    if not link_manual.startswith("http"):
+                        # this is a relative address, so we expand it
+                        link_manual = "https://cran.r-project.org/web/packages/" + json_package['Package'] + "/" + link_manual
+                    json_package["Manual"] = link_manual
 
     table3 = None
     rank = 0
@@ -221,14 +271,17 @@ def _convert_raw_package_record(packageRecordHtml, json_package):
                 # third one is the reverse dependency summary 
                 table3 = table
     if table3 is not None:
-        rows = table3.find("tbody").find_all("tr")
-
+        tbody = table3.find("tbody")
+        if tbody == None:
+            rows = table3.find_all("tr")
+        else:
+            rows = table3.find("tbody").find_all("tr")
         for row in rows:
             cells = row.find_all("td")
             if len(cells) != 2:
                 continue
             field = cells[0].get_text()
-            print(field)
+            #print(field)
 
             #"Reverse depends:"
             #"Reverse imports:"
@@ -237,11 +290,45 @@ def _convert_raw_package_record(packageRecordHtml, json_package):
 
     return json_package
 
+def convert_reference_information(content_html):
+    if content_html == None:
+        return None
+
+    soup = BeautifulSoup(content_html, "lxml")
+    references = []
+
+    # raw reference are under <blockquote>, one <blockquote> per reference
+    blockquotes = soup.find_all("blockquote")
+    for blockquote in blockquotes:
+        reference = {}
+        reference['raw'] = clean_field(blockquote.text)
+        references.append(reference)
+
+    # each bibtex reference are under one <pre> block, then usual bibtex format
+    pres = soup.find_all("pre")
+    for pre in pres:
+        reference = {}
+        reference['bibtex'] = pre.text.strip()
+        references.append(reference)
+
+    return references
+
+
 def _val_line(line):
     ind = line.find(":")
     if ind != -1:
-        return line[ind:].strip()
+        return line[ind+1:].strip()
     else: 
         return None
 
-    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Harvest and update CRAN public data")
+    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all records") 
+
+    args = parser.parse_args()
+    config_path = args.config
+    to_reset = args.reset
+
+    local_harvester = cran_harvester(config_path=config_path)
+    local_harvester.import_packages(reset=to_reset)

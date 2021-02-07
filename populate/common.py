@@ -8,7 +8,7 @@ repo_patterns = ["https://github.com/", "https://gitlab.com/", "https://bitbucke
 
 def is_git_repo(url):
     for repo in repo_patterns:
-        if url.find(repo):
+        if url.find(repo) != -1:
             return True
     return False
 
@@ -162,7 +162,6 @@ def process_author_field(author_field):
         if orcid != None:
             person['orcid'] = orcid
 
-
         pos = piece.find("[");
         if pos != -1:
             pos2 = piece.find("]", pos);
@@ -237,7 +236,6 @@ def process_boolean_field(boolean_field):
 def process_dependency_field(dependency_field, role):
     dependency_field = dependency_field.replace("\n", " ")
     dependencies = []
-    print("dependency_field:", dependency_field)
 
     pieces = dependency_field.split(", ")
     for piece in pieces:

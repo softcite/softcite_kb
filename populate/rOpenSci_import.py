@@ -189,6 +189,12 @@ class rOpenSci_harvester(Harvester):
             if field in package_json:
                 del package_json[field]
 
+        # we can infer the a github repo if missing from the bug report url 
+        if 'git_repository' not in package_json and 'BugReports' in package_json:
+            if is_git_repo(package_json['BugReports']):
+                if package_json['BugReports'].endswith("/issues/"):
+                    package_json['git_repository'] = package_json['BugReports'].replace("issues/", "")
+
         return package_json
 
 if __name__ == "__main__":
