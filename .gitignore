@@ -1,0 +1,9 @@
+**/.DS_Store
+.idea
+**/__pycache__
+__pycache__
+**/.ipynb_checkpoints/*
+env
+my_config.json
+data/CRAN
+data/rOpenSci

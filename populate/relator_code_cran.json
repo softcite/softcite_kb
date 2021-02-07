@@ -1,0 +1,16 @@
+{ 
+    "aut": "Author",
+    "cre": "Creator",
+    "ctb": "Contributor",
+    "cph": "Copyright holder",
+    "ths": "Thesis advisor",
+    "trl": "Translator",
+    "fnd": "Funder",
+    "dtc": "Data contributor",
+    "com": "Compiler",
+    "ctr": "Contractor",
+    "rev": "Reviewer",
+    "anl": "Analyst",
+    "ccp": "Conceptor",
+    "res": "Researcher"
+}

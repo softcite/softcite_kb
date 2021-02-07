@@ -1,0 +1,9 @@
+{
+    "arango_host": "localhost",
+    "arango_port": 8529,
+    "arango_protocol": "http",
+    "arango_user": "root",
+    "arango_pwd": "root",
+    "tmp_path": "./tmp/",
+    "api_port": 8080
+}

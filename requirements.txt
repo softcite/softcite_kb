@@ -1,0 +1,3 @@
+python-arango
+requests
+beautifulsoup4
