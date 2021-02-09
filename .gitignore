@@ -7,3 +7,4 @@ env
 my_config.json
 data/CRAN
 data/rOpenSci
+data/mentions

@@ -2,6 +2,8 @@
     Access, convert and load CRAN package metadata in the Knowledge Base
 
     We harvest cran.r-project.org 
+
+    As of 2021-02-01, 17091 packages
 '''
 
 import requests
@@ -99,6 +101,10 @@ class cran_harvester(Harvester):
                     json_package = _convert_raw_package_record(content_html, one_package)
                     #print(json.dumps(json_package))
 
+                    if json_package is None:
+                        # it means that this package has been removed from CRAN (e.g. because policy violation)
+                        continue
+
                     # try to get bibliographical reference information
                     references = self.import_reference_information(one_package['Package'])
                     if references is not None and len(references)>0:
@@ -106,7 +112,8 @@ class cran_harvester(Harvester):
 
                     # insert
                     json_package['_id'] = 'packages/' + one_package['Package']
-                    self.packages.insert(json_package)
+                    if not self.packages.has(json_package['_id']):
+                        self.packages.insert(json_package)
 
     def import_reference_information(self, package_name):
         '''
@@ -168,6 +175,14 @@ def _convert_raw_package_record(packageRecordHtml, json_package):
     regex_orcid = re.compile(orcid_pattern)
 
     soup = BeautifulSoup(packageRecordHtml, "lxml")
+
+    # note that some package can be removed from CRAN, but still have a page explaining the removal
+    # project is archived and metadata removed
+    # this can be detected easily here 
+    if soup.body.find("h2") == None:
+        print("the package has been removed from CRAN:", json_package['Package'])
+        return None
+
     json_package['Title'] = clean_field(soup.body.h2.text)
 
     # package name is prefixed in the title, we can strip it
@@ -324,7 +339,7 @@ def _val_line(line):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Harvest and update CRAN public data")
     parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
-    parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all records") 
+    parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all CRAN records") 
 
     args = parser.parse_args()
     config_path = args.config

@@ -200,7 +200,7 @@ class rOpenSci_harvester(Harvester):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Harvest and update rOpenSci public data")
     parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
-    parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all records") 
+    parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all rOpenSci records") 
 
     args = parser.parse_args()
     config_path = args.config

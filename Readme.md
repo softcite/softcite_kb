@@ -31,8 +31,6 @@ pip3 install -r requirements.txt
 
 The KB uses ArangoDB to store multi-model representations. Be sure to have an ArangoDB server installed and running. Indicate the server host and port of ArangoDB in the config file - if not default (`localhost:8529`) - together with the `username` and `password` to be used for transactions. In the following, we suppose that the config file is `my_config.json`, if not indicated the file `config.json` will be used by default. 
 
-
-
 ## Populate the Knowledge Base
 
 The main sources of data are currently:
@@ -45,11 +43,42 @@ The main sources of data are currently:
 
 - Public information available via GitHub API
 
+### Import Wikidata software entities
 
-### rOpenSci
+The import is realized via the JSON Wikidata dump. Entities corresponding to software (except video games) are imported to seed the KB, together with some relevant entities in relation to software corresponding to persons, organizations and close concepts (programming language, OS, license). 
+
+A recent full Wikidata json dump compressed with bz2 (which is more compact) is needed, which can be dowloaded [here](https://dumps.wikimedia.org/wikidatawiki/entities/). There is no need to uncompressed the json dump.
+
+The import is launched as follow, with `latest-all.json.bz2` as Wikidata dump file:
+
+```bash
+python3 populate/Wikidata_import.py --config my_config.json latest-all.json.bz2
+```
+
+### Import rOpenSci metadata
+
+From the project root, launch:
 
 ```bash
 python3 populate/rOpenSci_import.py --config my_config.json
 ```
+
+This will populate the rOpenSci import document database from scratch or update it if already present. 
+
+To force the import to recreate the rOpenSci database from scratch, use:
+
+```bash
+python3 populate/rOpenSci_import.py --config my_config.json --reset
+```
+
+The import uses a cache to avoid reloading the JSON from the rOpenSci API. The metadata are reloaded only when a new version of a package is available.
+
+### Import CRAN metadata
+
+
+
+### GitHub public data
+
+
 
 

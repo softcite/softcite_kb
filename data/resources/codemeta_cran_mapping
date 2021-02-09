@@ -1,0 +1,17 @@
+codeRepository  URL
+softwareRequirements    Depends, SystemRequirements
+author  [aut] in Author
+contributor     [ctb] in Author
+creator     [cre] in Author
+datePublished   Date
+license     License
+description     Description
+identifier  Package
+name    Title
+url     URL
+givenName   givenName
+familyName  familyName
+email   email
+softwareSuggestions     Suggests
+maintainer  Maintainer
+issueTracker    BugReports 

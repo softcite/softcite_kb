@@ -1,0 +1,86 @@
+[ 
+    { 
+        "cran": "aut",
+        "marc_term": "Author",
+        "wikidata": "P50",
+        "codemeta": "author"
+    },
+    {
+        "cran": "cre",
+        "marc_term": "Creator",
+        "wikidata": "P170",
+        "codemeta": "creator"
+    },
+    {
+        "cran": "ctb",
+        "marc_term": "Contributor",
+        "wikidata": "P767",
+        "codemeta": "contributor"
+    },
+    {
+        "cran": "cph",
+        "marc_term": "Copyright holder",
+        "wikidata": "P3931",
+        "codemeta": "copyrightHolder"
+    },
+    {
+        "cran": "ths",
+        "marc_term": "Thesis advisor",
+        "wikidata": "P184",
+        "codemeta": ""
+    },
+    {
+        "cran": "trl",
+        "marc_term": "Translator",
+        "wikidata": "P655",
+        "codemeta": ""
+    },
+    {
+        "cran": "fnd",
+        "marc_term": "Funder",
+        "wikidata": "P8324",
+        "codemeta": "funder"
+    },
+    {
+        "cran": "dtc",
+        "marc_term": "Data contributor",
+        "wikidata": "P767",
+        "codemeta": ""
+    },
+    {
+        "cran": "com",
+        "marc_term": "Compiler",
+        "wikidata": "P98",
+        "codemeta": "editor"
+    },
+    {
+        "cran": "ctr",
+        "marc_term": "Contractor",
+        "wikidata": "",
+        "codemeta": ""
+    },
+    {
+        "cran": "rev",
+        "marc_term": "Reviewer",
+        "wikidata": "P4032",
+        "codemeta": ""
+    },
+    {
+        "cran": "anl",
+        "marc_term": "Analyst",
+        "wikidata": "",
+        "codemeta": ""
+    },
+    {
+        "cran": "ccp",
+        "marc_term": "Conceptor",
+        "wikidata": "",
+        "codemeta": ""
+    },
+    {
+        "cran": "res",
+        "marc_term": "Researcher",
+        "wikidata": "",
+        "codemeta": ""
+    }
+]
