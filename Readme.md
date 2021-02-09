@@ -4,6 +4,10 @@ This repository contains the tools for creating, populating and updating the Sof
 
 We define first research software as the software mentioned in the scientific litterature, considering that these mentions characterize research software usage. The core of the Knwoledge Base is thus relying on the import of resources on software usage in the scientific literature. We further match mentionned software to software entities from different curated software resources. Via software dependencies, we then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view.  
 
+## Building the Knowledge Base 
+
+![overview](doc/software-kb-building-overview.png)
+
 ## Requirements and install
 
 The presents tools are implemented in Python and should work correctly with Python 3.5 or higher. An ArangoDB server must be installed, see the [installation](https://www.arangodb.com/download-major/) of the Open Source community server. 
@@ -55,6 +59,8 @@ The import is launched as follow, with `latest-all.json.bz2` as Wikidata dump fi
 python3 populate/Wikidata_import.py --config my_config.json latest-all.json.bz2
 ```
 
+To force the import to recreate the Wikidata database from scratch, use `--reset`.
+
 ### Import rOpenSci metadata
 
 From the project root, launch:
@@ -75,10 +81,39 @@ The import uses a cache to avoid reloading the JSON from the rOpenSci API. The m
 
 ### Import CRAN metadata
 
+```
+python3 populate/cran_import.py --config my_config.json
+```
 
+To force the import to recreate the CRAN metadata database from scratch, use `--reset`.
+
+
+### Import software mentions 
+
+To import software mentions automatically extracted from scientific literature with https://github.com/ourresearch/software-mentions:
+
+```
+python3 populate/software_mention_import.py --config my_config.json data/mentions/
+```
+
+The script expects as parameter the path to the repository where the software mention JSON objects are available (for example `data/mentions/`), obtained with `mongoexport`. `mongoexport` produces 3 JSON file (one JSON object per line) corresponding to 3 collections: `annotations`, `documents` and `references`. Usage of `mongoexport`is as follow:
+
+```bash
+> mongoexport -d <database> -c <collection_name> -o <output_file_name>
+``` 
 
 ### GitHub public data
 
+...
 
+## Merging
+
+
+Once imported, the following command will merge the different data source into one common space called the "staging area". This area is based on a graph model and a common schema. Attributes corresponding to string identifiers will be also merged in the process, which will gives aggregated representation for the software and related entities (persons, license, institutions, ...). 
+
+
+## Disambiguate
+
+The following script will launch a disambiguation process from the graph in the staging area. Sub-graphs corresponding to the same entities will be merged based on entity disambiguate techniques. The extracted mentions of software will be deduplicated and resolved with the aggregated software representation. The result is a dense graph which is the actual Software Knowledge base, stored in an independent third area.
 
 
