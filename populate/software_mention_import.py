@@ -13,7 +13,8 @@ import json
 from harvester import Harvester
 from arango import ArangoClient
 import re
-
+import os
+import gzip
 
 class Software_mention_import(Harvester):
 
@@ -57,12 +58,56 @@ class Software_mention_import(Harvester):
             self.db.delete_collection('references')
             self.references = self.db.create_collection('references')
 
-        
+        # import JSON collections
+        for thefile in os.listdir(mongoExportPath):
+            if thefile.find("annotations") != -1:
+                if thefile.endswith(".gz"):
+                    with gzip.open(os.path.join(mongoExportPath, thefile), 'rb') as fjson:
+                        for line in fjson:
+                            self._load_json(line, self.annotations, "annotations")
+                else:
+                    with open(os.path.join(mongoExportPath, thefile)) as fjson:
+                        for line in fjson:
+                            self._load_json(line, self.annotations, "annotations")
+            elif thefile.find("documents") != -1:
+                if thefile.endswith(".gz"):
+                    with gzip.open(os.path.join(mongoExportPath, thefile), 'rb') as fjson:
+                        for line in fjson:
+                            self._load_json(line, self.documents, "documents")
+                else:
+                    with open(os.path.join(mongoExportPath, thefile)) as fjson:
+                        for line in fjson:
+                            self._load_json(line, self.documents, "documents")
+            elif thefile.find("references") != -1:
+                if thefile.endswith(".gz"):
+                    with gzip.open(os.path.join(mongoExportPath, thefile), 'rb') as fjson:
+                        for line in fjson:
+                            self._load_json(line, self.references, "references")
+                else:
+                    with open(os.path.join(mongoExportPath, thefile)) as fjson:
+                        for line in fjson:
+                            self._load_json(line, self.references, "references")
+            else:
+                print("File skipped:", os.path.joint(mongoExportPath, thefile))
 
+    def _load_json(self, json_string, collection, collection_name):
+        '''
+        we use "$oid" under _id as key for the entry
+        '''
+        try:
+            json_object = json.loads(json_string.decode('utf-8'))
+            local_id = json_object['_id']
+            local_id = local_id['$oid']
+            json_object['_id'] = collection_name + "/" + local_id
+            # insert
+            if not collection.has(json_object['_id']):
+                collection.insert(json_object)
+        except:
+            print("failed to ingest json input:", json_string)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Import collection of automatically extracted software mention")
-    parser.add_argument("mongoExportPath", default=None, help="path to the repository with MongoDB JSON export containing the software mentions") 
+    parser.add_argument("mongoExportPath", default=None, help="path to the directory with MongoDB JSON export containing the software mentions") 
     parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
     parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all software mention records") 
 

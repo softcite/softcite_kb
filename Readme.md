@@ -1,8 +1,8 @@
-# Softcite Knowledge Base
+# A Knowledge Base on Research Software
 
-This repository contains the tools for creating, populating and updating the Softcite Knowledge Base, dedicated to research software. 
+This repository contains the tools for creating, populating and updating a Knowledge Base dedicated to research software. 
 
-We define first research software as the software mentioned in the scientific litterature, considering that these mentions characterize research software usage. The core of the Knwoledge Base is thus relying on the import of resources on software usage in the scientific literature. We further match mentionned software to software entities from different curated software resources. Via software dependencies, we then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view.  
+We approximate research software as the set of software mentioned in the scientific litterature, considering that these mentions characterize research usage. The core of the Knwoledge Base is thus relying on the import of software mentions automatically extracted from the scientific literature. We further match mentionned software to software entities from different curated software resources. Via software dependencies, we can then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view of the research software landscape.  
 
 ## Building the Knowledge Base 
 
@@ -37,15 +37,20 @@ The KB uses ArangoDB to store multi-model representations. Be sure to have an Ar
 
 ## Populate the Knowledge Base
 
-The main sources of data are currently:
+The main curated sources of data are currently:
 
-- Wikidata software entities
+- Wikidata software entities and related entities 
 
-- rOpenSci's R-universe package system and CRAN for R ecosystem
+- rOpenSci's R-universe package system 
 
-- The extraction of software mentions and citations in the scientific literature, thanks to the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions)
+- CRAN package metadata for R ecosystem
 
-- Public information available via GitHub API
+- public information available via GitHub API
+
+The extraction of software mentions and citations in the scientific literature is obtained via the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) applied to Open Access PDF. 
+
+The following sections describe how to import these different sources of software information into the system. The initial import and the following updates are currently manual processes, but it is expected to automate this workflow via Apache Airflow in future iterations.  
+
 
 ### Import Wikidata software entities
 
@@ -102,18 +107,26 @@ The script expects as parameter the path to the repository where the software me
 > mongoexport -d <database> -c <collection_name> -o <output_file_name>
 ``` 
 
+The MongoDB JSON export can be compressed with gzip or not. 
+
 ### GitHub public data
+
+GitHub public data come as an enrichment of a populated knowledge base. The following import should thus be done last after the import of the other resources. 
 
 ...
 
 ## Merging
 
+Once imported, the following command will merge the different data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
 
-Once imported, the following command will merge the different data source into one common space called the "staging area". This area is based on a graph model and a common schema. Attributes corresponding to string identifiers will be also merged in the process, which will gives aggregated representation for the software and related entities (persons, license, institutions, ...). 
 
 
 ## Disambiguate
 
-The following script will launch a disambiguation process from the graph in the staging area. Sub-graphs corresponding to the same entities will be merged based on entity disambiguate techniques. The extracted mentions of software will be deduplicated and resolved with the aggregated software representation. The result is a dense graph which is the actual Software Knowledge base, stored in an independent third area.
+The following script launches a disambiguation process on the graph in the staging area. Sub-graphs corresponding to the same entities will be combined based on entity disambiguate techniques. The extracted mentions of software will be deduplicated and resolved with the aggregated software representation. The result is a dense graph which is the actual Software Knowledge base, stored in an independent third area.
 
+
+## API
+
+...
 

@@ -133,7 +133,6 @@ class cran_harvester(Harvester):
         else:
             return None
 
-
     def set_num_downloads(self):
         '''
         From depsy/models/cran_package.py 
@@ -150,6 +149,15 @@ class cran_harvester(Harvester):
             for download_dict in all_days:
                 self.num_downloads += download_dict["downloads"]
         print(u"setting num_downloads to {}".format(self.num_downloads))
+
+    def export_package_names(self, file_out):
+        '''
+        Simple method for exporting all R package names, to be added as features for software 
+        mention recognition models
+        '''
+        with open(file_out, "wt") as the_file:
+            for package in self.packages:
+                the_file.write(package['Package']+"\n")
 
 
 def _convert_raw_package_summary(textResultPackage):
@@ -347,3 +355,4 @@ if __name__ == "__main__":
 
     local_harvester = cran_harvester(config_path=config_path)
     local_harvester.import_packages(reset=to_reset)
+    local_harvester.export_package_names('data/resources/cran_package_names.txt')
