@@ -61,7 +61,7 @@ A recent full Wikidata json dump compressed with bz2 (which is more compact) is 
 The import is launched as follow, with `latest-all.json.bz2` as Wikidata dump file:
 
 ```bash
-python3 populate/Wikidata_import.py --config my_config.json latest-all.json.bz2
+python3 import/Wikidata_import.py --config my_config.json latest-all.json.bz2
 ```
 
 To force the import to recreate the Wikidata database from scratch, use `--reset`.
@@ -71,7 +71,7 @@ To force the import to recreate the Wikidata database from scratch, use `--reset
 From the project root, launch:
 
 ```bash
-python3 populate/rOpenSci_import.py --config my_config.json
+python3 import/rOpenSci_import.py --config my_config.json
 ```
 
 This will populate the rOpenSci import document database from scratch or update it if already present. 
@@ -79,7 +79,7 @@ This will populate the rOpenSci import document database from scratch or update 
 To force the import to recreate the rOpenSci database from scratch, use:
 
 ```bash
-python3 populate/rOpenSci_import.py --config my_config.json --reset
+python3 import/rOpenSci_import.py --config my_config.json --reset
 ```
 
 The import uses a cache to avoid reloading the JSON from the rOpenSci API. The metadata are reloaded only when a new version of a package is available.
@@ -87,7 +87,7 @@ The import uses a cache to avoid reloading the JSON from the rOpenSci API. The m
 ### Import CRAN metadata
 
 ```
-python3 populate/cran_import.py --config my_config.json
+python3 import/cran_import.py --config my_config.json
 ```
 
 To force the import to recreate the CRAN metadata database from scratch, use `--reset`.
@@ -98,7 +98,7 @@ To force the import to recreate the CRAN metadata database from scratch, use `--
 To import software mentions automatically extracted from scientific literature with https://github.com/ourresearch/software-mentions:
 
 ```
-python3 populate/software_mention_import.py --config my_config.json data/mentions/
+python3 import/software_mention_import.py --config my_config.json data/mentions/
 ```
 
 The script expects as parameter the path to the repository where the software mention JSON objects are available (for example `data/mentions/`), obtained with `mongoexport`. `mongoexport` produces 3 JSON file (one JSON object per line) corresponding to 3 collections: `annotations`, `documents` and `references`. Usage of `mongoexport`is as follow:
@@ -119,14 +119,26 @@ GitHub public data come as an enrichment of a populated knowledge base. The foll
 
 Once imported, the following command will merge the different data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
 
-
+```bash
+python3 merge/populate.py --config my_config.json
+```
 
 ## Disambiguate
 
-The following script launches a disambiguation process on the graph in the staging area. Sub-graphs corresponding to the same entities will be combined based on entity disambiguate techniques. The extracted mentions of software will be deduplicated and resolved with the aggregated software representation. The result is a dense graph which is the actual Software Knowledge base, stored in an independent third area.
+The following script launches a disambiguation process on the graph in the staging area. Sub-graphs corresponding to the same entities will be combined based on entity disambiguate techniques. The extracted mentions of software will be deduplicated and resolved with the aggregated software representation. The result is a dense graph which is the actual Software Knowledge base, stored in an independent third area and used by the API.
 
+```bash
+python3 disambiguate/disambiguate.py --config my_config.json
+```
 
 ## API
 
-...
+### Start the service
+
+> python3 api/service.py --config my_config.json
+
+The swagger documentation/console of the web services is then available at: http:// **service_host** : **service_port** /api/ui/, e.g, http://localhost:5000/api/ui/
+
+
+
 

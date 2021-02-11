@@ -16,7 +16,7 @@ import json
 from harvester import Harvester
 from arango import ArangoClient
 import re
-from common import clean_field, is_git_repo
+from import_common import clean_field, is_git_repo
 import sys
 import os
 import bz2

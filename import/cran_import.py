@@ -13,7 +13,7 @@ import re
 from harvester import Harvester
 from arango import ArangoClient
 from bs4 import BeautifulSoup
-from common import process_author_field, clean_field, process_url_field, process_maintainer_field, process_boolean_field, process_dependency_field
+from import_common import process_author_field, clean_field, process_url_field, process_maintainer_field, process_boolean_field, process_dependency_field
 
 base_url = 'http://crandb.r-pkg.org/'
 # example package metadata: http://crandb.r-pkg.org/knitr

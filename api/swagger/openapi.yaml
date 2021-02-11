@@ -1,0 +1,435 @@
+openapi: "3.0.0"
+
+info:
+  description: Web services for the Softcite Knowledge Base
+  version: "0.1.0"
+  title: Softcite KB web service
+  contact:
+    name: Patrice Lopez
+    email: patrice.lopez@science-miner.com
+    url: https://science-miner.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:5000/api
+  - url: http://work.local:5000/api
+  - url: /api
+
+# Paths supported by the server application
+paths:
+  /alive:
+    get:
+      operationId: generic.alive
+      tags:
+        - generic
+      summary: Return true if the API is up and running
+      description: Return true if the API is up and running
+      responses:
+        200:
+          description: API is up and running
+        400:
+          description: Bad request
+  /version:
+    get:
+      operationId: generic.version
+      tags:
+        - generic
+      summary: Return the version number of the current web API
+      description: Return the version number of the current web API
+      responses:
+        200:
+          description: API version number
+        400:
+          description: Bad request
+
+  /software/{id}:
+    get:
+      operationId: software.read_one
+      tags:
+        - software
+      summary: Access information for one software entity
+      description: Access information for one software entity
+      parameters:
+        - name: id
+          in: path
+          description: Identifier of the software entity
+          required: true
+          schema:
+            type: string
+            example: "Q8029"
+      responses:
+        200:
+          description: Successfully access the information for the software entity
+        400:
+          description: Bad request
+
+  /software/{id}/citations:
+    get:
+      operationId: software.read_citations
+      tags:
+        - software
+      summary: Access information to all citations of one software entity
+      description: Access information to all citations of one software entity
+      parameters:
+        - name: id
+          in: path
+          description: Identifier of the cited software entity
+          required: true
+          schema:
+            type: string
+            example: "Q8029"
+      responses:
+        200:
+          description: Successfully access the information for all the citations to the software entity
+        400:
+          description: Bad request
+
+  /software/disambiguate:
+    post:
+      operationId: software.disambiguate
+      tags:
+        - software
+      summary: Disambiguate a software mention against the database content 
+      description: Disambiguate a software mention against the database content 
+      requestBody:
+        description: The software mention JSON object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/software'
+      responses:
+        200:
+          description: Successfully disambiguate the mention
+        400:
+          description: Bad request
+
+  /document/mentions:
+    get:
+      operationId: document.read_one_mentions
+      tags:
+        - document
+      summary: Access all mention information of one document
+      description: Access all mention information of one document
+      parameters:
+        - name: id
+          in: query
+          description: Identifier of the document
+          required: true
+          schema:
+            type: string
+            example: "10.1002/blabla"
+      responses:
+        200:
+          description: Successfully access the information for all the mentions to the document
+        400:
+          description: Bad request
+
+  /software/{id}/documents:
+    get:
+      operationId: software.nbest_documents
+      tags:
+        - software
+      summary: Provide the n-best citing documents for a software entity
+      description: Provide the n-best citing documents for a software entity
+      parameters:
+        - name: id
+          in: path
+          description: Identifier of the cited software entity
+          required: true
+          schema:
+            type: string
+            example: "Q8029"
+        - name: n
+          in: formData
+          description: Number of most relevant documents citing a software entity (default 1)          
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+      responses:
+        200:
+          description: Successfully provide the n-best citing documents for a software entity
+        400:
+          description: Bad request
+
+  /software/{id}/related:
+    get:
+      operationId: software.nbest_software
+      tags:
+        - software
+      summary: Provide the n most related software entities for a given software entity
+      description: Provide the n most related software entities for a given software entity
+      parameters:
+        - name: id
+          in: path
+          description: Identifier of the cited software entity
+          required: true
+          schema:
+            type: string
+            example: "Q8029"
+        - name: n
+          in: formData
+          description: Number of most relevant software entities for a given software entity (default 1)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+      responses:
+        200:
+          description: Successfully provide the n most related software entities for a given software entity
+        400:
+          description: Bad request
+
+  /person/{id}/software:
+    get:
+      operationId: person.software
+      tags:
+        - person
+      summary: Provide for a given person, all the software entities he has authored 
+      description: Provide for a given person, all the software entities he has authored and for each software the citing documents supporting the authorship 
+      parameters:
+        - name: id
+          in: path
+          description: Identifier of the person in the database
+          required: true
+          schema:
+            type: string
+            example: "Q93068"
+      responses:
+        200:
+          description: Successfully provide the software entities authored by one person
+        400:
+          description: Bad request      
+
+  /person/disambiguate:
+      post:
+        operationId: person.disambiguate
+        tags:
+          - person
+        summary: Disambiguate a person name against the database content 
+        description: Disambiguate a person name against the database content 
+        requestBody:
+          description: The person JSON object information
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/person'
+        responses:
+          200:
+            description: Successfully disambiguate the person name
+          400:
+            description: Bad request
+
+  /organization/{id}/software:
+    get:
+      operationId: organization.software
+      tags:
+        - organization
+      summary: Provide for a given organization, all the software entities it is publishing
+      description: Provide for a given organization, all the software entities it is publishing and for each software the citing documents supporting the publication role 
+      parameters:
+        - name: id
+          in: path
+          description: Identifier of the organization in the database
+          required: true
+          schema:
+            type: string
+            example: "Q93068"
+      responses:
+        200:
+          description: Successfully provide the software entities authored by one person
+        400:
+          description: Bad request      
+
+  /organization/disambiguate:
+      post:
+        operationId: organization.disambiguate
+        tags:
+          - organization
+        summary: Disambiguate a organization name against the database content 
+        description: Disambiguate a organization name and its additional metadata against the database content 
+        requestBody:
+          description: The organization JSON object information
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/organization'
+        responses:
+          200:
+            description: Successfully disambiguate the organization name
+          400:
+            description: Bad request
+
+  /document:
+      post:
+        operationId: document.add
+        tags:
+          - document
+        summary: Add to the Knowledge Base a new annotated document
+        description: Add to the Knowledge Base a new document, its new annotations, try to disambiguate the software mention and creators, update the different KB object.
+        requestBody:
+          description: The annotation JSON object information
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/person'
+        responses:
+          200:
+            description: Successful addition of the document and its annotations into the knowledge base
+          400:
+            description: Bad request
+
+  /document/software:
+    get:
+      operationId: document.read_one_software
+      tags:
+        - document
+      summary: Access all software entities cited in one document
+      description: Access all software entities cited in one document
+      parameters:
+        - name: id
+          in: query
+          description: Identifier of the document
+          required: true
+          schema:
+            type: string
+            example: "10.1002/blabla"
+      responses:
+        200:
+          description: Successfully access the information for all the software entities cited in one document
+        400:
+          description: Bad request
+
+  /document:
+    delete:
+      operationId: document.delete
+      tags: 
+        - document
+      summary: Delete a document from the Knowledge Base, this will also delete all its annotations/citations
+      description: Delete a document from the Knowledge Base, this will also delete all its annotations/citations at the software entity level
+      parameters:
+        - name: id
+          in: query
+          description: Identifier of the document that should be deleted from the KB
+          required: true
+          schema:
+            type: string
+            example: "10.1002/blabla"
+      responses:
+        200:
+          description: Successful deletion of the document into the knowledge base
+        400:
+          description: Bad request
+
+  /document/disambiguate:
+      post:
+        operationId: document.disambiguate
+        tags:
+          - document
+        summary: Disambiguate document metadata against the database content 
+        description: Disambiguate document metadata against the database content 
+        requestBody:
+          description: The metadata document JSON object information
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/document'
+        responses:
+          200:
+            description: Successfully disambiguate the document metadata
+          400:
+            description: Bad request  
+
+  /document/software/related:
+    get:
+      operationId: document.nbest_software
+      tags:
+        - document
+      summary: Provide for a given document the n most relevant related software entities 
+      description: Provide for a given document the n most relevant related software entities NOT mentioned in the document
+      parameters:
+        - name: id
+          in: query
+          description: Identifier of the document for which we want the most related software
+          required: true
+          schema:
+            type: string
+            example: "10.1002/blabla"
+        - name: n
+          in: query
+          description: Number of most relevant software entities for a given document (default 1)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+      responses:
+        200:
+          description: Successfully provide the n most related software entities for a given document
+        400:
+          description: Bad request      
+
+
+components:
+  schemas:
+
+    software:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        creator:
+          type: string
+        version_number:
+          type: string
+        version_date:
+          type: string
+        url:
+          type: string
+
+    document:
+      properties:
+        doi:
+          type: string
+        pmc:
+          type: string
+        pmid:
+          type: string
+        arxiv_id:
+          type: string
+
+    person:
+      required:
+        - lastname
+      properties:
+        lastname:
+          type: string
+        firstname:
+          type: string
+        middlename:
+          type: string
+        orcid:
+          type: string
+
+    organization:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        acronym:
+          type: string
+        full_address:
+          type: string
+        country:
+          type: string
