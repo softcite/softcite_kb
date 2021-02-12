@@ -51,7 +51,7 @@ The main curated sources of data are currently:
 
 The extraction of software mentions and citations in the scientific literature is obtained via the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) applied to Open Access PDF. 
 
-For a larger list of relevant resources on software, with various level of curation, see [here]().
+For a larger list of relevant resources on software, with various level of curation, see [here](doc/software-resources.md).
 
 The following sections describe how to import these different sources of software information into the system. The initial import and the following updates are currently manual processes, but it is expected to automate this workflow via Apache Airflow in future iterations.  
 
