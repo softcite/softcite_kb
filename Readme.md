@@ -1,5 +1,7 @@
 # A Knowledge Base on Research Software
 
+[Work In Progress]
+
 This repository contains the tools for creating, populating and updating a Knowledge Base dedicated to research software. 
 
 We approximate research software as the set of software mentioned in the scientific litterature, considering that these mentions characterize research usage. The core of the Knwoledge Base is thus relying on the import of software mentions automatically extracted from the scientific literature. We further match mentionned software to software entities from different curated software resources. Via software dependencies, we can then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view of the research software landscape.  
@@ -132,6 +134,8 @@ python3 disambiguate/disambiguate.py --config my_config.json
 ```
 
 ## API
+
+[Work In Progress] This module replaces [softcite-api](https://github.com/kermitt2/softcite-api).
 
 ### Start the service
 
