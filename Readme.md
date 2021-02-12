@@ -1,6 +1,6 @@
 # A Knowledge Base on Research Software
 
-[Work In Progress]
+**[Work In Progress]**
 
 This repository contains the tools for creating, populating and updating a Knowledge Base dedicated to research software. 
 
