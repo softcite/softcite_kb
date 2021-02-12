@@ -1,10 +1,10 @@
-# A Knowledge Base on Research Software
+# A Knowledge Base for Research Software
 
 **[Work In Progress]**
 
-This repository contains the tools for creating, populating and updating a Knowledge Base dedicated to research software. 
+This repository contains the tools for creating, populating and updating a Knowledge Base dedicated to research software, as well as a set of Knowledge graph services for various data disambiguation, ranking, analytics and data discovery. 
 
-We approximate research software as the set of software mentioned in the scientific litterature, considering that these mentions characterize research usage. The core of the Knwoledge Base is thus relying on the import of software mentions automatically extracted from the scientific literature. We further match mentionned software to software entities from different curated software resources. Via software dependencies, we can then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view of the research software landscape.  
+We approximate research software as the set of software mentioned in the scientific litterature, considering that these mentions characterize research usage. The core of the Knowledge Base is thus relying on the import of software mentions automatically extracted from the scientific literature with this [component](https://github.com/ourresearch/software-mentions). We further match mentionned software to software entities from different curated software resources. Via software dependencies, we can then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view of the research software landscape.  
 
 ## Building the Knowledge Base 
 
@@ -50,6 +50,8 @@ The main curated sources of data are currently:
 - public information available via GitHub API
 
 The extraction of software mentions and citations in the scientific literature is obtained via the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) applied to Open Access PDF. 
+
+For a larger list of relevant resources on software, with various level of curation, see [here]().
 
 The following sections describe how to import these different sources of software information into the system. The initial import and the following updates are currently manual processes, but it is expected to automate this workflow via Apache Airflow in future iterations.  
 
