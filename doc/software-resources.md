@@ -6,7 +6,7 @@ We can distinguish:
 * Aggregator for software information (swMath, ASCL service, Papers with code, SciCrunch)
 * Aggregator for software code and package (libraries.io, versioneye, World of Code, SoftwareHeritage)
 * Archive supporting software deposit (Zenodo, SoftwareHeritage, Code Ocean)
-* Tools supporing the collaborative development ecosystem: build/continuous integration service (travis, circleci, Jenkins, GitHub Events, etc.), test coverage (coverall, codecov, etc.), image system (DockerHub), documentation (readthedoc), etc.
+* Tools supporing the collaborative development ecosystem: build/continuous integration service (travis, circleci, Jenkins, GitHub Actions, etc.), test coverage (coverall, codecov, etc.), image system (DockerHub), documentation (readthedoc), etc.
 * Cloud-based computing infrastructure via Jupyter or Jupyter-style Notebooks environment: Google Colab, Azure Notebooks, Kaggle, Amazon Sagemaker, CoCalc, ...
 
 which will be connected somehow to main scholarly services, e.g. for Open Access ones: 
