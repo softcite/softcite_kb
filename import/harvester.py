@@ -3,6 +3,7 @@
 '''
 
 import os
+import sys
 import json
 from arango import ArangoClient
 import requests
