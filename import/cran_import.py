@@ -13,7 +13,7 @@ import re
 from harvester import Harvester
 from arango import ArangoClient
 from bs4 import BeautifulSoup
-from import_common import process_author_field, clean_field, process_url_field, process_maintainer_field, process_boolean_field, process_dependency_field
+from import_common import process_author_field, clean_field, process_url_field, process_maintainer_field, process_boolean_field, process_dependency_field, is_git_repo
 
 base_url = 'http://crandb.r-pkg.org/'
 # example package metadata: http://crandb.r-pkg.org/knitr
@@ -96,7 +96,7 @@ class cran_harvester(Harvester):
                     content_html = None
                     with open(local_path, "rb") as file:
                         content_html = file.read()
-                    # the following should work, but apparently the CRAN html pages are a mixture of UTF-8 and windows-1252 encoding
+                    # the following should work, but apparently the CRAN html pages can be a mixture of UTF-8 and windows-1252 encoding
                     content_html = content_html.decode('utf-8','ignore')    
                     json_package = _convert_raw_package_record(content_html, one_package)
                     #print(json.dumps(json_package))
@@ -109,6 +109,21 @@ class cran_harvester(Harvester):
                     references = self.import_reference_information(one_package['Package'])
                     if references is not None and len(references)>0:
                         json_package["References"] = references
+
+                    # detext repo in the field URL
+                    if 'URL' in json_package:
+
+                        # in case we have one git repo in the list of URL, we can seprate it from the from other url
+                        # manual/doc URL are already separated in CRAN 
+                        to_be_removed = []
+                        for url in json_package['URL']:
+                            if is_git_repo(url):
+                                json_package['git_repository'] = url
+                                to_be_removed.append(url)
+                                break
+                        if to_be_removed != None:
+                            for one_to_be_removed in to_be_removed:
+                                json_package['URL'].remove(one_to_be_removed)
 
                     # insert
                     json_package['_id'] = 'packages/' + one_package['Package']

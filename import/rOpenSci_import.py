@@ -170,14 +170,20 @@ class rOpenSci_harvester(Harvester):
             package_json['URL'] = process_url_field(package_json['URL'])
 
             # in case we have one git repo in the list of URL, we can seprate it from the from other url
-            to_be_removed = None
+            # in case we have a URL to a manual/doc, we can use the manual field as for CRAN
+            to_be_removed = []
             for url in package_json['URL']:
                 if is_git_repo(url):
                     package_json['git_repository'] = url
-                    to_be_removed = url
-                    break
+                    to_be_removed.append(url)
+                    continue
+                if url.startswith("https://docs.ropensci.org"):
+                    package_json['Manual'] = url
+                    to_be_removed.append(url)
+                    continue
             if to_be_removed != None:
-                package_json['URL'].remove(to_be_removed)
+                for one_to_be_removed in to_be_removed:
+                    package_json['URL'].remove(one_to_be_removed)
 
         if "NeedsCompilation" in package_json:
             package_json["NeedsCompilation"] = process_boolean_field(package_json["NeedsCompilation"])

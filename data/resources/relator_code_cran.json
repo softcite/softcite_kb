@@ -1,86 +1,86 @@
-[ 
-    { 
+{
+    "aut": { 
         "cran": "aut",
         "marc_term": "Author",
         "wikidata": "P50",
         "codemeta": "author"
     },
-    {
+    "cre": {
         "cran": "cre",
         "marc_term": "Creator",
         "wikidata": "P170",
         "codemeta": "creator"
     },
-    {
+    "ctb": {
         "cran": "ctb",
         "marc_term": "Contributor",
         "wikidata": "P767",
         "codemeta": "contributor"
     },
-    {
+    "cph": {
         "cran": "cph",
         "marc_term": "Copyright holder",
         "wikidata": "P3931",
         "codemeta": "copyrightHolder"
     },
-    {
+    "ths": {
         "cran": "ths",
         "marc_term": "Thesis advisor",
         "wikidata": "P184",
         "codemeta": ""
     },
-    {
+    "trl": {
         "cran": "trl",
         "marc_term": "Translator",
         "wikidata": "P655",
         "codemeta": ""
     },
-    {
+    "fnd": {
         "cran": "fnd",
         "marc_term": "Funder",
         "wikidata": "P8324",
         "codemeta": "funder"
     },
-    {
+    "dtc": {
         "cran": "dtc",
         "marc_term": "Data contributor",
         "wikidata": "P767",
         "codemeta": ""
     },
-    {
+    "com": {
         "cran": "com",
         "marc_term": "Compiler",
         "wikidata": "P98",
         "codemeta": "editor"
     },
-    {
+    "ctr": {
         "cran": "ctr",
         "marc_term": "Contractor",
         "wikidata": "",
         "codemeta": ""
     },
-    {
+    "rev": {
         "cran": "rev",
         "marc_term": "Reviewer",
         "wikidata": "P4032",
         "codemeta": ""
     },
-    {
+    "anl": {
         "cran": "anl",
         "marc_term": "Analyst",
         "wikidata": "",
         "codemeta": ""
     },
-    {
+    "ccp": {
         "cran": "ccp",
         "marc_term": "Conceptor",
         "wikidata": "",
         "codemeta": ""
     },
-    {
+    "res": {
         "cran": "res",
         "marc_term": "Researcher",
         "wikidata": "",
         "codemeta": ""
     }
-]
+}
