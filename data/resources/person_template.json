@@ -1,0 +1,20 @@
+{
+  "id": "",
+  "labels": "",
+  "descriptions": "",
+  "aliases": [
+  ],
+  "type": "item",
+  "claims": {
+    "P31": [
+      {
+        "value": {
+            "id": "Q5"
+        },
+        "datatype": "wikibase-item",
+        "references": [],
+        "qualifiers": {}
+      }
+    ]
+  }
+}
