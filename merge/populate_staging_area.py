@@ -194,6 +194,17 @@ class StagingArea(CommonArangoDB):
                 to_vertex_collections=['software']
             )
 
+    def init_entity_from_template(self, template="software"):
+        '''
+        Init an entity based on a template json present under resources/
+        '''
+        json_template = None
+        template_file = os.path.join("resources", template+"_template.json")
+        if not os.path.isfile(template_file): 
+            print("Error: template file does not exist for entity:", template)
+            return None
 
+        with open() as template_file:
+            json_template = json.loads(template_file)
 
-
+        return json_template
