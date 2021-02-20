@@ -11,6 +11,7 @@ from harvester import Harvester
 from arango import ArangoClient
 import re
 from import_common import process_r_author_field, clean_field, process_author_field, process_url_field, is_git_repo, process_boolean_field, process_maintainer_field
+from collections import OrderedDict
 
 base_url = "https://ropensci.r-universe.dev/"
 packages_path = "packages/"
@@ -78,6 +79,9 @@ class rOpenSci_harvester(Harvester):
             if jsonResultVersions == None:
                 continue
 
+            # sort by version number, descending
+            jsonResultVersions.sort(reverse=True)
+
             for packageVersion in jsonResultVersions:
                 # finally get the package version
                 package_version_url = packages_versions_url + "/" + packageVersion
@@ -99,10 +103,15 @@ class rOpenSci_harvester(Harvester):
                 # insert json document
                 package_json['_id'] = 'packages/' + package_json['_id']
                 if not self.packages.has(package_json['_id']):
-                    self.packages.insert(package_json)
+                    # for safety, check uniqueness of package name too (latestversion of each package comes first)
+                    cursor = self.packages.find({'Package': package_json["Package"]}, skip=0, limit=1)
+                    if cursor.count() == 0:
+                        self.packages.insert(package_json)
+                        # we only import the full record for the latest version
+                        break
 
     '''
-    not used
+    not used, we get it via the normal package input
     '''
     def import_maintainers(self, reset=False):
         if reset:
@@ -123,7 +132,7 @@ class rOpenSci_harvester(Harvester):
             self.maintainers.insert_document(maintainer_json)
 
     '''
-    not used
+    not used, we get it via the normal package input
     '''
     def import_package_descriptions(self):
         jsonResult = None
@@ -174,8 +183,10 @@ class rOpenSci_harvester(Harvester):
             to_be_removed = []
             for url in package_json['URL']:
                 if is_git_repo(url):
-                    package_json['git_repository'] = url
                     to_be_removed.append(url)
+                    if url.startswith("http://"):
+                        url = url.replace("http://", "https://")
+                    package_json['git_repository'] = url
                     continue
                 if url.startswith("https://docs.ropensci.org"):
                     package_json['Manual'] = url

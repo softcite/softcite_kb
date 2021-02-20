@@ -82,5 +82,11 @@
         "marc_term": "Researcher",
         "wikidata": "",
         "codemeta": ""
+    },
+    "dgs": {
+        "cran": "dgs",
+        "marc_term": "Degree supervisor",
+        "wikidata": "P184",
+        "codemeta": ""
     }
 }

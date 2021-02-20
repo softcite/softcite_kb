@@ -142,52 +142,68 @@ class StagingArea(CommonArangoDB):
 
 
     def reset(self):
+        # edge collections
+        if self.staging_graph.has_edge_collection('citations'):
+            self.staging_graph.delete_edge_definition('citations', purge=True)
+
+        if self.staging_graph.has_edge_collection('references'):
+            self.staging_graph.delete_edge_definition('references', purge=True)
+
+        if self.staging_graph.has_edge_collection('actors'):
+            self.staging_graph.delete_edge_definition('actors', purge=True)
+
+        if self.staging_graph.has_edge_collection('copyrights'):
+            self.staging_graph.delete_edge_definition('copyrights', purge=True)
+
+        if self.staging_graph.has_edge_collection('dependencies'):
+            self.staging_graph.delete_edge_definition('dependencies', purge=True)
+
         # vertex collections
-        self.staging_graph.delete_vertex_collection('software')
+        if self.staging_graph.has_vertex_collection('software'):
+            self.staging_graph.delete_vertex_collection('software', purge=True)
+
+        if self.staging_graph.has_vertex_collection('persons'):
+            self.staging_graph.delete_vertex_collection('persons', purge=True)
+
+        if self.staging_graph.has_vertex_collection('organizations'):
+            self.staging_graph.delete_vertex_collection('organizations', purge=True)
+
+        if self.staging_graph.has_vertex_collection('documents'):
+            self.staging_graph.delete_vertex_collection('documents', purge=True)
+
+        if self.staging_graph.has_vertex_collection('licenses'):
+            self.staging_graph.delete_vertex_collection('licenses', purge=True)
+
         self.software = self.staging_graph.create_vertex_collection('software')
-
-        self.staging_graph.delete_vertex_collection('persons')
         self.persons = self.staging_graph.create_vertex_collection('persons')
-
-        self.staging_graph.delete_vertex_collection('organizations')
         self.organizations = self.staging_graph.create_vertex_collection('organizations')
-        
-        self.staging_graph.delete_vertex_collection('documents')
         self.documents = self.staging_graph.create_vertex_collection('documents')
-
-        self.staging_graph.delete_vertex_collection('licenses')
         self.licenses = self.staging_graph.create_vertex_collection('licenses')
 
-        # edge collections
-        self.staging_graph.delete_edge_definition('citations', purge=True)
         self.citations = self.staging_graph.create_edge_definition(
                 edge_collection='citations',
                 from_vertex_collections=['documents'],
                 to_vertex_collections=['software']
             )
 
-        self.staging_graph.delete_edge_definition('references', purge=True)
         self.references = self.staging_graph.create_edge_definition(
                 edge_collection='references',
                 from_vertex_collections=['software', 'documents'],
                 to_vertex_collections=['software', 'documents']
             )
 
-        self.staging_graph.delete_edge_definition('actors', purge=True)
         self.actors = self.staging_graph.create_edge_definition(
                 edge_collection='actors',
                 from_vertex_collections=['persons'],
                 to_vertex_collections=['software', 'documents']
             )
 
-        self.staging_graph.delete_edge_definition('copyrights', purge=True)
         self.copyrights = self.staging_graph.create_edge_definition(
                 edge_collection='copyrights',
                 from_vertex_collections=['persons', 'organizations'],
                 to_vertex_collections=['software']
             )
 
-        self.staging_graph.delete_edge_definition('dependencies', purge=True)
         self.dependencies = self.staging_graph.create_edge_definition(
                 edge_collection='dependencies',
                 from_vertex_collections=['software'],
@@ -199,12 +215,12 @@ class StagingArea(CommonArangoDB):
         Init an entity based on a template json present under resources/
         '''
         json_template = None
-        template_file = os.path.join("resources", template+"_template.json")
+        template_file = os.path.join("data", "resources", template+"_template.json")
         if not os.path.isfile(template_file): 
             print("Error: template file does not exist for entity:", template)
             return None
 
-        with open() as template_file:
-            json_template = json.loads(template_file)
+        with open(template_file) as template_f:
+            json_template = json.load(template_f)
 
         return json_template

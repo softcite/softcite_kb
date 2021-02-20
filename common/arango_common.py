@@ -5,6 +5,7 @@
 import os
 import json
 from arango import ArangoClient
+import copy
 
 class CommonArangoDB(object):
 
@@ -134,3 +135,101 @@ class CommonArangoDB(object):
     def recover_naming_string(string):
         string = string.replace("%%", "/")
         return string
+
+
+    def aggregate_no_merge(entity1, entity2):
+        '''
+        Given two entities to be aggregated:
+
+        1) for statements, add the statements from the second entities as additional statements of the first 
+        entity, without any consideration of redundancy. Source information from the two entities are fully 
+        preserved in the statements.
+        
+        2) for non-statement fields, values of the second entities are added to the list in case of list
+        value, are added if value is None in the first entity, or ignored if already set in the first entity 
+        with non list value.
+
+        The aggregated entity is based on a deep copy of the first entity, which is thus not modified. 
+        '''
+        result = copy.deepcopy(entity1)
+        entity2_ = copy.deepcopy(entity2)
+
+        for key, value in entity2_.items():
+            if key == "aliases":
+                # append alias if not already there 
+                if not "aliases" in result:
+                    result["aliases"] = []
+                for alias in value:
+                    if not "aliases" in entity1 or entity1["aliases"].find(alias) == -1:
+                        result["aliases"].append(alias)
+            elif key == "summary":
+                # only add summary if missing... we might want to manage multiple summaries in the future
+                if not "summary" in entity1:
+                    result["summary"] = value
+            elif key == "descriptions":
+                # only add description if missing... we might want to manage multiple description in the future
+                if not "descriptions" in entity1:
+                    result["descriptions"] = value
+            elif key == "claims":
+                for the_property, claim in entity2_[key].items():
+                    # do we have this property in the first entity ? 
+                    if the_property in entity1["claims"]:
+                        # if yes add the value to the property entry
+                        result["claims"][the_property].append(claim)
+                    else:
+                        # if no just append it to the claims
+                        result["claims"][the_property] = claim
+        return result
+
+
+    def aggregate_with_merge(entity1, entity2):
+        '''
+        Given two entities to be aggregated, 
+
+        1) for statements, add the statements from the second entities as additional statements of the first 
+        entity if the prperty value is not present. If present/redundant attribute/value, simply add the 
+        the source information from the second entities in this statement.
+        
+        2) for non-statement fields, values of the second entities are added to the list in case of list
+        value, are added if value is None in the first entity, or ignored if already set in the first entity 
+        with non list value.
+
+        The aggregated entity is based on a deep copy of the first entity, which is thus not modified. 
+        '''
+        result = copy.deepcopy(entity1)
+        entity2_ = copy.deepcopy(entity2)
+
+        for key, value in entity2_.items():
+            if key == "aliases":
+                # append alias if not already there 
+                if not "aliases" in result:
+                    result["aliases"] = []
+                for alias in value:
+                    if not "aliases" in entity1 or entity1["aliases"].find(alias) == -1:
+                        result["aliases"].append(alias)
+            elif key == "summary":
+                # only add summary if missing... we might want to manage multiple summaries in the future
+                if not "summary" in entity1:
+                    result["summary"] = value
+            elif key == "descriptions":
+                # only add description if missing... we might want to manage multiple description in the future
+                if not "descriptions" in entity1:
+                    result["descriptions"] = value
+            elif key == "claims":
+                for the_property, claim in entity2_[key].items():
+                    # do we have this property in the first entity ? 
+                    if the_property in entity1["claims"]:
+                        # check if the value are identical by comparing value and data type
+                        for the_value in entity1["claims"][the_property]:
+                            local_value = the_value["value"]
+                            local_datatype = the_value["datatype"]
+
+                            # if yes add we simply add the provenance information the property entry
+
+                            # if no add the value to the property entry
+                            result["claims"][the_property].append(claim)
+                    else:
+                        # if no just append it to the claims
+                        result["claims"][the_property] = claim
+        return result
+

@@ -118,8 +118,10 @@ class cran_harvester(Harvester):
                         to_be_removed = []
                         for url in json_package['URL']:
                             if is_git_repo(url):
-                                json_package['git_repository'] = url
                                 to_be_removed.append(url)
+                                if url.startswith("http://"):
+                                    url = url.replace("http://", "https://")
+                                json_package['git_repository'] = url
                                 break
                         if to_be_removed != None:
                             for one_to_be_removed in to_be_removed:

@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 orcid_pattern = r'([0-9]{4}\-[0-9]{4}\-[0-9]{4}\-[0-9]{3}[a-zA-Z0-9])'
 regex_orcid = re.compile(orcid_pattern)
 
-repo_patterns = ["https://github.com/", "https://gitlab.com/", "https://bitbucket.org/", "https://sourceforge.net/projects/"]
+repo_patterns = ["https://github.com/", "https://github.com/", "https://gitlab.com/", "https://bitbucket.org/", "https://sourceforge.net/projects/"]
 
 def is_git_repo(url):
     for repo in repo_patterns:
@@ -170,6 +170,8 @@ def process_author_field(author_field):
                 subpieces = piece[pos+1:pos2].split(",")
                 roles = []
                 for subpiece in subpieces:
+                    if subpiece.endswith(")"):
+                        subpiece = subpiece[:-1]
                     roles.append(subpiece.strip(" \""))
                 if len(roles)>0:
                     person["roles"] = roles
