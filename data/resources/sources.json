@@ -1,0 +1,24 @@
+{
+    "wikidata": { 
+        "wikidata": "Q2013", 
+        "term": "wikidata"
+    },
+    "cran": {
+        "wikidata": "P5565",
+        "term": "cran"
+    },
+    "ropensci": { 
+        "term": "rOpenSci"
+    },
+    "grobid": {
+        "wikidata": "Q62830627",
+        "term": "GROBID"
+    },
+    "software-mentions": {
+        "term": "software-mentions",
+    },
+    "github": {
+        "wikidata": "Q364",
+        "term": "GitHub"
+    }
+}
