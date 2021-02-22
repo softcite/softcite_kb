@@ -210,7 +210,7 @@ class StagingArea(CommonArangoDB):
                 to_vertex_collections=['software']
             )
 
-    def init_entity_from_template(self, template="software"):
+    def init_entity_from_template(self, template="software", source=None):
         '''
         Init an entity based on a template json present under resources/
         '''
@@ -221,6 +221,10 @@ class StagingArea(CommonArangoDB):
             return None
 
         with open(template_file) as template_f:
-            json_template = json.load(template_f)
+            json_template_string = template_f.read()
+            if not source is None:
+                json_template_string = json_template_string.replace('[]', '[' + json.dumps(source) + ']')
+
+            json_template = json.loads(json_template_string)
 
         return json_template
