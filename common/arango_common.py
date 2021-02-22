@@ -13,6 +13,9 @@ class CommonArangoDB(object):
     client = None
     cache = None
 
+    # mapping for the source/provenance information
+    sources = None
+
     # naming is a common key-value store to map Wikidata identifiers to canonical strings
     # for readability purposes 
     naming_wikidata = None
@@ -36,6 +39,14 @@ class CommonArangoDB(object):
             self.sys_db = self.client.db('_system', username=self.config['arango_user'], password=self.config['arango_pwd'])
         except:
             print('Connection to ArangoDb failed')
+
+        source_path = os.path.join("data", "resources", "sources.json")
+        if os.path.isfile(source_path):
+            with open(source_path) as f_source:
+                self.sources = json.load(f_source)
+        else:
+            print('Source description json file not found:', source_path)
+        
 
     def validate_arangodb_conn_params(self):
         valid_conn_params = True
@@ -137,7 +148,7 @@ class CommonArangoDB(object):
         return string
 
 
-    def aggregate_no_merge(entity1, entity2):
+    def aggregate_no_merge(self, entity1, entity2):
         '''
         Given two entities to be aggregated:
 
@@ -182,7 +193,7 @@ class CommonArangoDB(object):
         return result
 
 
-    def aggregate_with_merge(entity1, entity2):
+    def aggregate_with_merge(self, entity1, entity2):
         '''
         Given two entities to be aggregated, 
 
@@ -219,13 +230,29 @@ class CommonArangoDB(object):
                 for the_property, claim in entity2_[key].items():
                     # do we have this property in the first entity ? 
                     if the_property in entity1["claims"]:
+                        local_merge = False
                         # check if the value are identical by comparing value and data type
-                        for the_value in entity1["claims"][the_property]:
+                        for the_value in result["claims"][the_property]:
                             local_value = the_value["value"]
                             local_datatype = the_value["datatype"]
 
-                            # if yes add we simply add the provenance information the property entry
+                            for the_value2 in entity2["claims"][the_property]:
+                                local_value2 = the_value2["value"]
+                                local_datatype2 = the_value2["datatype"]
 
+                                if local_value == local_value2 and local_datatype == local_datatype2:
+                                    # if yes add we simply add the provenance information the property entry
+                                    if not "references" in the_value:
+                                        the_value["references"] = []
+                                    sources_to_add = the_value2["references"]
+                                    for source_to_add in sources_to_add:
+                                        the_value["references"].append(source_to_add)
+                                    local_merge = True
+                                    break
+                            if local_merge:
+                                break
+
+                        if not local_merge:
                             # if no add the value to the property entry
                             result["claims"][the_property].append(claim)
                     else:
@@ -233,3 +260,17 @@ class CommonArangoDB(object):
                         result["claims"][the_property] = claim
         return result
 
+    def get_source(self, database_name):
+        '''
+        Return source information (provenance) json fragment to be added in the list reference 
+        '''
+        source = {}
+        local_value = {}
+        if "wikidata" in self.sources[database_name]:
+            local_value["value"] = self.sources[database_name]["wikidata"]
+            local_value["datatype"] = "wikibase-item"
+        else:
+            local_value["value"] = self.sources[database_name]["term"]
+            local_value["datatype"] = "string"
+        source["P248"] = local_value
+        return source

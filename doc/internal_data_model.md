@@ -14,9 +14,73 @@ From this internal representation, data are then exported by the Knowledge Base 
 
 - Wikidata standard JSON serialization format 
 
+## Keeping track of source information 
+
+Following the Wikidata schema, the different information coming from a particular source about a software are represented as claims. We exploit the list references associated to each claim for representing the source of the information (aka its provenance). We use the property "stated in" (`P248`) to introduce the origin of the atomic information, with value either as Wikidata item or string if the source is not represented in Wikidata. 
+
+For example, the provenance of the following claim about the developer of a software is CRAN (`Q2086703`):
+
+
+```json
+"claims": {
+    "P178": [
+        {
+            "id": "Q153844$40995A01-4DD7-4046-8DA0-4BA30A1E97FB",
+            "references": [ 
+                {
+                    "P248": {
+                        "value": {
+                            "id": "Q2086703"
+                        },
+                        "datatype": "wikibase-item"
+                    } 
+                }
+            ],
+            "qualifiers": { ... },
+            "value": {
+                  "id": "Q1668008"
+            },
+            "datatype": "wikibase-item"
+        }
+    ]
+}
+```
+
+In case the source has no Wikidata item, we use a string value, for instance if the same claim comes from rOpenSci metadata:
+
+```json
+"claims": {
+    "P178": [
+        {
+            "id": "Q153844$40995A01-4DD7-4046-8DA0-4BA30A1E97FB",
+            "references": [ 
+                {
+                    "P248": {
+                        "value": "rOpenSci",
+                        "datatype": "string"
+                    } 
+                }
+            ],
+            "qualifiers": { ... },
+            "value": {
+                  "id": "Q1668008"
+            },
+            "datatype": "wikibase-item"
+        }
+    ]
+}
+```
+
+
+
+## Representing scholar mentions in context
+
+In the case of a mention in a publication, extracted via text mining, we express the citation as a relation (edge property) using "quoted by" (`Q66204407`), relating a software and a document. The property is enriched with several property/values pairs in the associated qualifier list to further describe the mention: mention text context, PDF coordinates, etc. In this case the source information of the relation is the text mining software which has extracted the mention.
+
+
 ## Simplification of Wikidata schema
 
-Given the nature of the research software information, we applied the following simplification to the original Wikidata data schema:
+One of the issue with Wikidata is the systematic usage of item and property identifiers, obfuscating the representation. To make the data representation more readable and easier to work with, and given the nature of the research software information, we applied the following simplification to the original Wikidata data schema:
 
 - Only English is considered, so all multilingual levels of information are removed. 
 
@@ -66,15 +130,13 @@ The exported data in Wikidata format re-introduces the original JSON format, the
 
 We introduce the following additional data fields to better accomodate probabilistic and scoring information at the level of statements:
 
-- Probabilistic scoring attached to statements sharing the same Property value. 
-
-- Confidence score attached to every statements.
+- Confidence score attached to every statements between 0 and 1, which can be interpretated as the likelyhood that the claim is currently correct with respect to the ;atest version of the software or package. This is a certainty score, which can be produced by different scoring methods, and the particular method used to produced it must be described in the qualifier field. 
 
 To better represent usage statistics, we introduce an additional set of properties specific to this Knowledge Base. Usage statistics are a set of numerical information imported from the data source when available. They are specific to software entities and expressed as statements too, with the following additional properties:
 
 - download: number of downloads of the software or library
 
-- endorsement: number of user endorsemnents for the software or library, for instance number of stars on GitHub
+- endorsement: number of user endorsemnents for the software or library, for instance number of "stars" on GitHub
 
 - fork: total number of fork of the software or library
 

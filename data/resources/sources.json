@@ -1,21 +1,24 @@
 {
     "wikidata": { 
         "wikidata": "Q2013", 
-        "term": "wikidata"
+        "term": "Wikidata"
     },
-    "cran": {
-        "wikidata": "P5565",
-        "term": "cran"
+    "CRAN": {
+        "wikidata": "Q2086703",
+        "term": "CRAN",
+        "property": "P5565"
     },
-    "ropensci": { 
-        "term": "rOpenSci"
+    "rOpenSci": { 
+        "term": "rOpenSci",
+        "property": "PA1"
     },
     "grobid": {
         "wikidata": "Q62830627",
         "term": "GROBID"
     },
-    "software-mentions": {
+    "mentions": {
         "term": "software-mentions",
+        "property": "PA0"
     },
     "github": {
         "wikidata": "Q364",
