@@ -114,15 +114,21 @@ class CommonArangoDB(object):
             return
 
         # check string uniqueness
-        if string in self.naming_reverse_wikidata:
-            raise Exception("error adding Wikidata ID mapping: the target string is not unique")
+        try:
+            if string in self.naming_reverse_wikidata:
+                raise Exception("error adding Wikidata ID mapping: the target string is not unique")
+        except:
+            print("Invalid the target string key:", string)
 
         if wikidata_id in self.naming_wikidata:
             self.naming_wikidata[wikidata_id] = string
         else:
             self.naming_wikidata.insert({wikidata_id: string})
 
-        self.naming_reverse_wikidata.insert({string:wikidata_id})
+        try:
+            self.naming_reverse_wikidata.insert({string:wikidata_id})
+        except:
+            print("Invalid the target string key:", string)    
 
     def remove_naming_wikidata(self, wikidata_id):
         if not wikidata_id in self.naming_wikidata:
@@ -190,6 +196,10 @@ class CommonArangoDB(object):
                     else:
                         # if no just append it to the claims
                         result["claims"][the_property] = claim
+            elif key.startswith("index_"):
+                # have an index field that we can copy if not present in the first entity
+                if not key in entity1:
+                    result[key] = value
         return result
 
 
@@ -258,6 +268,10 @@ class CommonArangoDB(object):
                     else:
                         # if no just append it to the claims
                         result["claims"][the_property] = claim
+            elif key.startswith("index_"):
+                # have an index field that we can copy if not present in the first entity
+                if not key in entity1:
+                    result[key] = value
         return result
 
     def get_source(self, database_name):

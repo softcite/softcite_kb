@@ -221,10 +221,14 @@ def process_url_field(url_field):
     for piece in pieces:
         piece = piece.strip()
 
-        if piece.startswith("<a"):
-            soup = BeautifulSoup(piece, "lxml")
-            piece = soup.text
-        urls.append(piece)
+        subpieces = piece.split(",")
+        for subpiece in subpieces:
+            subpiece = subpiece.strip()
+
+            if subpiece.startswith("<a"):
+                soup = BeautifulSoup(subpiece, "lxml")
+                subpiece = soup.text
+            urls.append(subpiece)
 
     return urls
 

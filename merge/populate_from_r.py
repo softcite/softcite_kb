@@ -306,6 +306,7 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
         local_value["references"].append(source_ref)
         person["claims"]["P496"] = []
         person["claims"]["P496"].append(local_value)
+        person["index_orcid"] = author['orcid']
 
     if 'email' in author:
         # P968
@@ -320,12 +321,23 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
     # github identifier P2037
     # Google Scholar author ID P1960
 
-    # if only full_name is available, we need grobid to further parse the name
-    size = stagingArea.persons.count()
-    person["_key"] = "_" + str(size+1)
-    person["_id"] = "persons/" + person["_key"]
+    # if only full_name is available, we will need grobid to further parse the name
 
-    stagingArea.staging_graph.insert_vertex("persons", person)
+    # check orcid duplicate
+    matched_person = None
+    if 'orcid' in author:
+        cursor = stagingArea.persons.find({'index_orcid': author['orcid']}, skip=0, limit=1)
+        if cursor.count()>0:
+            matched_person = cursor.next()
+
+    if matched_person != None:
+        person = stagingArea.aggregate_with_merge(matched_person, person)
+        stagingArea.staging_graph.update_vertex(person)
+    else:
+        size = stagingArea.persons.count()
+        person["_key"] = "_" + str(size+1)
+        person["_id"] = "persons/" + person["_key"]
+        stagingArea.staging_graph.insert_vertex("persons", person)
 
     if "role" in author and isinstance(author["role"], str):
         author["role"] = [ author["role"] ]

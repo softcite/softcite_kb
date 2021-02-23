@@ -17,11 +17,10 @@ def populate(stagingArea):
         print("wikidata import database does not exist: you need to first import Wikidata resources")
 
     stagingArea.db = stagingArea.client.db(database_name_wikidata, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
-    entities = stagingArea.db.collection('software')
 
     populate_wikidata(stagingArea, entities, stagingArea.get_source(database_name_wikidata))
 
-def populate_wikidata(stagingArea, collection, source_ref):
+def populate_wikidata(stagingArea, source_ref):
     '''
     Adding Wikidata resources is straightforward, being already in the right format, but 
     we add the reference source information, and do some direct aggregation based on the explicit 
@@ -71,3 +70,86 @@ def populate_wikidata(stagingArea, collection, source_ref):
         else:
             if not stagingArea.staging_graph.has_vertex(software["_id"]):
                 stagingArea.staging_graph.insert_vertex("software", software)
+
+    cursor = stagingArea.db.aql.execute(
+      'FOR doc IN licences RETURN doc', ttl=1000
+    )
+
+    for licence in cursor:
+        # licenses are part of a vertex collection, they will be put in relation to work (software)
+        # via the edge relation "copyrights"
+        
+        if "claims" in licence:
+            for key, values in licence["claims"].items():
+                # insert source reference
+                for value in values:
+                    if not "references" in value:
+                        value["references"] = []
+                    value["references"].append(source_ref)
+
+        if not stagingArea.staging_graph.has_vertex(license["_id"]):
+                stagingArea.staging_graph.insert_vertex("licenses", license)
+
+    cursor = stagingArea.db.aql.execute(
+      'FOR doc IN organizations RETURN doc', ttl=1000
+    )
+
+    for organization in cursor:
+        if "claims" in organization:
+            for key, values in organization["claims"].items():
+                # insert source reference
+                for value in values:
+                    if not "references" in value:
+                        value["references"] = []
+                    value["references"].append(source_ref)
+
+        if not stagingArea.staging_graph.has_vertex(organization["_id"]):
+                stagingArea.staging_graph.insert_vertex("organizations", organization)
+
+    cursor = stagingArea.db.aql.execute(
+      'FOR doc IN publications RETURN doc', ttl=1000
+    )
+
+    for publication in cursor:
+        if "claims" in publication:
+            for key, values in publication["claims"].items():
+                # insert source reference
+                for value in values:
+                    if not "references" in value:
+                        value["references"] = []
+                    value["references"].append(source_ref)
+
+        if not stagingArea.staging_graph.has_vertex(publication["_id"]):
+                stagingArea.staging_graph.insert_vertex("publications", publication)
+
+    cursor = stagingArea.db.aql.execute(
+      'FOR doc IN persons RETURN doc', ttl=1000
+    )
+
+    for person in cursor:
+        # for persons we match based on orcid at this stage, because it is an explicit
+        # strong identifier
+
+        matched_person = none
+        if "claims" in publication:
+            for key, values in publication["claims"].items():
+                # insert source reference
+                for value in values:
+                    if not "references" in value:
+                        value["references"] = []
+                    value["references"].append(source_ref)
+
+                if key == 'P496':
+                    # orcid
+                    for value in values:
+                        orcid = value["value"]
+                        # try a look-up
+                        cursor = stagingArea.persons.find({'index_orcid': orcid}, skip=0, limit=1)
+                        if cursor.count()>0:
+                            matched_person = cursor.next()
+        if matched_person is None:
+            if not stagingArea.staging_graph.has_vertex(person["_id"]):
+                stagingArea.staging_graph.insert_vertex("persons", person)
+        else:
+            person = stagingArea.aggregate_with_merge(matched_person, person)
+            stagingArea.staging_graph.update_vertex(person)

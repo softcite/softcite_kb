@@ -76,6 +76,8 @@ class StagingArea(CommonArangoDB):
 
         if not self.staging_graph.has_vertex_collection('persons'):
             self.persons = self.staging_graph.create_vertex_collection('persons')
+            # we add a hash index on the orcid identifier
+            self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True)
         else:
             self.persons = self.staging_graph.vertex_collection('persons')
 
@@ -176,6 +178,7 @@ class StagingArea(CommonArangoDB):
 
         self.software = self.staging_graph.create_vertex_collection('software')
         self.persons = self.staging_graph.create_vertex_collection('persons')
+        self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True)
         self.organizations = self.staging_graph.create_vertex_collection('organizations')
         self.documents = self.staging_graph.create_vertex_collection('documents')
         self.licenses = self.staging_graph.create_vertex_collection('licenses')
