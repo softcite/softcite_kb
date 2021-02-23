@@ -176,7 +176,7 @@ class Wikidata_harvester(Harvester):
         """
         Check that the entity is the expected list of license
         """
-        if jsonEntity["id"] in self.license_list:
+        if jsonEntity["id"] in self.licenses_list:
             return True
         else:
             return False 
@@ -322,25 +322,25 @@ class Wikidata_harvester(Harvester):
 
     def write_extra_entity_lists(self):
         # person
-        person_path = os.path.join("resources", "data", "persons.wikidata.entities")
+        person_path = os.path.join("data", "resources", "persons.wikidata.entities")
         with open(person_path, "w") as person_file:
             for person in self.persons_list:
                 person_file.write(person)
                 person_file.write("\n")
         # license
-        license_path = os.path.join("resources", "data", "licenses.wikidata.entities")
+        license_path = os.path.join("data", "resources", "licenses.wikidata.entities")
         with open(license_path, "w") as license_file:
             for license in self.licenses_list:
                 license_file.write(license)
                 license_file.write("\n")
         # organization
-        organization_path = os.path.join("resources", "data", "organizations.wikidata.entities")
+        organization_path = os.path.join("data", "resources", "organizations.wikidata.entities")
         with open(organization_path, "w") as organization_file:
             for organization in self.organizations_list:
                 organization_file.write(organization)
                 organization_file.write("\n")
         # publication
-        publication_path = os.path.join("resources", "data", "publications.wikidata.entities")
+        publication_path = os.path.join("data", "resources", "publications.wikidata.entities")
         with open(publication_path, "w") as publication_file:
             for publication in self.publications_list:
                 publication_file.write(publication)
@@ -348,7 +348,7 @@ class Wikidata_harvester(Harvester):
 
     def load_extra_entity_list(self):
         # person
-        person_path = os.path.join("resources", "data", "persons.wikidata.entities")
+        person_path = os.path.join("data", "resources", "persons.wikidata.entities")
         if os.path.isfile(person_path):
             self.persons_list = []
             with open(person_path) as person_file:
@@ -356,16 +356,16 @@ class Wikidata_harvester(Harvester):
                     line = line.strip()
                     self.persons_list.append(line)
         # license
-        license_path = os.path.join("resources", "data", "licenses.wikidata.entities")
+        license_path = os.path.join("data", "resources", "licenses.wikidata.entities")
         if os.path.isfile(license_path):
-            self.licenses = []
+            self.licenses_list = []
             with open(license_path) as license_file:
                 for line in license_file.readlines():
                     line = line.strip()
                     self.licenses_list.append(line)
 
         # organization
-        organization_path = os.path.join("resources", "data", "organizations.wikidata.entities")
+        organization_path = os.path.join("data", "resources", "organizations.wikidata.entities")
         if os.path.isfile(organization_path):
             self.organizations_list = []
             with open(organization_path) as organization_file:
@@ -374,7 +374,7 @@ class Wikidata_harvester(Harvester):
                     self.organizations_list.append(line)
 
         # publication
-        publication_path = os.path.join("resources", "data", "publications.wikidata.entities")
+        publication_path = os.path.join("data", "resources", "publications.wikidata.entities")
         if os.path.isfile(publication_path):
             self.publications_list = []
             with open(publication_path) as publication_file:
@@ -382,7 +382,7 @@ class Wikidata_harvester(Harvester):
                     line = line.strip()
                     self.publications_list.append(line)
 
-    def import_extra_entities(self):
+    def import_extra_entities(self, jsonWikidataDumpPath, reset=False):
         '''
         We make an extra pass in the Wikidata dump (slow but it should be normally done rarely)
         '''
@@ -427,32 +427,28 @@ class Wikidata_harvester(Harvester):
 
                 if not entityJson is None:
                     # first rough filtering
-                    if entityJson["id"] in persons_list or entityJson["id"] in licenses_list or entityJson["id"] in organizations_list or entityJson["id"] in publications_list:
+                    if entityJson["id"] in self.persons_list or entityJson["id"] in self.licenses_list or entityJson["id"] in self.organizations_list or entityJson["id"] in self.publications_list:
                         entityJson = self._simplify(entityJson)
 
                         if self._valid_person(entityJson):
-                            entityJson = self._simplify(entityJson)
                             # store entity in arangodb as document
                             local_id = entityJson['id']
                             if not self.persons.has(local_id):
                                 entityJson['_id'] = 'persons/' + local_id
                                 self.persons.insert(entityJson)
                         elif self._valid_license(entityJson):
-                            entityJson = self._simplify(entityJson)
                             # store entity in arangodb as document
                             local_id = entityJson['id']
                             if not self.licenses.has(local_id):
                                 entityJson['_id'] = 'licenses/' + local_id
-                                self.licences.insert(entityJson)
+                                self.licenses.insert(entityJson)
                         elif self._valid_organization(entityJson):
-                            entityJson = self._simplify(entityJson)
                             # store entity in arangodb as document
                             local_id = entityJson['id']
                             if not self.organizations.has(local_id):
                                 entityJson['_id'] = 'organizations/' + local_id
                                 self.organizations.insert(entityJson)        
                         elif self._valid_publication(entityJson):
-                            entityJson = self._simplify(entityJson)
                             # store entity in arangodb as document
                             local_id = entityJson['id']
                             if not self.publications.has(local_id):
@@ -460,8 +456,6 @@ class Wikidata_harvester(Harvester):
                                 self.publications.insert(entityJson)        
 
                 
-
-
 def _replace_element(jsonEntity, element, lang):
     if element in jsonEntity:
         if lang in jsonEntity[element]:
