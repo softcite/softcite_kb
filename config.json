@@ -5,5 +5,15 @@
     "arango_user": "root",
     "arango_pwd": "root",
     "tmp_path": "./tmp/",
-    "api_port": 8080
+    "api_port": 8080,
+    "biblio_glutton_host": "cloud.science-miner.com/glutton",
+    "biblio_glutton_protocol": "https",
+    "biblio_glutton_port": "",
+    "grobid_host": "cloud.science-miner.com/grobid",
+    "grobid_protocol": "https",
+    "grobid_port": "",
+    "crossref_base": "https://api.crossref.org",
+    "crossref_email": "",
+    "unpaywall_base": "http://api.unpaywall.org/v2/",
+    "unpaywall_email": ""
 }
