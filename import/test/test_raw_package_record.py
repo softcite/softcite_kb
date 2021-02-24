@@ -4,7 +4,7 @@ import sys
 sys.path.append('.')
 sys.path.append('..')
 
-from populate.cran_import import _convert_raw_package_record, convert_reference_information 
+from cran_import import _convert_raw_package_record, convert_reference_information 
 
 # CRAN package metadata page
 

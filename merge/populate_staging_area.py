@@ -35,6 +35,7 @@ import json
 from arango import ArangoClient
 sys.path.append(os.path.abspath('./common'))
 from arango_common import CommonArangoDB
+import requests 
 
 class StagingArea(CommonArangoDB):
 
@@ -259,7 +260,7 @@ class StagingArea(CommonArangoDB):
         if available, return the full agregated biblio_glutton record
         If it's not woring, we use crossref API as fallback, with the idea of covering possible coverage gap in biblio-glutton. 
         """
-        biblio_glutton_url = _biblio_glutton_url(self.config["biblio_glutton_base"], self.config["biblio_glutton_port"])
+        biblio_glutton_url = _biblio_glutton_url(self.config["biblio_glutton_protocol"], self.config["biblio_glutton_host"], self.config["biblio_glutton_port"])
         success = False
         jsonResult = None
 
@@ -332,7 +333,7 @@ class StagingArea(CommonArangoDB):
             user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
                 + self.config['crossref_email'] + ')'} 
             params = { "query.bibliographic": raw_ref }
-            response = requests.get(self.config['crossref_base']+"/works/"+, params=params, headers=user_agent)
+            response = requests.get(self.config['crossref_base']+"/works/", params=params, headers=user_agent)
             if response.status_code == 200:
                 jsonResult = response.json()['message']
                 # filter out references and re-set doi, in case there are obtained via crossref
@@ -408,19 +409,18 @@ class StagingArea(CommonArangoDB):
                         res_format_ref = res_format_ref.replace("}", "")
 
                         # we can call biblio-glutton with the available information
-                        print(res_format_ref)
                         glutton_biblio = self.biblio_glutton_lookup(raw_ref=res_format_ref, title=local_title, first_author_last_name=first_author_last_name)
-
 
             if "raw" in reference:
                 # this can be sent to biblio-glutton
                 res_format_ref = reference["raw"]
-
+                glutton_biblio = stagingArea.biblio_glutton_lookup(raw_ref=reference["raw"])
 
 
         return entity
 
-def _biblio_glutton_url(biblio_glutton_base, biblio_glutton_port):
+def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glutton_port):
+    biblio_glutton_base = biblio_glutton_protocol + "://" + biblio_glutton_host
     if biblio_glutton_base.endswith("/"):
         res = biblio_glutton_base[:-1]
     else: 
@@ -429,8 +429,10 @@ def _biblio_glutton_url(biblio_glutton_base, biblio_glutton_port):
         res += ":"+biblio_glutton_port
     return res+"/service/lookup?"
 
-def _grobid_url(grobid_base, grobid_port):
-    the_url = 'http://'+grobid_base
+def _grobid_url(grobid_protocol, grobid_url, grobid_port):
+    the_url = grobid_protocol + "://" + grobid_base
+    if the_url.endswith("/"):
+        the_url = the_url[:-1]
     if grobid_port is not None and len(grobid_port)>0:
         the_url += ":"+grobid_port
     the_url += "/api/"
