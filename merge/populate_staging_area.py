@@ -20,6 +20,7 @@ A graph structure is built on top of these vertex collections, with the followin
   property relations
 - copyrights: for any explicit copyright relationship between a creative work, creators and organization and a license
 - dependencies: software dependencies
+- funding: relation between a work and a funding organization
 
 The staging area graph is then populated with method specific from the sources of imported documents, projecting 
 the relevant information into the common graph, with additional data transformation if necessary:
@@ -50,6 +51,7 @@ class StagingArea(CommonArangoDB):
     actors = None
     copyrights = None
     dependencies = None
+    funding = None
 
     database_name = "staging"
     graph_name = "staging_graph"
@@ -142,6 +144,15 @@ class StagingArea(CommonArangoDB):
         else:
             self.dependencies = self.staging_graph.edge_collection('dependencies')
 
+        if not self.staging_graph.has_edge_collection('funding'):
+            self.funding = self.staging_graph.create_edge_definition(
+                edge_collection='funding',
+                from_vertex_collections=['software', "documents"],
+                to_vertex_collections=['organizations']
+            )
+        else:
+            self.funding = self.staging_graph.edge_collection('funding')
+
 
     def reset(self):
         # edge collections
@@ -159,6 +170,9 @@ class StagingArea(CommonArangoDB):
 
         if self.staging_graph.has_edge_collection('dependencies'):
             self.staging_graph.delete_edge_definition('dependencies', purge=True)
+
+        if self.staging_graph.has_edge_collection('funding'):
+            self.staging_graph.delete_edge_definition('funding', purge=True)
 
         # vertex collections
         if self.staging_graph.has_vertex_collection('software'):
@@ -213,6 +227,12 @@ class StagingArea(CommonArangoDB):
                 to_vertex_collections=['software']
             )
 
+        self.funding = self.staging_graph.create_edge_definition(
+                edge_collection='funding',
+                from_vertex_collections=['software', "documents"],
+                to_vertex_collections=['organizations']
+            )
+
     def init_entity_from_template(self, template="software", source=None):
         '''
         Init an entity based on a template json present under resources/
@@ -231,3 +251,187 @@ class StagingArea(CommonArangoDB):
             json_template = json.loads(json_template_string)
 
         return json_template
+
+
+    def biblio_glutton_lookup(self, doi=None, pmcid=None, pmid=None, istex_id=None, raw_ref=None, title=None, first_author_last_name=None):
+        """
+        Lookup on biblio-glutton with the provided strong identifiers or the raw string and author/title information
+        if available, return the full agregated biblio_glutton record
+        If it's not woring, we use crossref API as fallback, with the idea of covering possible coverage gap in biblio-glutton. 
+        """
+        biblio_glutton_url = _biblio_glutton_url(self.config["biblio_glutton_base"], self.config["biblio_glutton_port"])
+        success = False
+        jsonResult = None
+
+        # we first call biblio-glutton with "strong" identifiers
+        if doi is not None and len(doi)>0:
+            response = requests.get(biblio_glutton_url, params={'doi': doi})
+            success = (response.status_code == 200)
+            if success:
+                jsonResult = response.json()
+
+        if not success and pmid is not None and len(pmid)>0:
+            response = requests.get(biblio_glutton_url + "pmid=" + pmid)
+            success = (response.status_code == 200)
+            if success:
+                jsonResult = response.json()     
+
+        if not success and pmcid is not None and len(pmcid)>0:
+            response = requests.get(biblio_glutton_url + "pmc=" + pmcid)  
+            success = (response.status_code == 200)
+            if success:
+                jsonResult = response.json()
+
+        if not success and istex_id is not None and len(istex_id)>0:
+            response = requests.get(biblio_glutton_url + "istexid=" + istex_id)
+            success = (response.status_code == 200)
+            if success:
+                jsonResult = response.json()
+        
+        if not success and doi is not None and len(doi)>0:
+            # let's call crossref as fallback for the X-months gap
+            # https://api.crossref.org/works/10.1037/0003-066X.59.1.29
+            user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
+                + self.config['crossref_email'] + ')'} 
+            response = requests.get(self.config['crossref_base']+"/works/"+doi, headers=user_agent)
+            if response.status_code == 200:
+                jsonResult = response.json()['message']
+                # filter out references and re-set doi, in case there are obtained via crossref
+                if "reference" in jsonResult:
+                    del jsonResult["reference"]
+            else:
+                success = False
+                jsonResult = None
+
+        if not success and first_author_last_name!= None and title != None:
+            if raw_ref != None:
+                # call to biblio-glutton with combined raw ref, title and last author first name
+                params = {"biblio": raw_ref, "atitle": title, "firstAuthor": first_author_last_name}
+                response = requests.post(biblio_glutton_url, data=params)  
+                success = (response.status_code == 200)
+                if success:
+                    jsonResult = response.json()
+            else:
+                # call to biblio-glutton with only title and last author first name
+                params = {"atitle": title, "firstAuthor": first_author_last_name}
+                response = requests.get(biblio_glutton_url, params=params)
+                success = (response.status_code == 200)
+                if success:
+                    jsonResult = response.json()
+
+        if not success and raw_ref != None:
+            # call to biblio-glutton with only raw ref
+            params = {"biblio": raw_ref}
+            response = requests.post(biblio_glutton_url, data=params)  
+            success = (response.status_code == 200)
+            if success:
+                jsonResult = response.json()
+
+        if not success and raw_ref != None:
+            # fallback for raw reference with CrossRef
+            user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
+                + self.config['crossref_email'] + ')'} 
+            params = { "query.bibliographic": raw_ref }
+            response = requests.get(self.config['crossref_base']+"/works/"+, params=params, headers=user_agent)
+            if response.status_code == 200:
+                jsonResult = response.json()['message']
+                # filter out references and re-set doi, in case there are obtained via crossref
+                if "reference" in jsonResult:
+                    del jsonResult["reference"]
+            else:
+                success = False
+                jsonResult = None
+
+        return jsonResult
+
+    def unpaywalling_doi(self, doi):
+        """
+        Check the Open Access availability of the DOI via Unpaywall, return the best download URL or None otherwise.
+        We need to use the Unpaywall API to get fresh information, because biblio-glutton is based on the 
+        Unpaywall dataset dump which has a 7-months gap.
+        """
+        response = requests.get(self.config["unpaywall_base"] + doi, params={'email': self.config["unpaywall_email"]}).json()
+        if response['best_oa_location'] and response['best_oa_location']['url_for_pdf']:
+            return response['best_oa_location']['url_for_pdf']
+        elif response['best_oa_location']['url'].startswith(self.config['pmc_base_web']):
+            return response['best_oa_location']['url']+"/pdf/"
+        # we have a look at the other "oa_locations", which might have a `url_for_pdf` ('best_oa_location' has not always a 
+        # `url_for_pdf`, for example for Elsevier OA articles)
+        for other_oa_location in response['oa_locations']:
+            # for a PMC file, we can concatenate /pdf/ to the base, eg https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7029158/pdf/
+            # but the downloader will have to use a good User-Agent and follow redirection
+            if other_oa_location['url'].startswith(self.config['pmc_base_web']):
+                return other_oa_location['url']+"/pdf/"
+            if other_oa_location['url_for_pdf']:
+                return other_oa_location['url_for_pdf']
+        return None
+
+    def process_reference_block(self, references_block, entity):
+        '''
+        Process the raw and bibtex references in a reference json list to create fully parsed 
+        representations with DOI/PMID/PMCID resolution
+        '''
+        for reference in references_block:
+            if "bibtex" in reference:
+                bibtex_str = reference["bibtex"]
+                # force a key if not present, for having valid parsing
+                bibtex_str = bibtex_str.replace("@Article{,", "@Article{toto,")
+                biblio = None
+                try:
+                    biblio = parse_string(bibtex_str, "bibtex")
+                except:
+                    print("Failed to parse the bibtext string:", bibtex_str)
+
+                if biblio != None:
+                    for key in biblio.entries:
+                        local_title = None
+                        if "title" in biblio.entries[key].fields:
+                            local_title = biblio.entries[key].fields["title"]
+                        first_author_last_name = None
+                        local_authors = biblio.entries[key].persons
+                        if local_authors is not None and "author" in local_authors:
+                            all_authors = local_authors["author"]
+                            if len(all_authors) > 0 and len(all_authors[0].last_names) > 0:
+                                first_author_last_name = all_authors[0].last_names[0]
+
+                        text_format_ref = format_from_string(bibtex_str, style="plain")
+                        res_format_ref = ""
+                        for line_format_ref in text_format_ref.split("\n"):
+                            if line_format_ref.startswith("\\newblock"):
+                                res_format_ref += line_format_ref.replace("\\newblock", "")
+                            elif len(line_format_ref.strip()) != 0 and not line_format_ref.startswith("\\"):
+                                res_format_ref += line_format_ref
+
+                        res_format_ref = res_format_ref.strip()
+                        res_format_ref = res_format_ref.replace("\\emph{", "")
+                        res_format_ref = res_format_ref.replace("\\url{", "")
+                        res_format_ref = res_format_ref.replace("}", "")
+
+                        # we can call biblio-glutton with the available information
+                        print(res_format_ref)
+                        glutton_biblio = self.biblio_glutton_lookup(raw_ref=res_format_ref, title=local_title, first_author_last_name=first_author_last_name)
+
+
+            if "raw" in reference:
+                # this can be sent to biblio-glutton
+                res_format_ref = reference["raw"]
+
+
+
+        return entity
+
+def _biblio_glutton_url(biblio_glutton_base, biblio_glutton_port):
+    if biblio_glutton_base.endswith("/"):
+        res = biblio_glutton_base[:-1]
+    else: 
+        res = biblio_glutton_base
+    if biblio_glutton_port is not None and len(biblio_glutton_port)>0:
+        res += ":"+biblio_glutton_port
+    return res+"/service/lookup?"
+
+def _grobid_url(grobid_base, grobid_port):
+    the_url = 'http://'+grobid_base
+    if grobid_port is not None and len(grobid_port)>0:
+        the_url += ":"+grobid_port
+    the_url += "/api/"
+    return the_url

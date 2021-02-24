@@ -1,5 +1,8 @@
 python-arango
 requests
 beautifulsoup4
+pybtex
 flask
 connexion[swagger-ui]==2.7.0
+
+

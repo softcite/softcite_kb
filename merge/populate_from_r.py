@@ -4,6 +4,7 @@ Populate the staging area graph from CRAN and rOpenSci imported documents
 
 import os
 import json
+import pybtex
 from arango import ArangoClient
 from populate_staging_area import StagingArea
 
@@ -129,6 +130,10 @@ def populate_r(stagingArea, collection, source_ref):
                 if not "P2078" in software["claims"]:
                     software["claims"]["P2078"] = []
                 software["claims"]["P2078"].append(local_value)
+
+        if "References" in package:
+            for reference in package["References"]:
+                software = self.process_reference_block(package["References"], software)
 
         # original identifier
         local_value = {}
