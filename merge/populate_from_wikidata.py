@@ -18,7 +18,7 @@ def populate(stagingArea):
 
     stagingArea.db = stagingArea.client.db(database_name_wikidata, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
 
-    populate_wikidata(stagingArea, entities, stagingArea.get_source(database_name_wikidata))
+    populate_wikidata(stagingArea, stagingArea.get_source(database_name_wikidata))
 
 def populate_wikidata(stagingArea, source_ref):
     '''

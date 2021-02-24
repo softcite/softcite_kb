@@ -113,7 +113,7 @@ class Wikidata_harvester(Harvester):
                     sys.stdout.write('.')
                     sys.stdout.flush()
 
-                if len(line.strip()) == 0:
+                if len(line.strip().rstrip('\n')) == 0:
                     # this is usually the end
                     continue
 
@@ -353,7 +353,7 @@ class Wikidata_harvester(Harvester):
             self.persons_list = []
             with open(person_path) as person_file:
                 for line in person_file.readlines():
-                    line = line.strip()
+                    line = line.strip().rstrip('\n')
                     self.persons_list.append(line)
         # license
         license_path = os.path.join("data", "resources", "licenses.wikidata.entities")
@@ -361,7 +361,7 @@ class Wikidata_harvester(Harvester):
             self.licenses_list = []
             with open(license_path) as license_file:
                 for line in license_file.readlines():
-                    line = line.strip()
+                    line = line.strip().rstrip('\n')
                     self.licenses_list.append(line)
 
         # organization
@@ -370,7 +370,7 @@ class Wikidata_harvester(Harvester):
             self.organizations_list = []
             with open(organization_path) as organization_file:
                 for line in organization_file.readlines():
-                    line = line.strip()
+                    line = line.strip().rstrip('\n')
                     self.organizations_list.append(line)
 
         # publication
@@ -379,7 +379,7 @@ class Wikidata_harvester(Harvester):
             self.publications_list = []
             with open(publication_path) as publication_file:
                 for line in publication_file.readlines():
-                    line = line.strip()
+                    line = line.strip().rstrip('\n')
                     self.publications_list.append(line)
 
     def import_extra_entities(self, jsonWikidataDumpPath, reset=False):
@@ -478,7 +478,7 @@ if __name__ == "__main__":
 
     if WikidataDumpPath is not None:
         local_harvester = Wikidata_harvester(config_path=config_path)
-        local_harvester.import_entities(WikidataDumpPath, reset=to_reset)
+        #local_harvester.import_entities(WikidataDumpPath, reset=to_reset)
         local_harvester.import_extra_entities(WikidataDumpPath, reset=to_reset)
     else:
         print("No Wikidata JSON dump file path indicated")

@@ -75,7 +75,7 @@ In case the source has no Wikidata item, we use a string value, for instance if 
 
 ## Representing scholar mentions in context
 
-In the case of a mention in a publication, extracted via text mining, we express the citation as a relation (edge property) using "quoted by" (`Q66204407`), relating a software and a document. The property is enriched with several property/values pairs in the associated qualifier list to further describe the mention: mention text context, PDF coordinates, etc. In this case the source information of the relation is the text mining software which has extracted the mention.
+In the case of a mention in a publication, extracted via text mining, we express the citation as a relation (edge property) using "quotes work" (`P6166`), relating a document and a software. The property is enriched with several property/values pairs in the associated qualifier list to further describe the mention: mention text context, PDF coordinates, etc. In this case the source information of the relation is the text mining software which has extracted the mention.
 
 
 ## Simplification of Wikidata schema
@@ -84,9 +84,9 @@ One of the issue with Wikidata is the systematic usage of item and property iden
 
 - Only English is considered, so all multilingual levels of information are removed. 
 
-- Item and Property identifiers are replaced by canonical readable identifiers derived from the English label. A dedicated key/value map is present to recover the original Wikidata-style identifiers.
-
 - As few data types are used as values, mostly implicit and given that they are built on similar pieces of information, `snak` are simplified as a simple `value` attribute:
+
+- [WIP] Item and Property identifiers are replaced by canonical readable identifiers derived from the English label. A dedicated key/value map is present to recover the original Wikidata-style identifiers.
 
 * for wikibase item:
 
