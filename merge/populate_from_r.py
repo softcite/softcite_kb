@@ -7,7 +7,7 @@ import json
 import pybtex
 from arango import ArangoClient
 from populate_staging_area import StagingArea
-
+import uuid 
 
 def populate(stagingArea):
 
@@ -65,8 +65,18 @@ def populate_r(stagingArea, collection, source_ref):
         # for the actual package description, there is no "content summary" property, so we introduce a field "summary"
         software['summary'] = package['Description']
         #software['id'] = package['_key']
-        software['_key'] = package['_key']
-        software['_id'] = "software/" + package['_key']
+
+        if stagingArea.db.name == "CRAN":
+            # for CRAN we don't have random ID, so we have to create one - to be consistent with MongoDB ones
+            # used for most of the others sources, we use an hexa identifier of length 24 
+            local_id = uuid.uuid4() 
+            local_id = local_id.replace("-", "")
+            local_id = local_id[:-24]
+            software['_key'] = local_id
+            software['_id'] = "software/" + local_id
+        else:
+            software['_key'] = package['_key']
+            software['_id'] = "software/" + package['_key']
 
         if "git_repository" in package:
             local_value = {}
@@ -133,7 +143,7 @@ def populate_r(stagingArea, collection, source_ref):
 
         if "References" in package:
             for reference in package["References"]:
-                software = self.process_reference_block(package["References"], software)
+                software = self.process_reference_block(package["References"], software, source_ref)
 
         # original identifier
         local_value = {}

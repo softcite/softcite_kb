@@ -367,12 +367,21 @@ class StagingArea(CommonArangoDB):
                 return other_oa_location['url_for_pdf']
         return None
 
-    def process_reference_block(self, references_block, entity):
+    def process_reference_block(self, references_block, entity, source_ref):
         '''
         Process the raw and bibtex references in a reference json list to create fully parsed 
         representations with DOI/PMID/PMCID resolution
         '''
+        has_bibtex = False
+        # if we have bibtex entries
         for reference in references_block:
+            if "bibtex" in reference:
+                has_bibtex = True
+                break
+
+        for reference in references_block:
+            glutton_biblio = None
+
             if "bibtex" in reference:
                 bibtex_str = reference["bibtex"]
                 # force a key if not present, for having valid parsing
@@ -411,11 +420,46 @@ class StagingArea(CommonArangoDB):
                         # we can call biblio-glutton with the available information
                         glutton_biblio = self.biblio_glutton_lookup(raw_ref=res_format_ref, title=local_title, first_author_last_name=first_author_last_name)
 
-            if "raw" in reference:
+            if "raw" in reference and glutton_biblio == null and not has_bibtex:
                 # this can be sent to biblio-glutton
                 res_format_ref = reference["raw"]
                 glutton_biblio = stagingArea.biblio_glutton_lookup(raw_ref=reference["raw"])
 
+            if glutton_biblio != null:
+                # we can create a document entry for the referenced document, 
+                # and a reference relation between the given entity and this document
+                local_id = uuid.uuid4() 
+                local_id = local_id.replace("-", "")
+                local_id = local_id[:-24]
+                local_doc = stagingArea.init_entity_from_template("document", source=source_ref)
+                if local_doc is None:
+                    raise("cannot init document entity from default template")
+
+                local_doc['_key'] = local_id
+                local_doc['_id'] = "documents/" + local_id
+
+                # document metadata stays as they are (e.g. full CrossRef record)
+                local_doc['metadata'] = glutton_biblio
+
+                if not self.staging_graph.has_vertex(local_doc["_id"]):
+                    self.staging_graph.insert_vertex("documents", local_doc)
+
+                relation = {}
+                relation["claims"] = {}
+                # "P2860" property "cites work "
+                relation["claims"]["P2860"] = []
+                local_value = {}
+                local_value["references"] = []
+                local_value["references"].append(source_ref)
+                relation["claims"]["P2860"].append(local_vale)
+
+                relation["_from"] = entity['_id']
+                relation["_to"] = local_doc['_id']
+
+                relation["_key"] = entity["_key"] + "_" + local_doc['_key']
+                relation["_id"] = "references/" + relation["_key"]
+                if not stagingArea.staging_graph.has_edge(relation["_id"]):
+                    stagingArea.staging_graph.insert_edge("references", edge=relation)
 
         return entity
 

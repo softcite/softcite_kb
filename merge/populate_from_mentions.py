@@ -34,6 +34,21 @@ def populate_wikidata(stagingArea, source_ref):
     for document in cursor:
         # document as document vertex collection
 
+
+
+        local_doc = stagingArea.init_entity_from_template("document", source=source_ref)
+        if local_doc is None:
+            raise("cannot init document entity from default template")
+
+        local_doc['_key'] = document["_key"]
+        local_doc['_id'] = "documents/" + document["_key"]
+
+        # document metadata stays as they are (e.g. full CrossRef record)
+        local_doc['metadata'] = document['metadata']
+
+        if not self.staging_graph.has_vertex(local_doc["_id"]):
+            self.staging_graph.insert_vertex("documents", local_doc)
+
         # there are two relations to be built at this level:
         # - authorship based on "author" metadata field (edge "actor" to "person")
         # - funding based on "funder" metadata field (edge )
@@ -47,6 +62,39 @@ def populate_wikidata(stagingArea, source_ref):
 
     for annotation in cursor:
         # annotations from the same document lead to a new software entity (to be further disambiguated)
+
+
+
+        software = stagingArea.init_entity_from_template("software", source=source_ref)
+        if software is None:
+            raise("cannot init software entity from default template")
+
+        software['labels'] = annotation["software-name"]["normalizedForm"]
+        
+        # version info (P348)
+        if "version" in annotation:
+            local_value = {}
+            local_value["value"] = package["Version"]
+            local_value["datatype"] = "string"
+            local_value["references"] = []
+            local_value["references"].append(source_ref)
+            software["claims"]["P348"] = []
+            software["claims"]["P348"].append(local_value)
+
+
+        # the predicted wikidata entity for the software is represented with property "said to be the same" (P460)
+        # which is defnied as "said to be the same as that item, but it's uncertain or disputed"
+        if "wikidataId" in annotation:
+            local_value = {}
+            local_value["value"] = annotation["wikidataId"]
+            local_value["datatype"] = "wikibase-item"
+            local_value["references"] = []
+            local_value["references"].append(source_ref)
+            software["claims"]["P460"] = []
+            software["claims"]["P460"].append(local_value)
+
+        
+
 
         # relations to be built at this level:
         # - citations based on software mention in a document, which will include context sentence, coordinates, etc.
