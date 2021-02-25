@@ -12,7 +12,7 @@ from merge.populate_staging_area import StagingArea
 
 ref_field = { "References": [ { "raw": "Scott Fortmann-Roe (2015). Consistent and Clear Reporting of Results from Diverse Modeling Techniques: The A3 Method. Journal of Statistical Software, 66(7), 1-23. URL http://www.jstatsoft.org/v66/i07/." }, 
                               { "bibtex": "@Article{,\n    title = {Consistent and Clear Reporting of Results from Diverse\n      Modeling Techniques: The A3 Method},\n    author = {Scott Fortmann-Roe},\n    journal = {Journal of Statistical Software},\n    year = {2015},\n    volume = {66},\n    number = {7},\n    pages = {1--23},\n    url = {http://www.jstatsoft.org/v66/i07/},\n  }" }, 
-                              { "bibtex": "@Article{toto,\
+                              { "bibtex": "@Article{,\
     title = {Combinacion de metodos factoriales y de analisis de\
       conglomerados en R: el paquete FactoClass},\
     author = {C.E. Pardo and P.C. DelCampo},\
@@ -21,8 +21,53 @@ ref_field = { "References": [ { "raw": "Scott Fortmann-Roe (2015). Consistent an
     volume = {30},\
     pages = {231-245},\
     number = {2},\
-    url = {www.matematicas.unal.edu.co/revcoles},}"}
-                            ] }
+    url = {www.matematicas.unal.edu.co/revcoles},}"},
+                              { "bibtex": "@Article{,\
+    title = {S4 Classes for Distributions},\
+    author = {P. Ruckdeschel and M. Kohl and T. Stabla and F.\
+      Camphausen},\
+    language = {English},\
+    year = {2006},\
+    journal = {R News},\
+    year = {2006},\
+    volume = {6},\
+    number = {2},\
+    pages = {2--6},\
+    month = {May},\
+    pdf = {https://CRAN.R-project.org/doc/Rnews/Rnews_2006-2.pdf},\
+  }"},
+                              { "bibtex": "@Article{,\
+    author = {James S Ware and Kaitlin E Samocha and J Homsy and Mark J\
+      Daly},\
+    year = {2015},\
+    title = {Interpreting de novo variation in human disease using\
+      denovolyzeR.},\
+    journal = {Curr. Protoc. Hum. Genet.},\
+    volume = {87},\
+    number = {7},\
+    chapter = {25},\
+    pages = {1},\
+    pages = {15},\
+    doi = {10.1002/0471142905.hg0725s87},\
+    note = {R package version 0.2.0},\
+    url = {http://denovolyzeR.org},\
+  }"},
+                              { "bibtex": "@Article{toto,\
+    author = {Roozbeh Valavi and Jane Elith and José J. Lahoz-Monfort\
+      and Gurutzeta Guillera-Arroita},\
+    title = {blockCV: An R package for generating spatially or\
+      environmentally separated folds for k-fold cross-validation of\
+      species distribution models},\
+    journal = {Methods in Ecology and Evolution},\
+    volume = {10},\
+    number = {2},\
+    pages = {225-232},\
+    year = {2019},\
+    author = {Roozbeh Valavi and Jane Elith and José J. Lahoz-Monfort\
+      and Gurutzeta Guillera-Arroita},\
+  }"}
+  ] }
+
 
 def test_biblio(stagingArea):
 
@@ -33,10 +78,10 @@ def test_biblio(stagingArea):
                 # force a key if not present, for having valid parsing
                 bibtex_str = bibtex_str.replace("@Article{,", "@Article{toto,")
                 biblio = None
-                try:
-                    biblio = parse_string(bibtex_str, "bibtex")
-                except:
-                    print("Failed to parse the bibtext string:", bibtex_str)
+                #try:
+                biblio = parse_string(bibtex_str, "bibtex")
+                #except:
+                #    print("Failed to parse the bibtext string:", bibtex_str)
 
                 if biblio != None:
                     for key in biblio.entries:

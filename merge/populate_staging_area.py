@@ -39,6 +39,8 @@ import requests
 import uuid 
 from pybtex.database import parse_string
 from pybtex import format_from_string
+import pybtex.errors
+pybtex.errors.set_strict_mode(False)
 
 class StagingArea(CommonArangoDB):
 
@@ -60,7 +62,7 @@ class StagingArea(CommonArangoDB):
     database_name = "staging"
     graph_name = "staging_graph"
 
-    bibtex_types = ["Article", "Manual", "Unpublished", "InCollection", "Book", "Misc", "InProceedings", "TechReport", "PhdThesis"]
+    bibtex_types = ["Article", "Manual", "Unpublished", "InCollection", "Book", "Misc", "InProceedings", "TechReport", "PhdThesis", "InBook", "Proceedings", "MastersThesis"]
 
     def __init__(self, config_path="./config.json"):
         self.load_config(config_path)
@@ -385,6 +387,9 @@ class StagingArea(CommonArangoDB):
                 has_bibtex = True
                 break
 
+        # signature for the processed strings, to avoid processing duplicated entries
+        signatures = []
+
         for reference in references_block:
             glutton_biblio = None
 
@@ -411,8 +416,10 @@ class StagingArea(CommonArangoDB):
                             all_authors = local_authors["author"]
                             if len(all_authors) > 0 and len(all_authors[0].last_names) > 0:
                                 first_author_last_name = all_authors[0].last_names[0]
-
-                        text_format_ref = format_from_string(bibtex_str, style="plain")
+                        try:
+                            text_format_ref = format_from_string(bibtex_str, style="plain")
+                        except:
+                            print("Failed to serialize the bibtext entry:", bibtex_str)
                         res_format_ref = ""
                         for line_format_ref in text_format_ref.split("\n"):
                             if line_format_ref.startswith("\\newblock"):
