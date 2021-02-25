@@ -7,7 +7,6 @@ import json
 from arango import ArangoClient
 from populate_staging_area import StagingArea
 
-
 def populate(stagingArea):
 
     database_name_wikidata = "wikidata"
@@ -27,7 +26,7 @@ def populate_wikidata(stagingArea, source_ref):
     CRAN property and reference URL
     '''
     cursor = stagingArea.db.aql.execute(
-      'FOR doc IN software RETURN doc', ttl=1000
+      'FOR doc IN software RETURN doc', ttl=3600
     )
 
     for software in cursor:

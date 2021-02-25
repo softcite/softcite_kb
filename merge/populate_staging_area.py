@@ -36,6 +36,9 @@ from arango import ArangoClient
 sys.path.append(os.path.abspath('./common'))
 from arango_common import CommonArangoDB
 import requests 
+import uuid 
+from pybtex.database import parse_string
+from pybtex import format_from_string
 
 class StagingArea(CommonArangoDB):
 
@@ -56,6 +59,8 @@ class StagingArea(CommonArangoDB):
 
     database_name = "staging"
     graph_name = "staging_graph"
+
+    bibtex_types = ["Article", "Manual", "Unpublished", "InCollection", "Book", "Misc", "InProceedings", "TechReport", "PhdThesis"]
 
     def __init__(self, config_path="./config.json"):
         self.load_config(config_path)
@@ -80,7 +85,7 @@ class StagingArea(CommonArangoDB):
         if not self.staging_graph.has_vertex_collection('persons'):
             self.persons = self.staging_graph.create_vertex_collection('persons')
             # we add a hash index on the orcid identifier
-            self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True)
+            self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
         else:
             self.persons = self.staging_graph.vertex_collection('persons')
 
@@ -193,7 +198,7 @@ class StagingArea(CommonArangoDB):
 
         self.software = self.staging_graph.create_vertex_collection('software')
         self.persons = self.staging_graph.create_vertex_collection('persons')
-        self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True)
+        self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
         self.organizations = self.staging_graph.create_vertex_collection('organizations')
         self.documents = self.staging_graph.create_vertex_collection('documents')
         self.licenses = self.staging_graph.create_vertex_collection('licenses')
@@ -297,9 +302,6 @@ class StagingArea(CommonArangoDB):
             response = requests.get(self.config['crossref_base']+"/works/"+doi, headers=user_agent)
             if response.status_code == 200:
                 jsonResult = response.json()['message']
-                # filter out references and re-set doi, in case there are obtained via crossref
-                if "reference" in jsonResult:
-                    del jsonResult["reference"]
             else:
                 success = False
                 jsonResult = None
@@ -308,7 +310,7 @@ class StagingArea(CommonArangoDB):
             if raw_ref != None:
                 # call to biblio-glutton with combined raw ref, title and last author first name
                 params = {"biblio": raw_ref, "atitle": title, "firstAuthor": first_author_last_name}
-                response = requests.post(biblio_glutton_url, data=params)  
+                response = requests.get(biblio_glutton_url, params=params)
                 success = (response.status_code == 200)
                 if success:
                     jsonResult = response.json()
@@ -322,12 +324,13 @@ class StagingArea(CommonArangoDB):
 
         if not success and raw_ref != None:
             # call to biblio-glutton with only raw ref
-            params = {"biblio": raw_ref}
-            response = requests.post(biblio_glutton_url, data=params)  
+            params = {"biblio": raw_ref, "postValidate": "true"}
+            response = requests.get(biblio_glutton_url, data=params)  
             success = (response.status_code == 200)
             if success:
                 jsonResult = response.json()
 
+        '''
         if not success and raw_ref != None:
             # fallback for raw reference with CrossRef
             user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
@@ -336,12 +339,15 @@ class StagingArea(CommonArangoDB):
             response = requests.get(self.config['crossref_base']+"/works/", params=params, headers=user_agent)
             if response.status_code == 200:
                 jsonResult = response.json()['message']
-                # filter out references and re-set doi, in case there are obtained via crossref
-                if "reference" in jsonResult:
-                    del jsonResult["reference"]
             else:
                 success = False
                 jsonResult = None
+        '''
+
+        # filter out references if present
+        if jsonResult != None:
+            if "reference" in jsonResult:
+                del jsonResult["reference"]
 
         return jsonResult
 
@@ -385,7 +391,9 @@ class StagingArea(CommonArangoDB):
             if "bibtex" in reference:
                 bibtex_str = reference["bibtex"]
                 # force a key if not present, for having valid parsing
-                bibtex_str = bibtex_str.replace("@Article{,", "@Article{toto,")
+                for bibtext_type in self.bibtex_types:
+                    bibtex_str = bibtex_str.replace("@"+bibtext_type+"{,", "@"+bibtext_type+"{toto,")
+
                 biblio = None
                 try:
                     biblio = parse_string(bibtex_str, "bibtex")
@@ -420,18 +428,16 @@ class StagingArea(CommonArangoDB):
                         # we can call biblio-glutton with the available information
                         glutton_biblio = self.biblio_glutton_lookup(raw_ref=res_format_ref, title=local_title, first_author_last_name=first_author_last_name)
 
-            if "raw" in reference and glutton_biblio == null and not has_bibtex:
+            if "raw" in reference and glutton_biblio == None and not has_bibtex:
                 # this can be sent to biblio-glutton
                 res_format_ref = reference["raw"]
                 glutton_biblio = stagingArea.biblio_glutton_lookup(raw_ref=reference["raw"])
 
-            if glutton_biblio != null:
+            if glutton_biblio != None:
                 # we can create a document entry for the referenced document, 
                 # and a reference relation between the given entity and this document
-                local_id = uuid.uuid4() 
-                local_id = local_id.replace("-", "")
-                local_id = local_id[:-24]
-                local_doc = stagingArea.init_entity_from_template("document", source=source_ref)
+                local_id = self.get_uid()
+                local_doc = self.init_entity_from_template("document", source=source_ref)
                 if local_doc is None:
                     raise("cannot init document entity from default template")
 
@@ -451,17 +457,21 @@ class StagingArea(CommonArangoDB):
                 local_value = {}
                 local_value["references"] = []
                 local_value["references"].append(source_ref)
-                relation["claims"]["P2860"].append(local_vale)
+                relation["claims"]["P2860"].append(local_value)
 
                 relation["_from"] = entity['_id']
                 relation["_to"] = local_doc['_id']
 
                 relation["_key"] = entity["_key"] + "_" + local_doc['_key']
                 relation["_id"] = "references/" + relation["_key"]
-                if not stagingArea.staging_graph.has_edge(relation["_id"]):
-                    stagingArea.staging_graph.insert_edge("references", edge=relation)
+                if not self.staging_graph.has_edge(relation["_id"]):
+                    self.staging_graph.insert_edge("references", edge=relation)
 
-        return entity
+    def get_uid(self):
+        local_id = uuid.uuid4().hex
+        local_id = local_id.replace("-", "")
+        local_id = local_id[:-24]
+        return local_id
 
 def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glutton_port):
     biblio_glutton_base = biblio_glutton_protocol + "://" + biblio_glutton_host
@@ -481,3 +491,4 @@ def _grobid_url(grobid_protocol, grobid_url, grobid_port):
         the_url += ":"+grobid_port
     the_url += "/api/"
     return the_url
+

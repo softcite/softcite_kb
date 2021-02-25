@@ -28,14 +28,11 @@ def populate_wikidata(stagingArea, source_ref):
     Other relations built are authorship, funding and references. 
     '''
     cursor = stagingArea.db.aql.execute(
-      'FOR doc IN documents RETURN doc', ttl=1000
+      'FOR doc IN documents RETURN doc', ttl=3600
     )
 
     for document in cursor:
         # document as document vertex collection
-
-
-
         local_doc = stagingArea.init_entity_from_template("document", source=source_ref)
         if local_doc is None:
             raise("cannot init document entity from default template")
@@ -70,16 +67,64 @@ def populate_wikidata(stagingArea, source_ref):
             raise("cannot init software entity from default template")
 
         software['labels'] = annotation["software-name"]["normalizedForm"]
+        # add the normalized form as property value too, with associated bounding boxes
+
         
         # version info (P348)
         if "version" in annotation:
             local_value = {}
-            local_value["value"] = package["Version"]
+            local_value["value"] = annotation["Version"]
             local_value["datatype"] = "string"
             local_value["references"] = []
             local_value["references"].append(source_ref)
             software["claims"]["P348"] = []
             software["claims"]["P348"].append(local_value)
+
+            # associated bounding boxes
+
+
+        if "publisher" in annotation:
+            # publisher (P123) 
+            local_value = {}
+            local_value["value"] = annotation["publisher"]
+            local_value["datatype"] = "string"
+            local_value["references"] = []
+            local_value["references"].append(source_ref)
+            software["claims"]["P123"] = []
+            software["claims"]["P123"].append(local_value)
+
+            # associated bounding boxes
+
+
+        if "url" in annotation:
+            # reference URL (P854) 
+            local_value = {}
+            local_value["value"] = annotation["url"]
+            local_value["datatype"] = "url"
+            local_value["references"] = []
+            local_value["references"].append(source_ref)
+            software["claims"]["P854"] = []
+            software["claims"]["P854"].append(local_value)
+
+            # associated bounding boxes
+
+
+        if "context" in annotation:    
+            # quotation or excerpt (P7081) 
+            local_value = {}
+            local_value["value"] = annotation["context"]
+            local_value["datatype"] = "string"
+            local_value["references"] = []
+            local_value["references"].append(source_ref)
+            software["claims"]["P7081"] = []
+            software["claims"]["P7081"].append(local_value)
+
+            # associated bounding boxes
+            # note: currently not outputted by the software-mention module !
+
+
+        if "wikipediaExternalRef" in annotation:
+
 
 
         # the predicted wikidata entity for the software is represented with property "said to be the same" (P460)
@@ -93,7 +138,7 @@ def populate_wikidata(stagingArea, source_ref):
             software["claims"]["P460"] = []
             software["claims"]["P460"].append(local_value)
 
-        
+
 
 
         # relations to be built at this level:

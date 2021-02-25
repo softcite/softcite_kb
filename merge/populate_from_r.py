@@ -7,7 +7,6 @@ import json
 import pybtex
 from arango import ArangoClient
 from populate_staging_area import StagingArea
-import uuid 
 
 def populate(stagingArea):
 
@@ -53,7 +52,13 @@ def populate_r(stagingArea, collection, source_ref):
     with open(relator_file) as relator_f:
         relator_code_cran = json.load(relator_f)
 
-    for package in collection:
+    cursor = stagingArea.db.aql.execute(
+      'FOR doc IN packages RETURN doc', ttl=3600
+    )
+
+    for package in cursor:
+        print(package['Package'], "...")
+
         # package as software vertex collection
         software = stagingArea.init_entity_from_template("software", source=source_ref)
         if software is None:
@@ -69,9 +74,7 @@ def populate_r(stagingArea, collection, source_ref):
         if stagingArea.db.name == "CRAN":
             # for CRAN we don't have random ID, so we have to create one - to be consistent with MongoDB ones
             # used for most of the others sources, we use an hexa identifier of length 24 
-            local_id = uuid.uuid4() 
-            local_id = local_id.replace("-", "")
-            local_id = local_id[:-24]
+            local_id = stagingArea.get_uid()
             software['_key'] = local_id
             software['_id'] = "software/" + local_id
         else:
@@ -141,10 +144,6 @@ def populate_r(stagingArea, collection, source_ref):
                     software["claims"]["P2078"] = []
                 software["claims"]["P2078"].append(local_value)
 
-        if "References" in package:
-            for reference in package["References"]:
-                software = self.process_reference_block(package["References"], software, source_ref)
-
         # original identifier
         local_value = {}
         local_value["value"] = package["_key"]
@@ -166,6 +165,7 @@ def populate_r(stagingArea, collection, source_ref):
                 #del existing_software["_rev"]
                 #print(existing_software)
                 stagingArea.staging_graph.update_vertex(existing_software)
+                software = existing_software
                 replaced = True
 
         if not replaced:
@@ -187,6 +187,13 @@ def populate_r(stagingArea, collection, source_ref):
                     maintainer_consumed = process_author(stagingArea, author, software['_key'], relator_code_cran, source_ref, maintainer)
                     if maintainer_consumed:
                         maintainer = None
+
+        if "References" in package:
+            for reference in package["References"]:
+                stagingArea.process_reference_block(package["References"], software, source_ref)
+
+                # update software entity
+                #stagingArea.staging_graph.update_vertex(software)
 
         
 def set_dependencies(stagingArea, collection, source_ref):
@@ -349,8 +356,8 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
         person = stagingArea.aggregate_with_merge(matched_person, person)
         stagingArea.staging_graph.update_vertex(person)
     else:
-        size = stagingArea.persons.count()
-        person["_key"] = "_" + str(size+1)
+        local_id = stagingArea.get_uid()
+        person["_key"] = local_id
         person["_id"] = "persons/" + person["_key"]
         stagingArea.staging_graph.insert_vertex("persons", person)
 

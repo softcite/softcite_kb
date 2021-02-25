@@ -241,32 +241,40 @@ class CommonArangoDB(object):
                     # do we have this property in the first entity ? 
                     if the_property in entity1["claims"]:
                         local_merge = False
-                        # check if the value are identical by comparing value and data type
-                        for the_value in result["claims"][the_property]:
-                            local_value = the_value["value"]
-                            local_datatype = the_value["datatype"]
+                        # check if the new values for this property are identical by comparing value and data type
+                        for the_value2 in entity2["claims"][the_property]:
+                            local_value2 = the_value2["value"]
+                            local_datatype2 = the_value2["datatype"]
 
-                            for the_value2 in entity2["claims"][the_property]:
-                                local_value2 = the_value2["value"]
-                                local_datatype2 = the_value2["datatype"]
+                            i = 0
+                            for the_value in entity1["claims"][the_property]:
+                                local_value = the_value["value"]
+                                local_datatype = the_value["datatype"]
+
+                                # this is the value in the newly build merge entity
+                                the_new_value = result["claims"][the_property][i]
 
                                 if local_value == local_value2 and local_datatype == local_datatype2:
                                     # if yes add we simply add the provenance information the property entry
-                                    if not "references" in the_value:
-                                        the_value["references"] = []
+                                    
+                                    if not "references" in the_new_value:
+                                        the_new_value["references"] = []
                                     sources_to_add = the_value2["references"]
                                     for source_to_add in sources_to_add:
-                                        the_value["references"].append(source_to_add)
+                                        add_ref_if_not_present(the_new_value["references"], source_to_add)
                                     local_merge = True
                                     break
+                                i += 1
+
                             if local_merge:
                                 break
 
-                        if not local_merge:
-                            # if no add the value to the property entry
-                            result["claims"][the_property].append(claim)
+                            if not local_merge:
+                                # if no add the value to the property entry
+                                result["claims"][the_property].append(the_value)
+                            
                     else:
-                        # if no just append it to the claims
+                        # if no just append it to the other claims
                         result["claims"][the_property] = claim
             elif key.startswith("index_"):
                 # have an index field that we can copy if not present in the first entity
@@ -288,3 +296,30 @@ class CommonArangoDB(object):
             local_value["datatype"] = "string"
         source["P248"] = local_value
         return source
+
+def add_ref_if_not_present(references, ref_to_add):
+    '''
+    check if a reference entry is not already present in a reference list, if no
+    add it to the list
+    '''
+    found = False
+    value_to_add = None
+    for key, value in ref_to_add.items():
+        value_to_add = value["value"]
+
+    if value_to_add == None:
+        return references
+
+    for reference in references:
+        for key, value in reference.items():
+            if "value" in value and value["value"] == value_to_add:
+                found = True
+                break
+        if found:
+            break
+
+    if not found:
+        references.append(ref_to_add)
+
+    return references
+

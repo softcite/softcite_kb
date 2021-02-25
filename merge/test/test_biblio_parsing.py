@@ -10,7 +10,19 @@ sys.path.append('..')
 
 from merge.populate_staging_area import StagingArea
 
-ref_field = { "References": [ { "raw": "Scott Fortmann-Roe (2015). Consistent and Clear Reporting of Results from Diverse Modeling Techniques: The A3 Method. Journal of Statistical Software, 66(7), 1-23. URL http://www.jstatsoft.org/v66/i07/." }, { "bibtex": "@Article{,\n    title = {Consistent and Clear Reporting of Results from Diverse\n      Modeling Techniques: The A3 Method},\n    author = {Scott Fortmann-Roe},\n    journal = {Journal of Statistical Software},\n    year = {2015},\n    volume = {66},\n    number = {7},\n    pages = {1--23},\n    url = {http://www.jstatsoft.org/v66/i07/},\n  }" } ] }
+ref_field = { "References": [ { "raw": "Scott Fortmann-Roe (2015). Consistent and Clear Reporting of Results from Diverse Modeling Techniques: The A3 Method. Journal of Statistical Software, 66(7), 1-23. URL http://www.jstatsoft.org/v66/i07/." }, 
+                              { "bibtex": "@Article{,\n    title = {Consistent and Clear Reporting of Results from Diverse\n      Modeling Techniques: The A3 Method},\n    author = {Scott Fortmann-Roe},\n    journal = {Journal of Statistical Software},\n    year = {2015},\n    volume = {66},\n    number = {7},\n    pages = {1--23},\n    url = {http://www.jstatsoft.org/v66/i07/},\n  }" }, 
+                              { "bibtex": "@Article{toto,\
+    title = {Combinacion de metodos factoriales y de analisis de\
+      conglomerados en R: el paquete FactoClass},\
+    author = {C.E. Pardo and P.C. DelCampo},\
+    journal = {Revista Colombiana de Estadistica},\
+    year = {2007},\
+    volume = {30},\
+    pages = {231-245},\
+    number = {2},\
+    url = {www.matematicas.unal.edu.co/revcoles},}"}
+                            ] }
 
 def test_biblio(stagingArea):
 
