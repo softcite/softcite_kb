@@ -1,0 +1,18 @@
+{
+  "labels": "",
+  "descriptions": "",
+  "aliases": [
+  ],
+  "type": "item",
+  "claims": {
+    "P31": [
+      {
+        "value": {
+            "id": "Q732577"
+        },
+        "datatype": "wikibase-item",
+        "references": []
+      }
+    ]
+  }
+}
