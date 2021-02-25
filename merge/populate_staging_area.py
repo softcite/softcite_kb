@@ -423,10 +423,15 @@ class StagingArea(CommonArangoDB):
                             all_authors = local_authors["author"]
                             if len(all_authors) > 0 and len(all_authors[0].last_names) > 0:
                                 first_author_last_name = all_authors[0].last_names[0]
+                        text_format_ref = None
                         try:
                             text_format_ref = format_from_string(bibtex_str, style="plain")
                         except:
                             print("Failed to serialize the bibtext entry:", bibtex_str)
+
+                        if text_format_ref == None:
+                            continue
+                            
                         res_format_ref = ""
                         for line_format_ref in text_format_ref.split("\n"):
                             if line_format_ref.startswith("\\newblock"):
