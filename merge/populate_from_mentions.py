@@ -123,7 +123,7 @@ def populate_wikidata(stagingArea, source_ref):
             # note: currently not outputted by the software-mention module !
 
 
-        if "wikipediaExternalRef" in annotation:
+        #if "wikipediaExternalRef" in annotation:
 
 
 

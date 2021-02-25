@@ -395,6 +395,13 @@ class StagingArea(CommonArangoDB):
 
             if "bibtex" in reference:
                 bibtex_str = reference["bibtex"]
+                local_signature =  ''.join(e for e in bibtex_str if e.isalnum())
+                if local_signature in signatures:
+                    # already processed
+                    continue
+                else:
+                    signatures.append(local_signature)
+
                 # force a key if not present, for having valid parsing
                 for bibtext_type in self.bibtex_types:
                     bibtex_str = bibtex_str.replace("@"+bibtext_type+"{,", "@"+bibtext_type+"{toto,")
@@ -438,6 +445,13 @@ class StagingArea(CommonArangoDB):
             if "raw" in reference and glutton_biblio == None and not has_bibtex:
                 # this can be sent to biblio-glutton
                 res_format_ref = reference["raw"]
+                local_signature =  ''.join(e for e in res_format_ref if e.isalnum())
+                if local_signature in signatures:
+                    # already processed
+                    continue
+                else:
+                    signatures.append(local_signature)
+
                 glutton_biblio = stagingArea.biblio_glutton_lookup(raw_ref=reference["raw"])
 
             if glutton_biblio != None:
