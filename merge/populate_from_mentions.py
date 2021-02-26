@@ -144,8 +144,8 @@ def populate_mentions(stagingArea, source_ref):
                 software["claims"]["P460"].append(local_value)
                 changed = True
 
-            # bibliographical references associated to the software could be added to here, possibly with count information
-            # to be reviewed
+            # bibliographical references associated to the software could be aggregated here, possibly with count information
+            # -> to be reviewed
 
             local_id = stagingArea.get_uid()
             software['_key'] = local_id
@@ -277,14 +277,43 @@ def populate_mentions(stagingArea, source_ref):
                 relation["claims"]["P7081"] = []
                 relation["claims"]["P7081"].append(local_value)
 
-            # bibliographical reference attached to the citation context
-
-
-
             relation["_from"] = "documents/" + local_doc["_key"]
             relation["_to"] = "software/" + software['_key']
             relation["_key"] = local_doc["_key"] + "_" + software['_key'] + "_" + str(index_annot)
             stagingArea.staging_graph.insert_edge(stagingArea.citation, edge=relation)
+
+            # bibliographical reference attached to the citation context, this will be represented as 
+            # a reference relation, from the citing document to the cited document, with related software information
+            # in the relation
+            if "references" in annotation:
+                for reference in annotation["references"]:
+                     # property is "cites work" (P2860) 
+                    local_value = {}
+                    local_value["value"] = reference["reference_id"]["$oid"]
+                    local_value["datatype"] = "external-id"
+                    local_value["references"] = []
+                    local_value["references"].append(source_ref)
+
+                    # bounding box in qualifier
+                    # relevant property is "relative position within image" (P2677) 
+                    # note: currently bounding box for the context sentence not outputted by the software-mention module, but
+                    # we can load it if present for the future
+                    if "boundingBoxes" in annotation:
+                        local_qualifier = {}
+                        local_qualifier_value = {}
+                        local_qualifier_value["value"] = annotation["boundingBoxes"]
+                        local_qualifier_value["datatype"] = "string"
+                        local_qualifier["P2677"] = local_qualifier_value
+                        local_value["qualifiers"] = []
+                        local_value["qualifiers"].append(local_qualifier)
+
+                    if not "P2860" in relation["claims"]:
+                        relation["claims"]["P2860"] = []
+                    relation["claims"]["P2860"].append(local_value)
+
+                # update citation edge document with the added reference information
+                stagingArea.staging_graph.update_edge(relation)
+
 
             index_annot += 1
 

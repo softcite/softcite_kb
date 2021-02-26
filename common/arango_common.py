@@ -226,7 +226,7 @@ class CommonArangoDB(object):
                 if not "aliases" in result:
                     result["aliases"] = []
                 for alias in value:
-                    if not "aliases" in entity1 or entity1["aliases"].find(alias) == -1:
+                    if not "aliases" in entity1 or not alias in entity1["aliases"]:
                         result["aliases"].append(alias)
             elif key == "summary":
                 # only add summary if missing... we might want to manage multiple summaries in the future

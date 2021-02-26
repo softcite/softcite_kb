@@ -118,8 +118,9 @@ def populate_wikidata(stagingArea, source_ref):
                         value["references"] = []
                     value["references"].append(source_ref)
 
+        publication["_id"] = "documents/" + publication["_key"]
         if not stagingArea.staging_graph.has_vertex(publication["_id"]):
-                stagingArea.staging_graph.insert_vertex("publications", publication)
+                stagingArea.staging_graph.insert_vertex("documents", publication)
 
     cursor = stagingArea.db.aql.execute(
       'FOR doc IN persons RETURN doc', ttl=1000
@@ -129,9 +130,9 @@ def populate_wikidata(stagingArea, source_ref):
         # for persons we match based on orcid at this stage, because it is an explicit
         # strong identifier
 
-        matched_person = none
-        if "claims" in publication:
-            for key, values in publication["claims"].items():
+        matched_person = None
+        if "claims" in person:
+            for key, values in person["claims"].items():
                 # insert source reference
                 for value in values:
                     if not "references" in value:
