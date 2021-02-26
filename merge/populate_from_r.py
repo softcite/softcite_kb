@@ -412,7 +412,7 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
         relation["_from"] = "person/" + person["_key"]
         relation["_to"] = "software/" + software_key
         relation["_key"] = person["_key"] + "_" + software_key + "maintainer"
-        stagingArea.staging_graph.insert_edge(stagingArea.actor, edge=relation)
+        stagingArea.staging_graph.insert_edge(stagingArea.actors, edge=relation)
 
         return True
 

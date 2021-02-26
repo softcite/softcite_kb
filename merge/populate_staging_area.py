@@ -73,6 +73,11 @@ class StagingArea(CommonArangoDB):
 
         self.db = self.client.db(self.database_name, username=self.config['arango_user'], password=self.config['arango_pwd'])
 
+        if not self.db.has_collection('cache'):
+            self.cache = self.db.create_collection('cache')
+        else:
+            self.cache = self.db.collection('cache')
+
         if self.db.has_graph(self.graph_name):
             self.staging_graph = self.db.graph(self.graph_name)
         else:
@@ -266,6 +271,8 @@ class StagingArea(CommonArangoDB):
         Lookup on biblio-glutton with the provided strong identifiers or the raw string and author/title information
         if available, return the full agregated biblio_glutton record
         If it's not woring, we use crossref API as fallback, with the idea of covering possible coverage gap in biblio-glutton. 
+
+        The query and result are not cached. 
         """
         biblio_glutton_url = _biblio_glutton_url(self.config["biblio_glutton_protocol"], self.config["biblio_glutton_host"], self.config["biblio_glutton_port"])
         success = False
@@ -431,7 +438,7 @@ class StagingArea(CommonArangoDB):
 
                         if text_format_ref == None:
                             continue
-                            
+
                         res_format_ref = ""
                         for line_format_ref in text_format_ref.split("\n"):
                             if line_format_ref.startswith("\\newblock"):

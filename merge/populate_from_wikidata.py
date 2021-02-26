@@ -71,15 +71,15 @@ def populate_wikidata(stagingArea, source_ref):
                 stagingArea.staging_graph.insert_vertex("software", software)
 
     cursor = stagingArea.db.aql.execute(
-      'FOR doc IN licences RETURN doc', ttl=1000
+      'FOR doc IN licenses RETURN doc', ttl=1000
     )
 
-    for licence in cursor:
+    for license in cursor:
         # licenses are part of a vertex collection, they will be put in relation to work (software)
         # via the edge relation "copyrights"
         
-        if "claims" in licence:
-            for key, values in licence["claims"].items():
+        if "claims" in license:
+            for key, values in license["claims"].items():
                 # insert source reference
                 for value in values:
                     if not "references" in value:
