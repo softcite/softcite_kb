@@ -47,7 +47,7 @@ The main curated sources of data are currently:
 
 - CRAN package metadata for R ecosystem
 
-- public information available via GitHub API
+- [WIP] public information available via GitHub API
 
 The extraction of software mentions and citations in the scientific literature is obtained via the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) applied to Open Access PDF. 
 
