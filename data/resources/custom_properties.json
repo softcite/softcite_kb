@@ -1,0 +1,25 @@
+{
+    "PA0": {
+        "label": "mentions",
+        "aliases": [ "software-mentions"],
+        "title": "Software-mentions text mining origin ID",
+        "description": "to be used to relate a software citation in a document to its extracted description by the software-mentions service"
+    },
+    "PA1": {
+        "label": "rOpenSci",
+        "title": "rOpenSci origin ID",
+        "description": "to be used to relate a software to its rOpenSci package"
+    },
+    "PA2": {
+        "label": "refkey", 
+        "title": "associated key/rank in a reference list",
+    },
+    "PA3": {
+        "label": "callout",
+        "aliases": ["reference marker"],
+        "title": "callout used in text to reference a bibliographical entry",
+    }
+}
+
+
+

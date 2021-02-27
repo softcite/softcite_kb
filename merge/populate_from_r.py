@@ -280,6 +280,12 @@ def add_dependency(stagingArea, dependency, software1, software2, source_ref, th
 def process_author(stagingArea, author, software_key, relator_code_cran, source_ref, maintainer=None):
     '''
     Process an author in the Author or Author@R fields
+
+    If the role is funder (fnd), we actually don't have a person but an organization and the relation
+    should be an edge "funding".
+
+    If the role is "copyright holder" (cph), the relation is the edge "copyrights". In this case, and 
+    also observed for authorship, we could habe an organization and not a person. 
     '''
     person = stagingArea.init_entity_from_template("person", source=source_ref)
     if person is None:

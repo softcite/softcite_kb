@@ -35,7 +35,6 @@ class Software_mention_import(Harvester):
             self.index_document = self.annotations.add_hash_index(fields=['document.$oid'], unique=False, sparse=False)
         else:
             self.annotations = self.db.collection('annotations')
-            self.index_document = self.annotations.add_hash_index(fields=['document.$oid'], unique=False, sparse=False)
 
         if not self.db.has_collection('documents'):
             self.documents = self.db.create_collection('documents')

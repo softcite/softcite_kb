@@ -45,25 +45,24 @@ def populate_mentions(stagingArea, source_ref):
         # document metadata stays as they are (e.g. full CrossRef record)
         local_doc['metadata'] = document['metadata']
 
-        if not self.staging_graph.has_vertex(local_doc["_id"]):
-            self.staging_graph.insert_vertex("documents", local_doc)
+        if not stagingArea.staging_graph.has_vertex(local_doc["_id"]):
+            stagingArea.staging_graph.insert_vertex("documents", local_doc)
 
         # there are two relations to be built at this level:
-        # - authorship based on "author" metadata field (edge "actor" to "person")
-        # - funding based on "funder" metadata field (edge )
+        # - authorship based on "author" metadata field (edge "actor" from "persons" to "documents")
+        # - funding based on crossref "funder" metadata field (edge "funding" from "organizations" to "documents")
 
         
 
-
         # we process all the annotations from this document, which makes possible some (modest) optimizations
 
-        cursor = stagingArea.db.aql.execute(
-          "FOR doc IN annotations FILTER doc['document.$oid'] == " + local_doc['_id'] + "RETURN doc", ttl=60
+        cursor_annot = stagingArea.db.aql.execute(
+          "FOR doc IN annotations FILTER doc['document.$oid'] == '" + local_doc['_id'] + "' RETURN doc", ttl=60
         )
 
         software_name_processed = {}
         index_annot = 0
-        for annotation in cursor:
+        for annotation in cursor_annot:
             # annotations from the same document lead to a set of new software entity (to be further disambiguated)
             # software with the same name in the same document are considered as the same entity and what is 
             # extracted for each annotation is aggregated in this single entity
@@ -287,7 +286,37 @@ def populate_mentions(stagingArea, source_ref):
             # in the relation
             if "references" in annotation:
                 for reference in annotation["references"]:
-                     # property is "cites work" (P2860) 
+
+                    # store the referenced document as document vertex (it will be deduplicated in a further stage) if not already present
+                    referenced_document = None
+                    cursor_ref = stagingArea.documents.find({'_key': reference["reference_id"]["$oid"]}, skip=0, limit=1)
+                    if cursor_ref.count()>0:
+                        referenced_document = cursor_ref.next()
+
+                    if referenced_document == None:
+                        # we create a new one from the metadata
+                        referenced_document = stagingArea.init_entity_from_template("document", source=source_ref)
+                        if referenced_document is None:
+                            raise("cannot init document entity from default template")
+
+                        referenced_document['_key'] = reference["reference_id"]["$oid"]
+                        referenced_document['_id'] = "documents/" + reference["reference_id"]["$oid"]
+
+                        # get the metadata from the mentions database
+                        cursor_origin_ref = stagingArea.db.aql.execute(
+                            "FOR doc IN references FILTER doc['document.$oid'] == " + reference["reference_id"]["$oid"] + " RETURN doc", 
+                        )
+                        if cursor_origin_ref.count()>0:
+                            mention_reference = cursor_origin_ref.next()
+
+                        # document metadata stays as they are (e.g. full CrossRef record)
+                        referenced_document['tei'] = mention_reference['tei']
+
+                        if not stagingArea.staging_graph.has_vertex(referenced_document["_id"]):
+                            stagingArea.staging_graph.insert_vertex("documents", referenced_document)
+
+
+                    # property is "cites work" (P2860) that we can include in the citation edge
                     local_value = {}
                     local_value["value"] = reference["reference_id"]["$oid"]
                     local_value["datatype"] = "external-id"
@@ -298,26 +327,63 @@ def populate_mentions(stagingArea, source_ref):
                     # relevant property is "relative position within image" (P2677) 
                     # note: currently bounding box for the context sentence not outputted by the software-mention module, but
                     # we can load it if present for the future
-                    if "boundingBoxes" in annotation:
+                    if "boundingBoxes" in reference:
                         local_qualifier = {}
                         local_qualifier_value = {}
-                        local_qualifier_value["value"] = annotation["boundingBoxes"]
+                        local_qualifier_value["value"] = reference["boundingBoxes"]
                         local_qualifier_value["datatype"] = "string"
                         local_qualifier["P2677"] = local_qualifier_value
                         local_value["qualifiers"] = []
+                        local_value["qualifiers"].append(local_qualifier)
+
+                    # refkey in qualifier (number of the reference in the full bibliographical section of the citing paper)
+                    if "refkey" in reference:
+                        local_qualifier = {}
+                        local_qualifier_value = {}
+                        local_qualifier_value["value"] = reference["refkey"]
+                        local_qualifier_value["datatype"] = "string"
+                        local_qualifier["PA02"] = local_qualifier_value
+                        if "qualifiers" not in local_value:
+                            local_value["qualifiers"] = []
+                        local_value["qualifiers"].append(local_qualifier)
+
+                    # label is the reference marker used by the citing paper as call-out to the full reference entry 
+                    if "label" in reference:
+                        local_qualifier = {}
+                        local_qualifier_value = {}
+                        local_qualifier_value["value"] = reference["label"]
+                        local_qualifier_value["datatype"] = "string"
+                        local_qualifier["PA03"] = local_qualifier_value
+                        if "qualifiers" not in local_value:
+                            local_value["qualifiers"] = []
                         local_value["qualifiers"].append(local_qualifier)
 
                     if not "P2860" in relation["claims"]:
                         relation["claims"]["P2860"] = []
                     relation["claims"]["P2860"].append(local_value)
 
+                    # reference relationwith specific edge
+                    relation_ref = {}
+                    relation_ref["claims"] = {}
+                    # "P2860" property "cites work "
+                    relation_ref["claims"]["P2860"] = []
+                    local_value = {}
+                    local_value["references"] = []
+                    local_value["references"].append(source_ref)
+                    relation_ref["claims"]["P2860"].append(local_value)
+
+                    relation_ref["_from"] = local_doc['_id']
+                    relation_ref["_to"] = referenced_document['_id']
+
+                    relation_ref["_key"] = local_doc["_key"] + "_" + referenced_document['_key'] + "_" + str(index_annot)
+                    relation_ref["_id"] = "references/" + relation_ref["_key"]
+                    if not stagingArea.staging_graph.has_edge(relation_ref["_id"]):
+                        stagingArea.staging_graph.insert_edge("references", edge=relation_ref)
+
                 # update citation edge document with the added reference information
                 stagingArea.staging_graph.update_edge(relation)
 
-
             index_annot += 1
-
-
 
 
 def check_value_exists(claim, property_name, value):

@@ -16,10 +16,10 @@ def populate_from_import(stagingArea, reset=False):
 
     # populate from Wikidata sources
     print("Add Wikidata imported documents to the staging area graph...")
-    populate_from_wikidata.populate(stagingArea)
+    #populate_from_wikidata.populate(stagingArea)
 
     # populate from extracted mention source
-    #populate_from_mentions.populate(stagingArea)
+    populate_from_mentions.populate(stagingArea)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Populate the staging area graph with imported document resources")
