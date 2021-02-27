@@ -57,7 +57,7 @@ def populate_mentions(stagingArea, source_ref):
         # we process all the annotations from this document, which makes possible some (modest) optimizations
 
         cursor_annot = stagingArea.db.aql.execute(
-          "FOR doc IN annotations FILTER doc['document.$oid'] == '" + local_doc['_id'] + "' RETURN doc", ttl=60
+          "FOR doc IN annotations FILTER doc.document.$oid == '" + local_doc['_key'] + "' RETURN doc", ttl=60
         )
 
         software_name_processed = {}
@@ -75,15 +75,13 @@ def populate_mentions(stagingArea, source_ref):
                     raise("cannot init software entity from default template")
 
                 software['labels'] = annotation["software-name"]["normalizedForm"]
-            
-                software_name_processed[annotation["software-name"]["normalizedForm"]] = software
                 new_entity = True
             else:
                 # otherwise get the existing entity for this software
                 software = software_name_processed[annotation["software-name"]["normalizedForm"]]
 
             # version info (P348)
-            if "version" in annotation and not check_value_exists(software["claims"], "P348", annotation["Version"]):
+            if "version" in annotation and not check_value_exists(software["claims"], "P348", annotation["version"]):
                 local_value = {}
                 local_value["value"] = annotation["version"]["normalizedForm"]
                 local_value["datatype"] = "string"
@@ -146,12 +144,12 @@ def populate_mentions(stagingArea, source_ref):
             # bibliographical references associated to the software could be aggregated here, possibly with count information
             # -> to be reviewed
 
-            local_id = stagingArea.get_uid()
-            software['_key'] = local_id
-            software['_id'] = "software/" + local_id
-
             if new_entity:
+                local_id = stagingArea.get_uid()
+                software['_key'] = local_id
+                software['_id'] = "software/" + local_id
                 stagingArea.staging_graph.insert_vertex("software", software)
+                software_name_processed[annotation["software-name"]["normalizedForm"]] = software
             elif changed:
                 stagingArea.staging_graph.update_vertex(software)
 
@@ -279,7 +277,8 @@ def populate_mentions(stagingArea, source_ref):
             relation["_from"] = "documents/" + local_doc["_key"]
             relation["_to"] = "software/" + software['_key']
             relation["_key"] = local_doc["_key"] + "_" + software['_key'] + "_" + str(index_annot)
-            stagingArea.staging_graph.insert_edge(stagingArea.citation, edge=relation)
+            relation["_id"] = "citations/" + relation["_key"]
+            stagingArea.staging_graph.insert_edge("citations", edge=relation)
 
             # bibliographical reference attached to the citation context, this will be represented as 
             # a reference relation, from the citing document to the cited document, with related software information
@@ -294,7 +293,7 @@ def populate_mentions(stagingArea, source_ref):
                         referenced_document = cursor_ref.next()
 
                     if referenced_document == None:
-                        # we create a new one from the metadata
+                        # this is the usual case. we create a new document entity from the extracted bibliographical reference metadata
                         referenced_document = stagingArea.init_entity_from_template("document", source=source_ref)
                         if referenced_document is None:
                             raise("cannot init document entity from default template")
@@ -303,11 +302,10 @@ def populate_mentions(stagingArea, source_ref):
                         referenced_document['_id'] = "documents/" + reference["reference_id"]["$oid"]
 
                         # get the metadata from the mentions database
-                        cursor_origin_ref = stagingArea.db.aql.execute(
-                            "FOR doc IN references FILTER doc['document.$oid'] == " + reference["reference_id"]["$oid"] + " RETURN doc", 
-                        )
-                        if cursor_origin_ref.count()>0:
-                            mention_reference = cursor_origin_ref.next()
+                        mention_reference = stagingArea.db.collection('references').get({'_key': reference["reference_id"]["$oid"]})
+                        if mention_reference is None:
+                            print("warning: reference object indicated in an annotation does not exist, _key:", reference["reference_id"]["$oid"])
+                            continue
 
                         # document metadata stays as they are (e.g. full CrossRef record)
                         referenced_document['tei'] = mention_reference['tei']
@@ -380,8 +378,8 @@ def populate_mentions(stagingArea, source_ref):
                     if not stagingArea.staging_graph.has_edge(relation_ref["_id"]):
                         stagingArea.staging_graph.insert_edge("references", edge=relation_ref)
 
-                # update citation edge document with the added reference information
-                stagingArea.staging_graph.update_edge(relation)
+            # update citation edge document with the added reference information
+            stagingArea.staging_graph.update_edge(relation)
 
             index_annot += 1
 

@@ -37,6 +37,7 @@ sys.path.append(os.path.abspath('./common'))
 from arango_common import CommonArangoDB
 import requests 
 import uuid 
+import hashlib
 from pybtex.database import parse_string
 from pybtex import format_from_string
 import pybtex.errors
@@ -280,64 +281,54 @@ class StagingArea(CommonArangoDB):
 
         # we first call biblio-glutton with "strong" identifiers
         if doi is not None and len(doi)>0:
-            response = requests.get(biblio_glutton_url, params={'doi': doi})
-            success = (response.status_code == 200)
+            the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'doi': doi})
             if success:
-                jsonResult = response.json()
+                jsonResult = the_result.json()
 
         if not success and pmid is not None and len(pmid)>0:
-            response = requests.get(biblio_glutton_url + "pmid=" + pmid)
-            success = (response.status_code == 200)
+            the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'pmid': pmid})
             if success:
-                jsonResult = response.json()     
+                jsonResult = the_result.json()     
 
         if not success and pmcid is not None and len(pmcid)>0:
-            response = requests.get(biblio_glutton_url + "pmc=" + pmcid)  
-            success = (response.status_code == 200)
+            the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'pmc': pmcid})
             if success:
-                jsonResult = response.json()
+                jsonResult = the_result.json()
 
         if not success and istex_id is not None and len(istex_id)>0:
-            response = requests.get(biblio_glutton_url + "istexid=" + istex_id)
-            success = (response.status_code == 200)
+            the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'istexid': istex_id})
             if success:
-                jsonResult = response.json()
+                jsonResult = the_result.json()
         
         if not success and doi is not None and len(doi)>0:
             # let's call crossref as fallback for the X-months gap
             # https://api.crossref.org/works/10.1037/0003-066X.59.1.29
             user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
                 + self.config['crossref_email'] + ')'} 
-            response = requests.get(self.config['crossref_base']+"/works/"+doi, headers=user_agent)
-            if response.status_code == 200:
-                jsonResult = response.json()['message']
-            else:
-                success = False
-                jsonResult = None
+            the_result, success, _ = self.access_web_api_get(self.config['crossref_base']+"/works/"+doi, headers=user_agent)
+            if success:
+                jsonResult = the_result.json()['message']
 
         if not success and first_author_last_name!= None and title != None:
             if raw_ref != None:
                 # call to biblio-glutton with combined raw ref, title and last author first name
                 params = {"biblio": raw_ref, "atitle": title, "firstAuthor": first_author_last_name}
-                response = requests.get(biblio_glutton_url, params=params)
-                success = (response.status_code == 200)
+                the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params=params)
                 if success:
-                    jsonResult = response.json()
+                    jsonResult = the_result.json()
             else:
                 # call to biblio-glutton with only title and last author first name
                 params = {"atitle": title, "firstAuthor": first_author_last_name}
-                response = requests.get(biblio_glutton_url, params=params)
-                success = (response.status_code == 200)
+                the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params=params)
                 if success:
-                    jsonResult = response.json()
+                    jsonResult = the_result.json()
 
         if not success and raw_ref != None:
             # call to biblio-glutton with only raw ref
             params = {"biblio": raw_ref, "postValidate": "true"}
-            response = requests.get(biblio_glutton_url, data=params)  
-            success = (response.status_code == 200)
+            the_result, success, _ = self.access_web_api_get(biblio_glutton_url, data=params)
             if success:
-                jsonResult = response.json()
+                jsonResult = the_result.json()
 
         '''
         if not success and raw_ref != None:
@@ -366,20 +357,23 @@ class StagingArea(CommonArangoDB):
         We need to use the Unpaywall API to get fresh information, because biblio-glutton is based on the 
         Unpaywall dataset dump which has a 7-months gap.
         """
-        response = requests.get(self.config["unpaywall_base"] + doi, params={'email': self.config["unpaywall_email"]}).json()
-        if response['best_oa_location'] and response['best_oa_location']['url_for_pdf']:
-            return response['best_oa_location']['url_for_pdf']
-        elif response['best_oa_location']['url'].startswith(self.config['pmc_base_web']):
-            return response['best_oa_location']['url']+"/pdf/"
-        # we have a look at the other "oa_locations", which might have a `url_for_pdf` ('best_oa_location' has not always a 
-        # `url_for_pdf`, for example for Elsevier OA articles)
-        for other_oa_location in response['oa_locations']:
-            # for a PMC file, we can concatenate /pdf/ to the base, eg https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7029158/pdf/
-            # but the downloader will have to use a good User-Agent and follow redirection
-            if other_oa_location['url'].startswith(self.config['pmc_base_web']):
-                return other_oa_location['url']+"/pdf/"
-            if other_oa_location['url_for_pdf']:
-                return other_oa_location['url_for_pdf']
+        params = {'email': self.config["unpaywall_email"]}
+        the_result, success, _ = self.access_web_api_get(self.config["unpaywall_base"] + doi, data=params)
+        if success:
+            response = the_result.json()
+            if response['best_oa_location'] and response['best_oa_location']['url_for_pdf']:
+                return response['best_oa_location']['url_for_pdf']
+            elif response['best_oa_location']['url'].startswith(self.config['pmc_base_web']):
+                return response['best_oa_location']['url']+"/pdf/"
+            # we have a look at the other "oa_locations", which might have a `url_for_pdf` ('best_oa_location' has not always a 
+            # `url_for_pdf`, for example for Elsevier OA articles)
+            for other_oa_location in response['oa_locations']:
+                # for a PMC file, we can concatenate /pdf/ to the base, eg https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7029158/pdf/
+                # but the downloader will have to use a good User-Agent and follow redirection
+                if other_oa_location['url'].startswith(self.config['pmc_base_web']):
+                    return other_oa_location['url']+"/pdf/"
+                if other_oa_location['url_for_pdf']:
+                    return other_oa_location['url_for_pdf']
         return None
 
     def process_reference_block(self, references_block, entity, source_ref):
@@ -503,8 +497,50 @@ class StagingArea(CommonArangoDB):
     def get_uid(self):
         local_id = uuid.uuid4().hex
         local_id = local_id.replace("-", "")
-        local_id = local_id[:-24]
+        local_id = local_id[:-8]
         return local_id
+
+    def access_web_api_get(self, url, params=None, data=None, headers=None, use_cache=True):
+        '''
+        This is a simple GET cached call to a given web service
+        '''
+        response_data = None
+        response_doc = None
+        final_key = None
+
+        if use_cache:
+            # check if cached
+            local_key = url
+            for param_key, param_value in params.items():
+                local_key += "_" + param_key + "_" + param_value
+
+            hash_object = hashlib.md5(local_key.encode())
+            final_key = hash_object.hexdigest()
+
+            response_doc = self.cache.get({'_key': final_key})
+
+        if response_doc is None:
+            # not cached, web access
+            response_data = requests.get(url, params=params, data=data, headers=headers)
+            status = response_data.status_code
+            success = (status == 200)
+
+            if use_cache and final_key != None:
+                # cache the result for next time
+                local_doc = {}
+                local_doc["data"] = response_data
+                local_doc["success"] = success
+                local_doc["status"] = status
+                local_doc["_key"] = final_key
+                local_doc["_id"] = "cache/" + final_key
+                self.cache.insert(response_data)
+        else:
+            success = response_doc["success"]
+            status = response_doc["status"]
+            response_data = response_doc["data"]
+
+        return response_data, success, status
+
 
 def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glutton_port):
     biblio_glutton_base = biblio_glutton_protocol + "://" + biblio_glutton_host
