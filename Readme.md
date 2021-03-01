@@ -117,22 +117,32 @@ The MongoDB JSON export can be compressed with gzip or not.
 
 GitHub public data come as an enrichment of a populated knowledge base. The following import should thus be done last after the import of the other resources. 
 
-...
+[WIP]
 
 ## Merging
 
-Once imported, the following command will merge the different data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
+Once imported, the following command will load the different imported data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
 
 ```bash
 python3 merge/populate.py --config my_config.json
 ```
 
-## Disambiguate
+The option `--reset` will re-init entirely the staging area. 
 
-The following script launches a disambiguation process on the graph in the staging area. Sub-graphs corresponding to the same entities will be combined based on entity disambiguate techniques. The extracted mentions of software will be deduplicated and resolved with the aggregated software representation. The result is a dense graph which is the actual Software Knowledge base, stored in an independent third area and used by the API.
+Once the staging area has been populated, we can merge/conflate entities based on a matching and disambiguation process:
 
 ```bash
-python3 disambiguate/disambiguate.py --config my_config.json
+python3 merge/merge.py --config my_config.json
+```
+
+The entities are actually not effectively merged at this stage, we simply keep track of merging decisions in some additional dedicated collections. 
+
+## Conflated Knowledge base
+
+The following script launches the creation of the final Knowledge Base using the graph in the staging area and the merging decisions produced by the disambiguation process. The actual merging of entities (vertex) is realized at this stage. Relations (edges) will be updated and deduplicated based on the merged entities. The result is a denser graph which is the actual Software Knowledge base, stored in an independent third area and used by the API.
+
+```bash
+python3 kb/knowledge_base.py --config my_config.json
 ```
 
 ## API

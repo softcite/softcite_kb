@@ -114,6 +114,17 @@ def test_biblio(stagingArea):
                 print(stagingArea.biblio_glutton_lookup(raw_ref=reference["raw"]))
 
 
+tei_str_tests = [ '<biblStruct xml:id=\"b28\">\n\t<analytic>\n\t\t<title level=\"a\" type=\"main\">Superintelligence and Singularity</title>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">R</forename></persName>\n\t\t</author>\n\t\t<idno type=\"DOI\">10.1002/9781118922590.ch15</idno>\n\t</analytic>\n\t<monogr>\n\t\t<title level=\"m\">Science Fiction and Philosophy</title>\n\t\t\t\t<editor>\n\t\t\t<persName><forename type=\"first\">S</forename><surname>Schneider</surname></persName>\n\t\t</editor>\n\t\t<imprint>\n\t\t\t<publisher>John Wiley &amp; Sons, Inc</publisher>\n\t\t\t<date type=\"published\" when=\"2016-01-08\" />\n\t\t\t<biblScope unit=\"page\" from=\"146\" to=\"170\" />\n\t\t</imprint>\n\t</monogr>\n\t<note>Superintelligence and singularity</note>\n</biblStruct>\n',
+                  '<biblStruct xml:id=\"b17\">\n\t<analytic>\n\t\t<title level=\"a\" type=\"main\">YmdB: a stress-responsive ribonuclease-binding regulator of E. coli RNase III activity</title>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">K-S</forename><surname>Kim</surname></persName>\n\t\t</author>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">R</forename><surname>Manasherob</surname></persName>\n\t\t</author>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">S</forename><forename type=\"middle\">N</forename><surname>Cohen</surname></persName>\n\t\t</author>\n\t\t<idno type=\"DOI\">10.1101/gad.1729508</idno>\n\t\t<idno type=\"PMID\">19141481</idno>\n\t\t<idno type=\"PMCID\">PMC2607070</idno>\n\t\t<ptr type=\"open-access\" target=\"http://genesdev.cshlp.org/content/22/24/3497.full.pdf\" />\n\t</analytic>\n\t<monogr>\n\t\t<title level=\"j\">Genes &amp; Development</title>\n\t\t<title level=\"j\" type=\"abbrev\">Genes &amp; Development</title>\n\t\t<idno type=\"ISSN\">0890-9369</idno>\n\t\t<imprint>\n\t\t\t<biblScope unit=\"volume\">22</biblScope>\n\t\t\t<biblScope unit=\"issue\">24</biblScope>\n\t\t\t<biblScope unit=\"page\" from=\"3497\" to=\"3508\" />\n\t\t\t<date type=\"published\" when=\"2008-12-15\" />\n\t\t\t<publisher>Cold Spring Harbor Laboratory</publisher>\n\t\t</imprint>\n\t</monogr>\n</biblStruct>',
+                  '<biblStruct xml:id=\"b17\">\n\t<analytic>\n\t\t<title level=\"a\" type=\"main\">YmdB: a stress-responsive ribonuclease-binding regulator of E. coli RNase III activity</title>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">K-S</forename><surname>Kim</surname></persName>\n\t\t</author>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">R</forename><surname>Manasherob</surname></persName>\n\t\t</author>\n\t\t<author>\n\t\t\t<persName><forename type=\"first\">S</forename><forename type=\"middle\">N</forename><surname>Cohen</surname></persName>\n\t\t</author>\n\t\t<idno type=\"PMID\">19141481</idno>\n\t\t<idno type=\"PMCID\">PMC2607070</idno>\n\t\t<ptr type=\"open-access\" target=\"http://genesdev.cshlp.org/content/22/24/3497.full.pdf\" />\n\t</analytic>\n\t<monogr>\n\t\t<title level=\"j\">Genes &amp; Development</title>\n\t\t<title level=\"j\" type=\"abbrev\">Genes &amp; Development</title>\n\t\t<idno type=\"ISSN\">0890-9369</idno>\n\t\t<imprint>\n\t\t\t<biblScope unit=\"volume\">22</biblScope>\n\t\t\t<biblScope unit=\"issue\">24</biblScope>\n\t\t\t<biblScope unit=\"page\" from=\"3497\" to=\"3508\" />\n\t\t\t<date type=\"published\" when=\"2008-12-15\" />\n\t\t\t<publisher>Cold Spring Harbor Laboratory</publisher>\n\t\t</imprint>\n\t</monogr>\n</biblStruct>'
+                ]
+
+def test_tei2json(stagingArea):
+    for tei_str in tei_str_tests:
+        json_obj = stagingArea.tei2json(tei_str)
+        print(json.dumps(json_obj))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Test bibliographicla reference processing during import/populate of the KB")
     parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
@@ -123,3 +134,5 @@ if __name__ == "__main__":
 
     stagingArea = StagingArea(config_path=config_path)
     test_biblio(stagingArea)
+
+    test_tei2json(stagingArea)
