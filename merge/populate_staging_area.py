@@ -42,6 +42,7 @@ from pybtex.database import parse_string
 from pybtex import format_from_string
 import pybtex.errors
 pybtex.errors.set_strict_mode(False)
+from lxml import etree 
 
 class StagingArea(CommonArangoDB):
 
@@ -104,6 +105,11 @@ class StagingArea(CommonArangoDB):
 
         if not self.staging_graph.has_vertex_collection('documents'):
             self.documents = self.staging_graph.create_vertex_collection('documents')
+            # we add a hash index on the DOI identifier (note DOI is not case-sensitive, so we lowercase 
+            # everything and look-up must be made with lower case DOI too)
+            self.index_doi = self.persons.add_hash_index(fields=['index_doi'], unique=False, sparse=True)
+            # we add an index on a title+first author last name signature
+            self.index_title_author = self.persons.add_hash_index(fields=['index_title_author'], unique=False, sparse=True)
         else:
             self.documents = self.staging_graph.vertex_collection('documents')
 
@@ -247,6 +253,60 @@ class StagingArea(CommonArangoDB):
                 to_vertex_collections=['organizations']
             )
 
+    def init_merging_collections(self):
+        '''
+        Create collections to keep track of merging decisions for the different entities (vertex only). 
+        '''
+        if not self.staging_graph.has_vertex_collection('software_merging'):
+            self.software_merging = self.staging_graph.create_vertex_collection('software_merging')
+        else:
+            self.software_merging = self.staging_graph.vertex_collection('software_merging')
+
+        if not self.staging_graph.has_vertex_collection('persons_merging'):
+            self.persons_merging = self.staging_graph.create_vertex_collection('persons_merging')
+        else:
+            self.persons_merging = self.staging_graph.vertex_collection('persons_merging')
+
+        if not self.staging_graph.has_vertex_collection('organizations_merging'):
+            self.organizations_merging = self.staging_graph.create_vertex_collection('organizations_merging')
+        else:
+            self.organizations_merging = self.staging_graph.vertex_collection('organizations_merging')
+
+        if not self.staging_graph.has_vertex_collection('documents_merging'):
+            self.documents_merging = self.staging_graph.create_vertex_collection('documents_merging')
+        else:
+            self.documents_merging = self.staging_graph.vertex_collection('documents_merging')
+
+        if not self.staging_graph.has_vertex_collection('licenses_merging'):
+            self.licenses_merging = self.staging_graph.create_vertex_collection('licenses_merging')
+        else:
+            self.licenses_merging = self.staging_graph.vertex_collection('licenses_merging')
+
+    def reset_merging_collections(self):
+        '''
+        Reinit the collections to keep track of merging decisions for the different entities (vertex only). 
+        '''
+        if self.staging_graph.has_vertex_collection('software_merging'):
+            self.staging_graph.delete_vertex_collection('software_merging', purge=True)
+
+        if self.staging_graph.has_vertex_collection('persons_merging'):
+            self.staging_graph.delete_vertex_collection('persons_merging', purge=True)
+
+        if self.staging_graph.has_vertex_collection('organizations_merging'):
+            self.staging_graph.delete_vertex_collection('organizations_merging', purge=True)
+
+        if self.staging_graph.has_vertex_collection('documents_merging'):
+            self.staging_graph.delete_vertex_collection('documents_merging', purge=True)
+
+        if self.staging_graph.has_vertex_collection('licenses_merging'):
+            self.staging_graph.delete_vertex_collection('licenses_merging', purge=True)
+
+        self.software_merging = self.staging_graph.create_vertex_collection('software_merging')
+        self.persons_merging = self.staging_graph.create_vertex_collection('persons_merging')
+        self.organizations_merging = self.staging_graph.create_vertex_collection('organizations_merging')
+        self.documents_merging = self.staging_graph.create_vertex_collection('documents_merging')
+        self.licenses_merging = self.staging_graph.create_vertex_collection('licenses_merging')
+
     def init_entity_from_template(self, template="software", source=None):
         '''
         Init an entity based on a template json present under resources/
@@ -283,22 +343,22 @@ class StagingArea(CommonArangoDB):
         if doi is not None and len(doi)>0:
             the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'doi': doi})
             if success:
-                jsonResult = the_result.json()
+                jsonResult = the_result
 
         if not success and pmid is not None and len(pmid)>0:
             the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'pmid': pmid})
             if success:
-                jsonResult = the_result.json()     
+                jsonResult = the_result  
 
         if not success and pmcid is not None and len(pmcid)>0:
             the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'pmc': pmcid})
             if success:
-                jsonResult = the_result.json()
+                jsonResult = the_result
 
         if not success and istex_id is not None and len(istex_id)>0:
             the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params={'istexid': istex_id})
             if success:
-                jsonResult = the_result.json()
+                jsonResult = the_result
         
         if not success and doi is not None and len(doi)>0:
             # let's call crossref as fallback for the X-months gap
@@ -307,7 +367,7 @@ class StagingArea(CommonArangoDB):
                 + self.config['crossref_email'] + ')'} 
             the_result, success, _ = self.access_web_api_get(self.config['crossref_base']+"/works/"+doi, headers=user_agent)
             if success:
-                jsonResult = the_result.json()['message']
+                jsonResult = the_result['message']
 
         if not success and first_author_last_name!= None and title != None:
             if raw_ref != None:
@@ -315,20 +375,20 @@ class StagingArea(CommonArangoDB):
                 params = {"biblio": raw_ref, "atitle": title, "firstAuthor": first_author_last_name}
                 the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params=params)
                 if success:
-                    jsonResult = the_result.json()
+                    jsonResult = the_result
             else:
                 # call to biblio-glutton with only title and last author first name
                 params = {"atitle": title, "firstAuthor": first_author_last_name}
                 the_result, success, _ = self.access_web_api_get(biblio_glutton_url, params=params)
                 if success:
-                    jsonResult = the_result.json()
+                    jsonResult = the_result
 
         if not success and raw_ref != None:
             # call to biblio-glutton with only raw ref
             params = {"biblio": raw_ref, "postValidate": "true"}
             the_result, success, _ = self.access_web_api_get(biblio_glutton_url, data=params)
             if success:
-                jsonResult = the_result.json()
+                jsonResult = the_result
 
         '''
         if not success and raw_ref != None:
@@ -358,9 +418,8 @@ class StagingArea(CommonArangoDB):
         Unpaywall dataset dump which has a 7-months gap.
         """
         params = {'email': self.config["unpaywall_email"]}
-        the_result, success, _ = self.access_web_api_get(self.config["unpaywall_base"] + doi, data=params)
+        response, success, _ = self.access_web_api_get(self.config["unpaywall_base"] + doi, data=params)
         if success:
-            response = the_result.json()
             if response['best_oa_location'] and response['best_oa_location']['url_for_pdf']:
                 return response['best_oa_location']['url_for_pdf']
             elif response['best_oa_location']['url'].startswith(self.config['pmc_base_web']):
@@ -474,6 +533,17 @@ class StagingArea(CommonArangoDB):
                 # document metadata stays as they are (e.g. full CrossRef record)
                 local_doc['metadata'] = glutton_biblio
 
+                # doi index
+                if "DOI" in glutton_biblio:
+                    local_doc["index_doi"] = glutton_biblio["DOI"].lower()
+
+                # title/first author last name index
+                if "title" in glutton_biblio and 'author' in glutton_biblio:
+                    local_key = self.title_author_key(glutton_biblio["title"], glutton_biblio['author'])
+                    if local_key != None:
+                        local_doc["index_title_author"] = local_key
+                                
+
                 if not self.staging_graph.has_vertex(local_doc["_id"]):
                     self.staging_graph.insert_vertex("documents", local_doc)
 
@@ -500,9 +570,9 @@ class StagingArea(CommonArangoDB):
         local_id = local_id[:-8]
         return local_id
 
-    def access_web_api_get(self, url, params=None, data=None, headers=None, use_cache=True):
+    def access_web_api_get(self, url, params=None, data=None, headers=None, use_cache=True, json_content=True):
         '''
-        This is a simple GET cached call to a given web service
+        This is a simple GET cached call to a given web service, with response content as JSON or text only
         '''
         response_data = None
         response_doc = None
@@ -511,8 +581,12 @@ class StagingArea(CommonArangoDB):
         if use_cache:
             # check if cached
             local_key = url
-            for param_key, param_value in params.items():
-                local_key += "_" + param_key + "_" + param_value
+            if params != None:
+                for param_key, param_value in params.items():
+                    local_key += "_" + param_key + "_" + param_value
+            if data != None:
+                for param_key, param_value in data.items():
+                    local_key += "_" + param_key + "_" + param_value
 
             hash_object = hashlib.md5(local_key.encode())
             final_key = hash_object.hexdigest()
@@ -521,9 +595,13 @@ class StagingArea(CommonArangoDB):
 
         if response_doc is None:
             # not cached, web access
-            response_data = requests.get(url, params=params, data=data, headers=headers)
-            status = response_data.status_code
+            response = requests.get(url, params=params, data=data, headers=headers)
+            status = response.status_code
             success = (status == 200)
+            if success and json_content:
+                response_data = response.json()
+            elif success:
+                response_data = response.text
 
             if use_cache and final_key != None:
                 # cache the result for next time
@@ -533,7 +611,7 @@ class StagingArea(CommonArangoDB):
                 local_doc["status"] = status
                 local_doc["_key"] = final_key
                 local_doc["_id"] = "cache/" + final_key
-                self.cache.insert(response_data)
+                self.cache.insert(local_doc)
         else:
             success = response_doc["success"]
             status = response_doc["status"]
@@ -541,6 +619,208 @@ class StagingArea(CommonArangoDB):
 
         return response_data, success, status
 
+    def tei2json(self, tei):
+        '''
+        Transform a bibliographical reference in TEI into JSON, similar to CrossRef JSON format (largely simplified)
+        '''
+        json_bib = {}
+        root = etree.fromstring(tei)
+
+        # xpaths
+        x_title = '/biblStruct/analytic/title[@level="a"]'
+        x_doi = '/biblStruct/analytic/idno[@type="DOI"]' 
+        x_pmid = '/biblStruct/analytic/idno[@type="PMID"]'
+        x_pmcid = '/biblStruct/analytic/idno[@type="PMCID"]'
+        x_oa_link = '/biblStruct/analytic/ptr[@type="open-access"]/@target'
+
+        x_publisher = '/biblStruct/monogr/imprint/publisher'
+        x_journal = '/biblStruct/monogr/title[@level="j"]'
+        x_monograph = '/biblStruct/monogr/title[@level="m"]'
+
+        x_volume = '/biblStruct/monogr/imprint/biblScope[@unit="volume"]'
+        x_issue = '/biblStruct/monogr/imprint/biblScope[@unit="issue"]'
+        x_page_from = '/biblStruct/monogr/imprint/biblScope[@unit="page"]/@from'
+        x_page_to = '/biblStruct/monogr/imprint/biblScope[@unit="page"]/@to'
+        x_page = '/biblStruct/monogr/imprint/biblScope[@unit="page"]'
+        x_issn = '/biblStruct/monogr/idno[@type="ISSN"]'
+        x_isbn = '/biblStruct/monogr/idno[@type="ISBN"]'
+
+        x_date = '/biblStruct/monogr/imprint/date[@type="published"]'
+        x_url = '/biblStruct/analytic/ptr[not(@type)]'
+
+        x_meeting_title = '/biblStruct/monogr/meeting/title'
+        x_meeting_place = '/biblStruct/monogr/meeting/placeName'
+        x_meeting_start = '/biblStruct/monogr/meeting/date[@type="conferenceStartDate"]'
+        x_meeting_end = '/biblStruct/monogr/meeting/date[@type="conferenceEndDate"]' 
+
+        # authorship
+        x_author_persons = '/biblStruct/analytic/author/persName'
+
+        local_doi = _get_first_value_xpath(root, x_doi)
+        if local_doi != None:
+            json_bib['DOI'] = local_doi
+
+        # if we have a DOI, we get the CrossRef entry directly
+        if 'DOI' in json_bib and json_bib['DOI'] is not None and len(json_bib['DOI']) >0:
+            result_glutton = self.biblio_glutton_lookup(doi=json_bib['DOI'])
+            if result_glutton != None:
+                return result_glutton
+
+        local_pmid = _get_first_value_xpath(root, x_pmid)
+        if local_pmid != None:
+            json_bib["pmid"] = local_pmid
+        
+        local_pmcid = _get_first_value_xpath(root, x_pmcid)
+        if local_pmcid != None:
+            json_bib["pmcid"] = local_pmcid 
+
+        local_url = _get_first_value_xpath(root, x_url)
+        if local_url != None:
+            json_bib['URL'] = local_url
+
+        json_bib['author'] = _get_all_values_authors_xpath(root, x_author_persons)
+
+        local_volume = _get_first_value_xpath(root, x_volume)
+        if local_volume != None:
+            json_bib["volume"] = local_volume
+        local_issn = _get_first_value_xpath(root, x_issn)
+        if local_issn != None:
+            json_bib["ISSN"] = local_issn
+        local_isbn = _get_first_value_xpath(root, x_isbn)
+        if local_isbn != None:
+            json_bib["ISBN"] = local_isbn
+        local_issue = _get_first_value_xpath(root, x_issue)
+        if local_issue != None:
+            json_bib["issue"] = local_issue
+
+        local_oa_link = _get_first_attribute_value_xpath(root, x_oa_link)
+        if local_oa_link != None:
+            json_bib["oaLink"] = local_oa_link
+
+        json_bib["title"] = []
+        local_title = _get_first_value_xpath(root, x_title)
+        if local_title != None:
+            json_bib["title"].append(local_title)
+        local_publisher = _get_first_value_xpath(root, x_publisher) 
+        if local_publisher != None:
+            json_bib["publisher"] = local_publisher
+
+        # date has a strange structure in crossref... we also store the standard ISO 8601 format which is much easier to work with and clear  
+        local_date = _get_date_xpath(root, x_date)
+        if local_date != None:
+            json_bib["date"] = local_date
+
+            parts = []
+            date_parts = local_date.split("-")
+            if len(date_parts) > 0:
+                # year
+                parts.append(date_parts[0])
+            if len(date_parts) > 1:
+                # month
+                parts.append(date_parts[1])
+            if len(date_parts) > 2:
+                # day
+                parts.append(date_parts[2])    
+
+            json_bib["published-online"] = { "date-parts": [ parts ] }    
+            ''' format is:
+            "published-online": {
+              "date-parts": [
+                [
+                  2014,
+                  9,
+                  8
+                ]
+              ]
+            },
+            '''
+        page_from = _get_first_attribute_value_xpath(root, x_page_from)
+        page_to =  _get_first_attribute_value_xpath(root, x_page_to)
+        if page_from is not None and page_to is not None:
+            json_bib["page"] = page_from + '-' + page_to
+        else:
+            local_page_range = _get_first_value_xpath(root, x_pages)
+            if local_page_range != None:
+                json_bib["page"] = local_page_range
+
+        json_bib["container-title"] = []
+        title_journal = _get_first_value_xpath(root, x_journal)
+        if title_journal != None and len(title_journal) > 0:
+            json_bib["container-title"].append(title_journal)
+        title_monograph = _get_first_value_xpath(root, x_monograph)
+        if title_monograph != None and len(title_monograph) > 0:
+            json_bib["container-title"].append(title_monograph)
+
+        event_title = _get_first_value_xpath(root, x_meeting_title)
+        if event_title != None and len(event_title) > 0:
+            json_bib["event"] = { "name": event_title } 
+
+        return json_bib
+
+    def title_author_key(self, title, author_block):
+        '''
+        Generate a key for a document hash index based on the title and first author last name. 
+        If no key is possible, return None 
+        '''
+        if title == None or len(title) == 0 or author_block == None or len(author_block) == 0:
+            return None
+
+        # normally title is a list, but for safety we cover also a string value
+        if isinstance(title, list):
+            simplified_title = title[0].replace(" ", "").lower()
+        else:
+            simplified_title = title.replace(" ", "").lower()
+
+        if "family" in author_block[0]: 
+            simplified_name = author_block[0]['family'].replace(" ", "").lower()
+            return simplified_title + '_' + simplified_name
+
+        return None
+
+def _get_first_value_xpath(node, xpath_exp):
+    values = node.xpath(xpath_exp)
+    value = None
+    if values is not None and len(values)>0:
+        value = values[0].text
+    return value
+
+def _get_first_attribute_value_xpath(node, xpath_exp):
+    values = node.xpath(xpath_exp)
+    value = None
+    if values is not None and len(values)>0:
+        value = values[0]
+    return value
+
+def _get_date_xpath(node, xpath_exp):
+    dates = node.xpath(xpath_exp)
+    date = None
+    if dates is not None and len(dates)>0:
+        date = dates[0].get("when")
+    return date
+
+def _get_all_values_authors_xpath(node, xpath_exp):
+    values = node.xpath(xpath_exp)
+    result = []
+    if values is not None and len(values)>0:
+        for val in values:
+            # each val is a person
+            person = {}
+            fornames = val.xpath('./forename')
+            surname = val.xpath('./surname')
+
+            if surname != None and len(surname)>0 and surname[0].text != None:
+                person['family'] = surname[0].text.strip() 
+
+            if fornames != None:
+                for forname in fornames:
+                    if forname.text != None:
+                        if not 'given' in person:
+                            person['given'] = forname.text.strip()
+                        else:
+                            person['given'] += " " + forname.text
+            result.append(person)
+    # family, given - there is no middle name in crossref, it is just concatenated to "given" without any normalization
+    return result
 
 def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glutton_port):
     biblio_glutton_base = biblio_glutton_protocol + "://" + biblio_glutton_host

@@ -7,7 +7,6 @@ import json
 from arango import ArangoClient
 from populate_staging_area import StagingArea
 
-
 def populate(stagingArea):
 
     database_name_mentions = "mentions"
@@ -308,7 +307,17 @@ def populate_mentions(stagingArea, source_ref):
                             continue
 
                         # document metadata stays as they are (e.g. full CrossRef record)
-                        referenced_document['tei'] = mention_reference['tei']
+                        referenced_document['metadata'] = stagingArea.tei2json(mention_reference['tei'])
+
+                        # DOI index
+                        if "DOI" in referenced_document['metadata']:
+                            referenced_document["index_doi"] = referenced_document['metadata']['DOI'].lower()
+
+                        # title/first author last name index
+                        if "title" in referenced_document['metadata'] and author in referenced_document['metadata']:
+                            local_key = stagingArea.title_author_key(referenced_document['metadata']['title'], referenced_document['metadata']['author'])
+                            if local_key != None:
+                                referenced_document["index_title_author"] = local_key
 
                         if not stagingArea.staging_graph.has_vertex(referenced_document["_id"]):
                             stagingArea.staging_graph.insert_vertex("documents", referenced_document)
@@ -382,7 +391,6 @@ def populate_mentions(stagingArea, source_ref):
             stagingArea.staging_graph.update_edge(relation)
 
             index_annot += 1
-
 
 def check_value_exists(claim, property_name, value):
     '''

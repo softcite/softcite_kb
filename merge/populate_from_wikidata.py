@@ -119,6 +119,10 @@ def populate_wikidata(stagingArea, source_ref):
                     value["references"].append(source_ref)
 
         publication["_id"] = "documents/" + publication["_key"]
+
+        # we need to add crossref metadata and set the index when possible
+        # TBD
+
         if not stagingArea.staging_graph.has_vertex(publication["_id"]):
                 stagingArea.staging_graph.insert_vertex("documents", publication)
 
