@@ -8,6 +8,26 @@
     A recent full Wikidata json dump compressed with bz2 (which is more compact) is needed, which 
     can be dowloaded [here](https://dumps.wikimedia.org/wikidatawiki/entities/). There is no need to 
     uncompressed the json dump.
+
+    Note: given the limited number of entities to be imported and given that the processing of the full Wikidata
+    JSON dump is time consuming, alternatively we could explore the usage of entity-level web query:
+    
+    https://www.wikidata.org/wiki/Special:EntityData/Q42.json
+    or
+    https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q24871&format=json
+
+    batch:
+    https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q775450|Q3041294|Q646968|Q434841|Q11920&format=json&props=labels
+
+    batch and filter: 
+    https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q775450|Q3041294|Q646968|Q434841|Q11920&format=json&props=labels&languages=en|de|fr
+
+    with a cache, if we can easily get the lastrevid for comparison with the cached one
+    See https://www.mediawiki.org/wiki/API:Recent_changes_stream
+    and https://www.mediawiki.org/wiki/API:RecentChanges
+
+    On the other hand, processing the wikidata full dump is not something to be done frequently. 
+
 '''
 
 import requests
