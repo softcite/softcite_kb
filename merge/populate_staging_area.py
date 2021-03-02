@@ -88,6 +88,7 @@ class StagingArea(CommonArangoDB):
         # init vertex collections if they don't exist
         if not self.staging_graph.has_vertex_collection('software'):
             self.software = self.staging_graph.create_vertex_collection('software')
+            self.index_software_name = self.software.add_hash_index(fields=['label'], unique=False, sparse=False)
         else:
             self.software = self.staging_graph.vertex_collection('software')
 
@@ -95,6 +96,7 @@ class StagingArea(CommonArangoDB):
             self.persons = self.staging_graph.create_vertex_collection('persons')
             # we add a hash index on the orcid identifier
             self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
+            self.index_person_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
         else:
             self.persons = self.staging_graph.vertex_collection('persons')
 
@@ -107,9 +109,9 @@ class StagingArea(CommonArangoDB):
             self.documents = self.staging_graph.create_vertex_collection('documents')
             # we add a hash index on the DOI identifier (note DOI is not case-sensitive, so we lowercase 
             # everything and look-up must be made with lower case DOI too)
-            self.index_doi = self.persons.add_hash_index(fields=['index_doi'], unique=False, sparse=True)
+            self.index_doi = self.documents.add_hash_index(fields=['index_doi'], unique=False, sparse=True)
             # we add an index on a title+first author last name signature
-            self.index_title_author = self.persons.add_hash_index(fields=['index_title_author'], unique=False, sparse=True)
+            self.index_title_author = self.documents.add_hash_index(fields=['index_title_author'], unique=False, sparse=True)
         else:
             self.documents = self.staging_graph.vertex_collection('documents')
 
@@ -211,10 +213,18 @@ class StagingArea(CommonArangoDB):
             self.staging_graph.delete_vertex_collection('licenses', purge=True)
 
         self.software = self.staging_graph.create_vertex_collection('software')
+        self.index_software_name = self.software.add_hash_index(fields=['label'], unique=False, sparse=False)
+
         self.persons = self.staging_graph.create_vertex_collection('persons')
         self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
+        self.index_person_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
+        
         self.organizations = self.staging_graph.create_vertex_collection('organizations')
+        
         self.documents = self.staging_graph.create_vertex_collection('documents')
+        self.index_doi = self.documents.add_hash_index(fields=['index_doi'], unique=False, sparse=True)
+        self.index_title_author = self.documents.add_hash_index(fields=['index_title_author'], unique=False, sparse=True)
+
         self.licenses = self.staging_graph.create_vertex_collection('licenses')
 
         self.citations = self.staging_graph.create_edge_definition(
@@ -257,55 +267,31 @@ class StagingArea(CommonArangoDB):
         '''
         Create collections to keep track of merging decisions for the different entities (vertex only). 
         '''
-        if not self.staging_graph.has_vertex_collection('software_merging'):
-            self.software_merging = self.staging_graph.create_vertex_collection('software_merging')
-        else:
-            self.software_merging = self.staging_graph.vertex_collection('software_merging')
 
-        if not self.staging_graph.has_vertex_collection('persons_merging'):
-            self.persons_merging = self.staging_graph.create_vertex_collection('persons_merging')
+        # keep track of list of entities to be merged (first entity of the list will be the host of the merging)
+        if not self.staging_graph.has_vertex_collection('merging_lists'):
+            self.merging_lists = self.staging_graph.create_vertex_collection('merging_lists')
         else:
-            self.persons_merging = self.staging_graph.vertex_collection('persons_merging')
+            self.merging_lists = self.staging_graph.vertex_collection('merging_lists')
 
-        if not self.staging_graph.has_vertex_collection('organizations_merging'):
-            self.organizations_merging = self.staging_graph.create_vertex_collection('organizations_merging')
+        # keep track for a given entity of the list of entities where is should be merged     
+        if not self.staging_graph.has_vertex_collection('merging_entities'):
+            self.merging_entities = self.staging_graph.create_vertex_collection('merging_entities')
         else:
-            self.organizations_merging = self.staging_graph.vertex_collection('organizations_merging')
-
-        if not self.staging_graph.has_vertex_collection('documents_merging'):
-            self.documents_merging = self.staging_graph.create_vertex_collection('documents_merging')
-        else:
-            self.documents_merging = self.staging_graph.vertex_collection('documents_merging')
-
-        if not self.staging_graph.has_vertex_collection('licenses_merging'):
-            self.licenses_merging = self.staging_graph.create_vertex_collection('licenses_merging')
-        else:
-            self.licenses_merging = self.staging_graph.vertex_collection('licenses_merging')
+            self.merging_entities = self.staging_graph.vertex_collection('merging_entities')
 
     def reset_merging_collections(self):
         '''
         Reinit the collections to keep track of merging decisions for the different entities (vertex only). 
         '''
-        if self.staging_graph.has_vertex_collection('software_merging'):
-            self.staging_graph.delete_vertex_collection('software_merging', purge=True)
+        if self.staging_graph.has_vertex_collection('merging_list'):
+            self.staging_graph.delete_vertex_collection('merging_list', purge=True)
 
-        if self.staging_graph.has_vertex_collection('persons_merging'):
-            self.staging_graph.delete_vertex_collection('persons_merging', purge=True)
+        if self.staging_graph.has_vertex_collection('merging_entities'):
+            self.staging_graph.delete_vertex_collection('merging_entities', purge=True)
 
-        if self.staging_graph.has_vertex_collection('organizations_merging'):
-            self.staging_graph.delete_vertex_collection('organizations_merging', purge=True)
-
-        if self.staging_graph.has_vertex_collection('documents_merging'):
-            self.staging_graph.delete_vertex_collection('documents_merging', purge=True)
-
-        if self.staging_graph.has_vertex_collection('licenses_merging'):
-            self.staging_graph.delete_vertex_collection('licenses_merging', purge=True)
-
-        self.software_merging = self.staging_graph.create_vertex_collection('software_merging')
-        self.persons_merging = self.staging_graph.create_vertex_collection('persons_merging')
-        self.organizations_merging = self.staging_graph.create_vertex_collection('organizations_merging')
-        self.documents_merging = self.staging_graph.create_vertex_collection('documents_merging')
-        self.licenses_merging = self.staging_graph.create_vertex_collection('licenses_merging')
+        self.merging_list = self.staging_graph.create_vertex_collection('merging_list')
+        self.merging_entities = self.staging_graph.create_vertex_collection('merging_entities')
 
     def init_entity_from_template(self, template="software", source=None):
         '''
@@ -369,7 +355,7 @@ class StagingArea(CommonArangoDB):
             if success:
                 jsonResult = the_result['message']
 
-        if not success and first_author_last_name!= None and title != None:
+        if not success and first_author_last_name != None and title != None:
             if raw_ref != None:
                 # call to biblio-glutton with combined raw ref, title and last author first name
                 params = {"biblio": raw_ref, "atitle": title, "firstAuthor": first_author_last_name}
@@ -595,7 +581,13 @@ class StagingArea(CommonArangoDB):
 
         if response_doc is None:
             # not cached, web access
-            response = requests.get(url, params=params, data=data, headers=headers)
+            if params != None and len(params) > 0:
+                response = requests.get(url, params=params, headers=headers)
+            elif data != None and len(data) > 0:
+                response = requests.get(url, data=data, headers=headers)
+            else:
+                response = requests.get(url, headers=headers)
+
             status = response.status_code
             success = (status == 200)
             if success and json_content:
@@ -621,7 +613,7 @@ class StagingArea(CommonArangoDB):
 
     def tei2json(self, tei):
         '''
-        Transform a bibliographical reference in TEI into JSON, similar to CrossRef JSON format (largely simplified)
+        Transform a bibliographical reference in TEI into JSON, similar to CrossRef JSON format (but simplified)
         '''
         json_bib = {}
         root = etree.fromstring(tei)
@@ -641,7 +633,7 @@ class StagingArea(CommonArangoDB):
         x_issue = '/biblStruct/monogr/imprint/biblScope[@unit="issue"]'
         x_page_from = '/biblStruct/monogr/imprint/biblScope[@unit="page"]/@from'
         x_page_to = '/biblStruct/monogr/imprint/biblScope[@unit="page"]/@to'
-        x_page = '/biblStruct/monogr/imprint/biblScope[@unit="page"]'
+        x_pages = '/biblStruct/monogr/imprint/biblScope[@unit="page"]'
         x_issn = '/biblStruct/monogr/idno[@type="ISSN"]'
         x_isbn = '/biblStruct/monogr/idno[@type="ISBN"]'
 
@@ -757,6 +749,123 @@ class StagingArea(CommonArangoDB):
 
         return json_bib
 
+    def wiki_biblio2json(self, entity):
+        '''
+        For a research publication entity, convert some wikidata information relevant to deduplication into
+        bibliographical metadata, similar to CrossRef JSON format (but simplified) and feed the signature index
+        '''
+        metadata = {}
+        local_title = None
+        local_first_author = None
+        if "claims" in entity:
+            for the_property in entity["claims"]:
+                claims = entity["claims"][the_property]
+                if the_property == "P356":
+                    print(claim)
+                    # P356 DOI 
+                    if len(claims) > 0 and "value" in claims[0]:
+                        local_doi = claims[0]["value"]
+                        if local_doi != None and len(local_doi) > 0:
+                            metadata["DOI"] = local_doi
+
+                    # DOI index
+                    entity["index_doi"] = local_doi.lower()
+
+                    # we can simply get the crossref entry and stop the conversion at this stage
+                    metadata = self.biblio_glutton_lookup(doi=local_doi)
+                    entity["metadata"] = metadata
+                    return entity
+
+                elif the_property == "P1476":
+                    # P1476 gives the article title
+                    if len(claims) > 0 and "value" in claims[0]:
+                        local_title = claims[0]["value"]
+                        if local_title != None and len(local_title) > 0:
+                            metadata["title"] = local_title
+
+                    '''
+                    elif "P50" in claim:
+                        # P50 (entity value) and P2093 (string value) gives the list of authors
+                        # P50 entity value is annoying because it requires an additional web access to get the author string form
+                        # in addition the partition of authors into entity value and string value complicates the
+                        # retrieval of the order of the authors and exploiting the first author as traditional look-up key
+                        if len(claim["P50"]) > 0:
+                            for author_claim in claim["P50"]:
+                                if "value" in author_claim: 
+                                    local_author_entity = author_claim["value"]
+                                    # get the author rank
+
+
+                        # the actual author order is given by the property P1545 (series ordinal) in the qualifiers
+
+                    elif "P2093" in claim:  
+                        # unfortunately, the person name string value is raw name string, without identification of 
+                        # first/middle/last names
+                        if len(claim["P2093"]) > 0:
+                            for author_claim in claim["P2093"]:
+                                if "value" in author_claim: 
+                                    local_author_string = author_claim["value"]
+                                    # get the author rank
+                    '''
+
+                elif the_property == "P577":
+                    # P577 publication date
+                    if len(claims) > 0 and "value" in claims[0]:
+                        local_date = claims[0]["value"]["time"]
+                        # ISO format e.g. "+2002-01-00T00:00:00Z"
+                        if local_date.startswith("+"):
+                            local_date = local_date[1:]
+                        ind = local_date.find("T")
+                        if ind != -1:
+                            local_date = local_date[:ind]
+                        metadata['date'] = local_date
+
+                        parts = []
+                        date_parts = local_date.split("-")
+                        if len(date_parts) > 0:
+                            # year
+                            parts.append(date_parts[0])
+                        if len(date_parts) > 1:
+                            # month
+                            parts.append(date_parts[1])
+                        if len(date_parts) > 2:
+                            # day
+                            parts.append(date_parts[2])    
+
+                        metadata["published-online"] = { "date-parts": [ parts ] }    
+
+                elif the_property == "P818": 
+                    # P818 arXiv ID
+                    if len(claims) > 0 and "value" in claims[0]:
+                        local_arxiv = claims[0]["value"]
+                        if local_arxiv != None and len(local_arxiv) > 0:
+                            metadata["arXiv"] = local_arxiv
+
+                elif the_property == "P698":
+                    # P698 PMID
+                    if len(claims) > 0 and "value" in claims[0]:
+                        local_pmid = claims[0]["value"]
+                        if local_pmid != None and len(local_pmid) > 0:
+                            metadata["PMID"] = local_pmid
+
+                elif the_property == "P932":
+                    # P932 PMC ID
+                    if len(claims) > 0 and "value" in claims[0]:
+                        local_pmcid = claims[0]["value"]
+                        if local_pmcid != None and len(local_pmcid) > 0:
+                            metadata["PMID"] = local_pmcid
+
+                # no need to go further
+
+        # set title + first author last name index
+        if local_title != None and local_first_author != None:
+            entity["index_title_author"] = self.title_author_key(local_title, local_first_author)
+    
+        entity["metadata"] = metadata
+
+        return entity
+
+
     def title_author_key(self, title, author_block):
         '''
         Generate a key for a document hash index based on the title and first author last name. 
@@ -776,6 +885,108 @@ class StagingArea(CommonArangoDB):
             return simplified_title + '_' + simplified_name
 
         return None
+
+    def register_merging(self, entity1, entity2):
+        '''
+        Store a merging decision:
+        - create or extend the merging list related to the entities
+        - index the merging list for the two entities   
+        '''
+
+        # do we have a merging list for one of these entities?
+        if self.merging_entities.has_vertex("merging_entities/" + entity1['_key']):
+            merging_list1_item = self.merging_entities.get("merging_entities/" + entity1['_key'])
+            merging_list1_id = merging_list1_item['list_id']
+
+        if self.merging_entities.has_vertex("merging_entities/" + entity2['_key']):
+            merging_list2_item = self.merging_entities.get("merging_entities/" + entity2['_key'])
+            merging_list2_id = merging_list2_item['list_id']
+
+        # get the corresponding lists
+        merging_list1 = None
+        if self.merging_lists.has_vertex(merging_list1_id):
+            merging_list1_item = self.merging_lists.get(merging_list1_id)
+            merging_list1 = merging_list1_item['data']
+
+        merging_list2 = None
+        if self.merging_lists.has_vertex(merging_list2_id):
+            merging_list2_item = self.merging_lists.get(merging_list2_id)
+            merging_list2 = merging_list2_item['data']
+        
+        if merging_list1 != None and merging_list2 != None:
+            # merge the lists into the first one
+            merging_list1.extend(merging_list2)
+            merging_list1_item['data'] = merging_list1
+
+            # update first list 
+            self.merging_lists.update_vertex(merging_list1)
+
+            # update index for all the entities of the second list
+            for local_id in merging_list2:
+                entity_item = self.merging_entities.get(local_id)
+                entity_item['list_id'] = merging_list1['_id']
+                self.merging_entities.update_vertex('merging_entities', entity_item)
+
+            # remove second list
+            self.merging_lists.delete_vertex(merging_list2_item['_id'])
+
+        if merging_list1 != None and merging_list2 == None:
+            # add entity2 into the first list
+            merging_list1.append(entity2['_id'])
+            merging_list1_item['data'] = merging_list1
+
+            # update first list
+            self.merging_lists.update_vertex(merging_list1)
+
+            # update index for entity2
+            entity2_item = {}
+            entity2_item['_key'] = entity2['_key']
+            entity2_item['_id'] = "merging_entities/" + entity2['_key']
+            entity2_item['list_id'] = merging_list1_item["_id"]
+            self.merging_entities.insert_vertex('merging_entities', entity2_item)
+
+        if merging_list1 == None and merging_list2 != None:
+            # add entity1 into the second list
+            merging_list2.append(entity1['_id'])
+            merging_list2_item['data'] = merging_list2
+
+            # update second list
+            self.merging_lists.update_vertex(merging_list2)
+
+            # update index for entity1
+            entity1_item = {}
+            entity1_item['_key'] = entity1['_key']
+            entity1_item['_id'] = "merging_entities/" + entity1['_key']
+            entity1_item['list_id'] = merging_list2_item["_id"]
+            self.merging_entities.insert_vertex('merging_entities', entity1_item)
+
+        if merging_list1 == None and merging_list2 == None:
+            # create a new list
+            merging_list = []
+            merging_list.append(entity1['_id'])
+            merging_list.append(entity2['_id'])
+            local_id = self.get_uid()
+            merging_list_item = {}
+            merging_list_item["_key"] = local_id
+            merging_list_item["_id"] = "merging_lists/" + local_id
+            merging_list_item['data'] = merging_list
+
+            # insert the new list
+            self.merging_entities.insert_vertex('merging_lists', merging_list_item)
+
+            # update index for the 2 entities
+            entity1_item = {}
+            entity1_item['_key'] = entity1['_key']
+            entity1_item['_id'] = "merging_entities/" + entity1['_key']
+            entity1_item['list_id'] = merging_list_item["_id"]
+            self.merging_entities.insert_vertex('merging_entities', entity1_item)
+
+            entity2_item = {}
+            entity2_item['_key'] = entity2['_key']
+            entity2_item['_id'] = "merging_entities/" + entity2['_key']
+            entity2_item['list_id'] = merging_list_item["_id"]
+            self.merging_entities.insert_vertex('merging_entities', entity2_item)
+
 
 def _get_first_value_xpath(node, xpath_exp):
     values = node.xpath(xpath_exp)
