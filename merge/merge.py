@@ -15,20 +15,26 @@ def merge(stagingArea, reset=False):
         # biblio-glutton matching has already been performed, so there is no particular additional 
         # metadata enrichment to be done for document
         
+        merging = False
+
         # check DOI matching
         if 'metadata' in document:
             if 'DOI' in document['metadata']:
                 document_match = stagingArea.db.collection('documents').get({'index_doi': document['metadata']['DOI'].lower() })
                 if document_match != None:
-                    # store merging decision set 
-                    
+                    # update/store merging decision list 
+                    stagingArea.register_merging(document_match, document)
+                    merging = True
 
         # check title+first_author_last_name matching
-
-
-
-
-
+        if not merging:
+            if 'title' in document['metadata'] and 'author' in document['metadata']:
+                local_key = stagingArea.title_author_key(document['metadata']['title'], document['metadata']['author'])
+                document_match = stagingArea.db.collection('documents').get({'index_title_author': local_key })
+                if document_match != None:
+                    # update/store merging decision list 
+                    stagingArea.register_merging(document_match, document)
+                    merging = True
 
     cursor = stagingArea.db.aql.execute(
         'FOR doc IN organizations RETURN doc', ttl=3600
@@ -39,6 +45,7 @@ def merge(stagingArea, reset=False):
         # merging is lead by attribute matching (country, organization type, address), frequency,
         # related persons, documents and software
 
+        merging = False
 
 
 
@@ -51,6 +58,7 @@ def merge(stagingArea, reset=False):
         # merging based on orcid has already been done on the fly
         # safe merging: same document/software authorship, similar email, same organization relation
 
+        merging = False
 
 
     cursor = stagingArea.db.aql.execute(
@@ -64,9 +72,11 @@ def merge(stagingArea, reset=False):
         # same entity disambiguation, same co-occuring reference, software with same name in closely 
         # related documents, same non trivial version
 
+        merging = False
 
-
-
+        software_name = software["label"]
+        
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Disambiguate/conflate entities in the staging area")

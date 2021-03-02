@@ -761,7 +761,6 @@ class StagingArea(CommonArangoDB):
             for the_property in entity["claims"]:
                 claims = entity["claims"][the_property]
                 if the_property == "P356":
-                    print(claim)
                     # P356 DOI 
                     if len(claims) > 0 and "value" in claims[0]:
                         local_doi = claims[0]["value"]
@@ -779,7 +778,10 @@ class StagingArea(CommonArangoDB):
                 elif the_property == "P1476":
                     # P1476 gives the article title
                     if len(claims) > 0 and "value" in claims[0]:
-                        local_title = claims[0]["value"]
+                        if "text" in claims[0]["value"]:
+                            local_title = claims[0]["value"]["text"]
+                        else:
+                            local_title = claims[0]["value"]
                         if local_title != None and len(local_title) > 0:
                             metadata["title"] = local_title
 

@@ -121,7 +121,7 @@ def populate_wikidata(stagingArea, source_ref):
         publication["_id"] = "documents/" + publication["_key"]
 
         # we need to add crossref metadata and set the index when possible for further deduplication
-        publication = stagingArea.wiki_biblio2json(publication)
+        stagingArea.wiki_biblio2json(publication)
 
         if not stagingArea.staging_graph.has_vertex(publication["_id"]):
             stagingArea.staging_graph.insert_vertex("documents", publication)

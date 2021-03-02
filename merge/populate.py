@@ -12,7 +12,7 @@ def populate_from_import(stagingArea, reset=False):
 
     # populate from R sources
     print("Add R imported documents to the staging area graph...")
-    #populate_from_r.populate(stagingArea)
+    populate_from_r.populate(stagingArea)
 
     # populate from Wikidata sources
     print("Add Wikidata imported documents to the staging area graph...")
