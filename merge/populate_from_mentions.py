@@ -314,7 +314,7 @@ def populate_mentions(stagingArea, source_ref):
                             referenced_document["index_doi"] = referenced_document['metadata']['DOI'].lower()
 
                         # title/first author last name index
-                        if "title" in referenced_document['metadata'] and author in referenced_document['metadata']:
+                        if "title" in referenced_document['metadata'] and "author" in referenced_document['metadata']:
                             local_key = stagingArea.title_author_key(referenced_document['metadata']['title'], referenced_document['metadata']['author'])
                             if local_key != None:
                                 referenced_document["index_title_author"] = local_key

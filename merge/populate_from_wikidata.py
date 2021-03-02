@@ -120,11 +120,11 @@ def populate_wikidata(stagingArea, source_ref):
 
         publication["_id"] = "documents/" + publication["_key"]
 
-        # we need to add crossref metadata and set the index when possible
-        # TBD
+        # we need to add crossref metadata and set the index when possible for further deduplication
+        publication = stagingArea.wiki_biblio2json(publication)
 
         if not stagingArea.staging_graph.has_vertex(publication["_id"]):
-                stagingArea.staging_graph.insert_vertex("documents", publication)
+            stagingArea.staging_graph.insert_vertex("documents", publication)
 
     cursor = stagingArea.db.aql.execute(
       'FOR doc IN persons RETURN doc', ttl=1000
