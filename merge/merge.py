@@ -41,14 +41,16 @@ def merge(stagingArea, reset=False):
         if not merging:
             if 'title' in document['metadata'] and 'author' in document['metadata']:
                 local_key = stagingArea.title_author_key(document['metadata']['title'], document['metadata']['author'])
-                for document_match in stagingArea.documents.find({'index_title_author': local_key }, skip=0):
+                if local_key != None:
+                    for document_match in stagingArea.documents.find({'index_title_author': local_key }, skip=0):
 
-                    if document_match['_key'] == document['_key']:
-                        continue
+                        if document_match['_key'] == document['_key']:
+                            continue
 
-                    # update/store merging decision list 
-                    stagingArea.register_merging(document_match, document)
-                    merging = True
+                        # update/store merging decision list 
+                        stagingArea.register_merging(document_match, document)
+                        merging = True
+
 
     cursor = stagingArea.db.aql.execute(
         'FOR doc IN organizations RETURN doc', ttl=3600
@@ -73,7 +75,7 @@ def merge(stagingArea, reset=False):
 
         merging = False
         
-        
+
 
     cursor = stagingArea.db.aql.execute(
         'FOR doc IN persons RETURN doc', ttl=3600
@@ -89,8 +91,7 @@ def merge(stagingArea, reset=False):
         # note: merging based on orcid already done normally
 
         # check full name
-        if matched_person == None:
-        for person_match in stagingArea.persons.find({'labels': person['labels']}, skip=0)
+        for person_match in stagingArea.persons.find({'labels': person['labels']}, skip=0):
             # TBD: a post validation here
             if person_match['_key'] == person['_key']:
                 continue

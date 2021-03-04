@@ -12,6 +12,9 @@ import json
 from arango import ArangoClient
 sys.path.append(os.path.abspath('./common'))
 from arango_common import CommonArangoDB
+sys.path.append(os.path.abspath('./merge'))
+from populate_staging_area import StagingArea
+import argparse
 
 class knowledgeBase(CommonArangoDB):
 
@@ -48,168 +51,165 @@ class knowledgeBase(CommonArangoDB):
             self.cache = self.db.collection('cache')
 
         if self.db.has_graph(self.graph_name):
-            self.staging_graph = self.db.graph(self.graph_name)
+            self.kb_graph = self.db.graph(self.graph_name)
         else:
-            self.staging_graph = self.db.create_graph(self.graph_name)
+            self.kb_graph = self.db.create_graph(self.graph_name)
 
         # init vertex collections if they don't exist
-        if not self.staging_graph.has_vertex_collection('software'):
-            self.software = self.staging_graph.create_vertex_collection('software')
+        if not self.kb_graph.has_vertex_collection('software'):
+            self.software = self.kb_graph.create_vertex_collection('software')
         else:
-            self.software = self.staging_graph.vertex_collection('software')
+            self.software = self.kb_graph.vertex_collection('software')
 
-        if not self.staging_graph.has_vertex_collection('persons'):
-            self.persons = self.staging_graph.create_vertex_collection('persons')
-            # we add a hash index on the orcid identifier
-            self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
+        if not self.kb_graph.has_vertex_collection('persons'):
+            self.persons = self.kb_graph.create_vertex_collection('persons')
         else:
-            self.persons = self.staging_graph.vertex_collection('persons')
+            self.persons = self.kb_graph.vertex_collection('persons')
 
-        if not self.staging_graph.has_vertex_collection('organizations'):
-            self.organizations = self.staging_graph.create_vertex_collection('organizations')
+        if not self.kb_graph.has_vertex_collection('organizations'):
+            self.organizations = self.kb_graph.create_vertex_collection('organizations')
         else:
-            self.organizations = self.staging_graph.vertex_collection('organizations')
+            self.organizations = self.kb_graph.vertex_collection('organizations')
 
-        if not self.staging_graph.has_vertex_collection('documents'):
-            self.documents = self.staging_graph.create_vertex_collection('documents')
+        if not self.kb_graph.has_vertex_collection('documents'):
+            self.documents = self.kb_graph.create_vertex_collection('documents')
         else:
-            self.documents = self.staging_graph.vertex_collection('documents')
+            self.documents = self.kb_graph.vertex_collection('documents')
 
-        if not self.staging_graph.has_vertex_collection('licenses'):
-            self.licenses = self.staging_graph.create_vertex_collection('licenses')
+        if not self.kb_graph.has_vertex_collection('licenses'):
+            self.licenses = self.kb_graph.create_vertex_collection('licenses')
         else:
-            self.licenses = self.staging_graph.vertex_collection('licenses')
+            self.licenses = self.kb_graph.vertex_collection('licenses')
 
         # init edge collections if they don't exist
-        if not self.staging_graph.has_edge_collection('citations'):
-            self.citations = self.staging_graph.create_edge_definition(
+        if not self.kb_graph.has_edge_collection('citations'):
+            self.citations = self.kb_graph.create_edge_definition(
                 edge_collection='citations',
                 from_vertex_collections=['documents'],
                 to_vertex_collections=['software']
             )
         else:
-            self.citations = self.staging_graph.edge_collection('citations')
+            self.citations = self.kb_graph.edge_collection('citations')
 
-        if not self.staging_graph.has_edge_collection('references'):
-            self.references = self.staging_graph.create_edge_definition(
+        if not self.kb_graph.has_edge_collection('references'):
+            self.references = self.kb_graph.create_edge_definition(
                 edge_collection='references',
                 from_vertex_collections=['software', 'documents'],
                 to_vertex_collections=['software', 'documents']
             )
         else:
-            self.references = self.staging_graph.edge_collection('references')
+            self.references = self.kb_graph.edge_collection('references')
 
-        if not self.staging_graph.has_edge_collection('actors'):
-            self.actors = self.staging_graph.create_edge_definition(
+        if not self.kb_graph.has_edge_collection('actors'):
+            self.actors = self.kb_graph.create_edge_definition(
                 edge_collection='actors',
                 from_vertex_collections=['persons'],
                 to_vertex_collections=['software', 'documents']
             )
         else:
-            self.actors = self.staging_graph.edge_collection('actors')
+            self.actors = self.kb_graph.edge_collection('actors')
 
-        if not self.staging_graph.has_edge_collection('copyrights'):
-            self.copyrights = self.staging_graph.create_edge_definition(
+        if not self.kb_graph.has_edge_collection('copyrights'):
+            self.copyrights = self.kb_graph.create_edge_definition(
                 edge_collection='copyrights',
                 from_vertex_collections=['persons', 'organizations'],
                 to_vertex_collections=['software']
             )
         else:
-            self.copyrights = self.staging_graph.edge_collection('copyrights')
+            self.copyrights = self.kb_graph.edge_collection('copyrights')
 
-        if not self.staging_graph.has_edge_collection('dependencies'):
-            self.dependencies = self.staging_graph.create_edge_definition(
+        if not self.kb_graph.has_edge_collection('dependencies'):
+            self.dependencies = self.kb_graph.create_edge_definition(
                 edge_collection='dependencies',
                 from_vertex_collections=['software'],
                 to_vertex_collections=['software']
             )
         else:
-            self.dependencies = self.staging_graph.edge_collection('dependencies')
+            self.dependencies = self.kb_graph.edge_collection('dependencies')
 
-        if not self.staging_graph.has_edge_collection('funding'):
-            self.funding = self.staging_graph.create_edge_definition(
+        if not self.kb_graph.has_edge_collection('funding'):
+            self.funding = self.kb_graph.create_edge_definition(
                 edge_collection='funding',
                 from_vertex_collections=['software', "documents"],
                 to_vertex_collections=['organizations']
             )
         else:
-            self.funding = self.staging_graph.edge_collection('funding')
+            self.funding = self.kb_graph.edge_collection('funding')
 
 
     def reset(self):
         # edge collections
-        if self.staging_graph.has_edge_collection('citations'):
-            self.staging_graph.delete_edge_definition('citations', purge=True)
+        if self.kb_graph.has_edge_collection('citations'):
+            self.kb_graph.delete_edge_definition('citations', purge=True)
 
-        if self.staging_graph.has_edge_collection('references'):
-            self.staging_graph.delete_edge_definition('references', purge=True)
+        if self.kb_graph.has_edge_collection('references'):
+            self.kb_graph.delete_edge_definition('references', purge=True)
 
-        if self.staging_graph.has_edge_collection('actors'):
-            self.staging_graph.delete_edge_definition('actors', purge=True)
+        if self.kb_graph.has_edge_collection('actors'):
+            self.kb_graph.delete_edge_definition('actors', purge=True)
 
-        if self.staging_graph.has_edge_collection('copyrights'):
-            self.staging_graph.delete_edge_definition('copyrights', purge=True)
+        if self.kb_graph.has_edge_collection('copyrights'):
+            self.kb_graph.delete_edge_definition('copyrights', purge=True)
 
-        if self.staging_graph.has_edge_collection('dependencies'):
-            self.staging_graph.delete_edge_definition('dependencies', purge=True)
+        if self.kb_graph.has_edge_collection('dependencies'):
+            self.kb_graph.delete_edge_definition('dependencies', purge=True)
 
-        if self.staging_graph.has_edge_collection('funding'):
-            self.staging_graph.delete_edge_definition('funding', purge=True)
+        if self.kb_graph.has_edge_collection('funding'):
+            self.kb_graph.delete_edge_definition('funding', purge=True)
 
         # vertex collections
-        if self.staging_graph.has_vertex_collection('software'):
-            self.staging_graph.delete_vertex_collection('software', purge=True)
+        if self.kb_graph.has_vertex_collection('software'):
+            self.kb_graph.delete_vertex_collection('software', purge=True)
 
-        if self.staging_graph.has_vertex_collection('persons'):
-            self.staging_graph.delete_vertex_collection('persons', purge=True)
+        if self.kb_graph.has_vertex_collection('persons'):
+            self.kb_graph.delete_vertex_collection('persons', purge=True)
 
-        if self.staging_graph.has_vertex_collection('organizations'):
-            self.staging_graph.delete_vertex_collection('organizations', purge=True)
+        if self.kb_graph.has_vertex_collection('organizations'):
+            self.kb_graph.delete_vertex_collection('organizations', purge=True)
 
-        if self.staging_graph.has_vertex_collection('documents'):
-            self.staging_graph.delete_vertex_collection('documents', purge=True)
+        if self.kb_graph.has_vertex_collection('documents'):
+            self.kb_graph.delete_vertex_collection('documents', purge=True)
 
-        if self.staging_graph.has_vertex_collection('licenses'):
-            self.staging_graph.delete_vertex_collection('licenses', purge=True)
+        if self.kb_graph.has_vertex_collection('licenses'):
+            self.kb_graph.delete_vertex_collection('licenses', purge=True)
 
-        self.software = self.staging_graph.create_vertex_collection('software')
-        self.persons = self.staging_graph.create_vertex_collection('persons')
-        self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
-        self.organizations = self.staging_graph.create_vertex_collection('organizations')
-        self.documents = self.staging_graph.create_vertex_collection('documents')
-        self.licenses = self.staging_graph.create_vertex_collection('licenses')
+        self.software = self.kb_graph.create_vertex_collection('software')
+        self.persons = self.kb_graph.create_vertex_collection('persons')
+        self.organizations = self.kb_graph.create_vertex_collection('organizations')
+        self.documents = self.kb_graph.create_vertex_collection('documents')
+        self.licenses = self.kb_graph.create_vertex_collection('licenses')
 
-        self.citations = self.staging_graph.create_edge_definition(
+        self.citations = self.kb_graph.create_edge_definition(
                 edge_collection='citations',
                 from_vertex_collections=['documents'],
                 to_vertex_collections=['software']
             )
 
-        self.references = self.staging_graph.create_edge_definition(
+        self.references = self.kb_graph.create_edge_definition(
                 edge_collection='references',
                 from_vertex_collections=['software', 'documents'],
                 to_vertex_collections=['software', 'documents']
             )
 
-        self.actors = self.staging_graph.create_edge_definition(
+        self.actors = self.kb_graph.create_edge_definition(
                 edge_collection='actors',
                 from_vertex_collections=['persons'],
                 to_vertex_collections=['software', 'documents']
             )
 
-        self.copyrights = self.staging_graph.create_edge_definition(
+        self.copyrights = self.kb_graph.create_edge_definition(
                 edge_collection='copyrights',
                 from_vertex_collections=['persons', 'organizations'],
                 to_vertex_collections=['software']
             )
 
-        self.dependencies = self.staging_graph.create_edge_definition(
+        self.dependencies = self.kb_graph.create_edge_definition(
                 edge_collection='dependencies',
                 from_vertex_collections=['software'],
                 to_vertex_collections=['software']
             )
 
-        self.funding = self.staging_graph.create_edge_definition(
+        self.funding = self.kb_graph.create_edge_definition(
                 edge_collection='funding',
                 from_vertex_collections=['software', "documents"],
                 to_vertex_collections=['organizations']
@@ -242,7 +242,7 @@ class knowledgeBase(CommonArangoDB):
             # check if the document entry shall be merged
             if stagingArea.staging_graph.has_vertex("merging_entities/" + document['_key']):
                 # this document has to be merged with other ones
-                merging_entity_item = stagingArea.staging_graph.get("merging_entities/" + document['_key'])
+                merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + document['_key'])
                 merging_list_ids = merging_entity_item['list_id']
 
                 # we have to check the rank of the document entity in the list (of entity _id), only the first one is canonical
@@ -253,16 +253,16 @@ class knowledgeBase(CommonArangoDB):
                     for local_id in merging_list_ids:
                         if start:
                             start = False
-                            merged_document = stagingArea.staging_graph.get(local_id)
+                            merged_document = stagingArea.documents.get(local_id)
                             continue
-                        to_merge_document = stagingArea.staging_graph.get(local_id)
+                        to_merge_document = stagingArea.documents.get(local_id)
                         merged_document = self.aggregate_with_merge(merged_document, to_merge_document)
-                    self.kb_graph.insert('documents', merged_document)
+                    self.kb_graph.insert_vertex('documents', merged_document)
                 else:
                     continue
             else:
                 # no merging involved with this document, we add it to the KB and continue
-                self.kb_graph.insert('documents', document)
+                self.kb_graph.insert_vertex('documents', document)
 
     def init_organizations(self):
         '''
@@ -282,7 +282,7 @@ class knowledgeBase(CommonArangoDB):
         )
         for license in cursor:
             # no merging done previously for the moment
-            self.kb_graph.insert('licenses', license)
+            self.kb_graph.insert_vertex('licenses', license)
 
     def init_persons(self):
         '''
@@ -299,7 +299,7 @@ class knowledgeBase(CommonArangoDB):
             # check if the person entry shall be merged
             if stagingArea.staging_graph.has_vertex("merging_entities/" + person['_key']):
                 # this person has to be merged with other ones
-                merging_entity_item = stagingArea.staging_graph.get("merging_entities/" + person['_key'])
+                merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + person['_key'])
                 merging_list_ids = merging_entity_item['list_id']
 
                 # we have to check the rank of the person entity in the list (of entity _id), only the first one is canonical
@@ -310,16 +310,16 @@ class knowledgeBase(CommonArangoDB):
                     for local_id in merging_list_ids:
                         if start:
                             start = False
-                            merged_person = stagingArea.staging_graph.get(local_id)
+                            merged_person = stagingArea.persons.get(local_id)
                             continue
-                        to_merge_person = stagingArea.staging_graph.get(local_id)
+                        to_merge_person = stagingArea.persons.get(local_id)
                         merged_person = self.aggregate_with_merge(merged_person, to_merge_person)
-                    self.kb_graph.insert('persons', merged_person)
+                    self.kb_graph.insert_vertex('persons', merged_person)
                 else:
                     continue
             else:
                 # no merging involved with this person, we add it to the KB and continue
-                self.kb_graph.insert('persons', person)
+                self.kb_graph.insert_vertex('persons', person)
 
 
 

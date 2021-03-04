@@ -179,6 +179,7 @@ class StagingArea(CommonArangoDB):
         else:
             self.funding = self.staging_graph.edge_collection('funding')
 
+        self.init_merging_collections()
 
     def reset(self):
         # edge collections
@@ -267,6 +268,8 @@ class StagingArea(CommonArangoDB):
                 from_vertex_collections=['software', "documents"],
                 to_vertex_collections=['organizations']
             )
+
+        self.reset_merging_collections()
 
     def init_merging_collections(self):
         '''
@@ -777,8 +780,15 @@ class StagingArea(CommonArangoDB):
 
                     # we can simply get the crossref entry and stop the conversion at this stage
                     metadata = self.biblio_glutton_lookup(doi=local_doi)
-                    entity["metadata"] = metadata
-                    return entity
+
+                    if metadata != None:
+                        if "title" in metadata and "author" in metadata:
+                            local_key = self.title_author_key(metadata["title"], metadata["author"])
+                            if local_key != None:
+                                entity["title_author_key"] = local_key
+
+                        entity["metadata"] = metadata
+                        return entity
 
                 elif the_property == "P1476":
                     # P1476 gives the article title
@@ -899,6 +909,18 @@ class StagingArea(CommonArangoDB):
         - create or extend the merging list related to the entities
         - index the merging list for the two entities   
         '''
+
+        # check if merging_entities and merging_lists collections exist, if not create them
+        if not self.staging_graph.has_vertex_collection('merging_entities'):
+            print("create merging_entities collection")
+            self.merging_entities = self.staging_graph.create_vertex_collection('merging_entities')
+        else:
+            self.merging_entities = self.staging_graph.vertex_collection('merging_entities')
+
+        if not self.staging_graph.has_vertex_collection('merging_lists'):
+            self.merging_lists = self.staging_graph.create_vertex_collection('merging_lists')
+        else:
+            self.merging_lists = self.staging_graph.vertex_collection('merging_lists')
 
         # do we have a merging list for one of these entities?
         merging_list1_id = None

@@ -48,13 +48,16 @@ def populate_mentions(stagingArea, source_ref):
             local_doc['index_doi'] = document['metadata']['DOI'].lower()
 
         if "title" in document['metadata'] and len(document['metadata']['title'])>0 and 'author' in document['metadata'] and len(document['metadata']['author'])>0:
-            local_title = document['metadata']['title'][0]
-            local_first_author = None
-            if 'family' in document['metadata']['author'][0]:
-                local_first_author = document['metadata']['author'][0]['family']
+            local_title = document['metadata']['title']
+            local_author = None
+            if 'author' in document['metadata']:
+                # we normally alwas have an author field
+                local_author = document['metadata']['author']
 
-            if len(local_title)>0 and local_first_author != None and len(local_first_author)>0:
-                local_doc['index_title_author'] = stagingArea.title_author_key(local_title, local_first_author)
+            if local_author != None and local_title != None:
+                local_title_author_key = stagingArea.title_author_key(local_title, local_author)
+                if local_title_author_key != None and len(local_title_author_key)>0:
+                    local_doc['index_title_author'] = local_title_author_key
 
         if not stagingArea.staging_graph.has_vertex(local_doc["_id"]):
             stagingArea.staging_graph.insert_vertex("documents", local_doc)

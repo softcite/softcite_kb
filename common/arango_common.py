@@ -200,6 +200,9 @@ class CommonArangoDB(object):
                 # have an index field that we can copy if not present in the first entity
                 if not key in entity1:
                     result[key] = value
+            elif key == "metadata":
+                if not "metadata" in entity1:
+                    result["metadata"] = metadata
         return result
 
 
@@ -280,6 +283,9 @@ class CommonArangoDB(object):
                 # have an index field that we can copy if not present in the first entity
                 if not key in entity1:
                     result[key] = value
+            elif key == "metadata":
+                if not "metadata" in entity1:
+                    result["metadata"] = metadata
         return result
 
     def get_source(self, database_name):
