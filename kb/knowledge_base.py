@@ -239,14 +239,30 @@ class knowledgeBase(CommonArangoDB):
         )
         # note: given the possible number of documents, we should rather use pagination than a large ttl 
         for document in cursor:
-            # matching has already been performed, so there is no particular additional metadata 
-            # enrichment or deduplication to be done for documents
-            
+            # check if the document entry shall be merged
+            if stagingArea.staging_graph.has_vertex("merging_entities/" + document['_key']):
+                # this document has to be merged with other ones
+                merging_entity_item = stagingArea.staging_graph.get("merging_entities/" + document['_key'])
+                merging_list_ids = merging_entity_item['list_id']
 
-
-
-    for document in cursor:
-        stagingArea.documents
+                # we have to check the rank of the document entity in the list (of entity _id), only the first one is canonical
+                rank = _index(merging_list_ids, document['_id'])
+                if rank != None and rank == 0:
+                    # merge
+                    start = True 
+                    for local_id in merging_list_ids:
+                        if start:
+                            start = False
+                            merged_document = stagingArea.staging_graph.get(local_id)
+                            continue
+                        to_merge_document = stagingArea.staging_graph.get(local_id)
+                        merged_document = self.aggregate_with_merge(merged_document, to_merge_document)
+                    self.kb_graph.insert('documents', merged_document)
+                else:
+                    continue
+            else:
+                # no merging involved with this document, we add it to the KB and continue
+                self.kb_graph.insert('documents', document)
 
     def init_organizations(self):
         '''
@@ -259,13 +275,53 @@ class knowledgeBase(CommonArangoDB):
         Load licenses with merging information from the staging area. Keep track of conflation for 
         updating relations. 
         '''
-        
+        stagingArea = StagingArea(config_path=config_path)
+
+        cursor = stagingArea.db.aql.execute(
+            'FOR doc IN licenses RETURN doc', ttl=1000
+        )
+        for license in cursor:
+            # no merging done previously for the moment
+            self.kb_graph.insert('licenses', license)
 
     def init_persons(self):
         '''
         Load person entities with merging information from the staging area. Keep track of conflation for 
         updating relations. 
         '''
+        stagingArea = StagingArea(config_path=config_path)
+
+        cursor = stagingArea.db.aql.execute(
+            'FOR doc IN persons RETURN doc', ttl=3600
+        )
+        # note: given the possible number of persons, we should rather use pagination than a large ttl 
+        for person in cursor:
+            # check if the person entry shall be merged
+            if stagingArea.staging_graph.has_vertex("merging_entities/" + person['_key']):
+                # this person has to be merged with other ones
+                merging_entity_item = stagingArea.staging_graph.get("merging_entities/" + person['_key'])
+                merging_list_ids = merging_entity_item['list_id']
+
+                # we have to check the rank of the person entity in the list (of entity _id), only the first one is canonical
+                rank = _index(merging_list_ids, document['_id'])
+                if rank != None and rank == 0:
+                    # merge
+                    start = True 
+                    for local_id in merging_list_ids:
+                        if start:
+                            start = False
+                            merged_person = stagingArea.staging_graph.get(local_id)
+                            continue
+                        to_merge_person = stagingArea.staging_graph.get(local_id)
+                        merged_person = self.aggregate_with_merge(merged_person, to_merge_person)
+                    self.kb_graph.insert('persons', merged_person)
+                else:
+                    continue
+            else:
+                # no merging involved with this person, we add it to the KB and continue
+                self.kb_graph.insert('persons', person)
+
+
 
     def init_software(self):
         '''
@@ -279,6 +335,11 @@ class knowledgeBase(CommonArangoDB):
         Load relations from staging area and update them based on merged vertex.
         '''
 
+def _index(the_list, the_value):
+    try:
+        return the_list.index(the_value)
+    except ValueError:
+        return None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Create the knowledge base using the staging area graph and the produced deduplication/disambiguation decisions")

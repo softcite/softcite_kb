@@ -7,9 +7,7 @@
   "claims": {
     "P31": [
       {
-        "value": {
-            "id": "Q5"
-        },
+        "value": "Q5",
         "datatype": "wikibase-item",
         "references": []
       }

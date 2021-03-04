@@ -19,10 +19,21 @@ def merge(stagingArea, reset=False):
 
         # check DOI matching
         if 'metadata' in document:
-            if 'DOI' in document['metadata']:
-                document_match = stagingArea.db.collection('documents').get({'index_doi': document['metadata']['DOI'].lower() })
-                if document_match != None:
+            if 'DOI' in document['metadata'] and len(document['metadata']['DOI'])>0:
+                print(document['metadata']['DOI'].lower())
+                for document_match in stagingArea.documents.find({'index_doi': document['metadata']['DOI'].lower() }, skip=0):
+
+                    if document_match['_key'] == document['_key']:
+                        continue
+
+                    '''
+                    match_cursor = stagingArea.db.aql.execute(
+                        "FOR doc IN annotations FILTER doc.document.$oid == '" + local_doc['_key'] + "' RETURN doc", ttl=60
+                    )
+                    '''
+
                     # update/store merging decision list 
+                    print("register....")
                     stagingArea.register_merging(document_match, document)
                     merging = True
 
@@ -30,8 +41,11 @@ def merge(stagingArea, reset=False):
         if not merging:
             if 'title' in document['metadata'] and 'author' in document['metadata']:
                 local_key = stagingArea.title_author_key(document['metadata']['title'], document['metadata']['author'])
-                document_match = stagingArea.db.collection('documents').get({'index_title_author': local_key })
-                if document_match != None:
+                for document_match in stagingArea.documents.find({'index_title_author': local_key }, skip=0):
+
+                    if document_match['_key'] == document['_key']:
+                        continue
+
                     # update/store merging decision list 
                     stagingArea.register_merging(document_match, document)
                     merging = True
@@ -50,6 +64,18 @@ def merge(stagingArea, reset=False):
 
 
     cursor = stagingArea.db.aql.execute(
+        'FOR doc IN licenses RETURN doc', ttl=1000
+    )
+
+    for license in cursor:
+        # no merging at entity level for the moment, but the corresponding attribute value which are raw strings 
+        # should be matched to entity values
+
+        merging = False
+        
+        
+
+    cursor = stagingArea.db.aql.execute(
         'FOR doc IN persons RETURN doc', ttl=3600
     )
 
@@ -59,6 +85,21 @@ def merge(stagingArea, reset=False):
         # safe merging: same document/software authorship, similar email, same organization relation
 
         merging = False
+
+        # note: merging based on orcid already done normally
+
+        # check full name
+        if matched_person == None:
+        for person_match in stagingArea.persons.find({'labels': person['labels']}, skip=0)
+            # TBD: a post validation here
+            if person_match['_key'] == person['_key']:
+                continue
+
+                # update/store merging decision list 
+                stagingArea.register_merging(person_match, person)
+                merging = True
+
+        # TBD the look-up based on 'index_key_name' with a stronger post-validation
 
 
     cursor = stagingArea.db.aql.execute(
@@ -75,8 +116,8 @@ def merge(stagingArea, reset=False):
         merging = False
 
         software_name = software["label"]
-        
-        
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Disambiguate/conflate entities in the staging area")

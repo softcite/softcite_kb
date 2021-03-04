@@ -96,6 +96,10 @@ class StagingArea(CommonArangoDB):
             self.persons = self.staging_graph.create_vertex_collection('persons')
             # we add a hash index on the orcid identifier
             self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
+            # we add a hash index on the full name 
+            self.index_full_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
+            # add a hash index on first letter forname+last name
+            self.index_name_key = self.persons.add_hash_index(fields=['index_name_key'], unique=False, sparse=True)
             self.index_person_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
         else:
             self.persons = self.staging_graph.vertex_collection('persons')
@@ -217,7 +221,8 @@ class StagingArea(CommonArangoDB):
 
         self.persons = self.staging_graph.create_vertex_collection('persons')
         self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
-        self.index_person_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
+        self.index_full_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
+        self.index_name_key = self.persons.add_hash_index(fields=['index_name_key'], unique=False, sparse=True)
         
         self.organizations = self.staging_graph.create_vertex_collection('organizations')
         
@@ -896,73 +901,88 @@ class StagingArea(CommonArangoDB):
         '''
 
         # do we have a merging list for one of these entities?
-        if self.merging_entities.has_vertex("merging_entities/" + entity1['_key']):
+        merging_list1_id = None
+        if self.staging_graph.has_vertex("merging_entities/" + entity1['_key']):
             merging_list1_item = self.merging_entities.get("merging_entities/" + entity1['_key'])
             merging_list1_id = merging_list1_item['list_id']
 
-        if self.merging_entities.has_vertex("merging_entities/" + entity2['_key']):
+        merging_list2_id = None    
+        if self.staging_graph.has_vertex("merging_entities/" + entity2['_key']):
             merging_list2_item = self.merging_entities.get("merging_entities/" + entity2['_key'])
             merging_list2_id = merging_list2_item['list_id']
 
+        if merging_list1_id != None and merging_list2_id != None and merging_list1_id == merging_list2_id:
+            # entities already registered for merging, nothing to do...
+            return
+
+        print(merging_list1_id, merging_list2_id)
+
         # get the corresponding lists
         merging_list1 = None
-        if self.merging_lists.has_vertex(merging_list1_id):
+        if merging_list1_id != None and self.staging_graph.has_vertex(merging_list1_id):
             merging_list1_item = self.merging_lists.get(merging_list1_id)
             merging_list1 = merging_list1_item['data']
 
         merging_list2 = None
-        if self.merging_lists.has_vertex(merging_list2_id):
+        if merging_list2_id != None and self.staging_graph.has_vertex(merging_list2_id):
             merging_list2_item = self.merging_lists.get(merging_list2_id)
             merging_list2 = merging_list2_item['data']
         
         if merging_list1 != None and merging_list2 != None:
-            # merge the lists into the first one
-            merging_list1.extend(merging_list2)
+            # merge the second list into the first one
+            for local_entity_id in merging_list2:
+                if not local_entity_id in merging_list1:
+                    merging_list1.append(local_entity_id)
             merging_list1_item['data'] = merging_list1
 
             # update first list 
-            self.merging_lists.update_vertex(merging_list1)
+            self.staging_graph.update_vertex(merging_list1_item)
 
             # update index for all the entities of the second list
             for local_id in merging_list2:
-                entity_item = self.merging_entities.get(local_id)
-                entity_item['list_id'] = merging_list1['_id']
-                self.merging_entities.update_vertex('merging_entities', entity_item)
+                print(_project_entity_id_collection(local_id, "merging_entities"))
+                entity_item = self.merging_entities.get(_project_entity_id_collection(local_id, "merging_entities"))
+                print(merging_list1_item)
+                entity_item['list_id'] = merging_list1_item['_id']
+                print(entity_item)
+                self.staging_graph.update_vertex(entity_item)
 
             # remove second list
-            self.merging_lists.delete_vertex(merging_list2_item['_id'])
+            self.staging_graph.delete_vertex(merging_list2_item['_id'])
 
         if merging_list1 != None and merging_list2 == None:
             # add entity2 into the first list
-            merging_list1.append(entity2['_id'])
+            if entity2['_id'] not in merging_list1:
+                merging_list1.append(entity2['_id'])
             merging_list1_item['data'] = merging_list1
 
             # update first list
-            self.merging_lists.update_vertex(merging_list1)
+            self.staging_graph.update_vertex(merging_list1_item)
 
             # update index for entity2
             entity2_item = {}
             entity2_item['_key'] = entity2['_key']
             entity2_item['_id'] = "merging_entities/" + entity2['_key']
             entity2_item['list_id'] = merging_list1_item["_id"]
-            self.merging_entities.insert_vertex('merging_entities', entity2_item)
+            self.staging_graph.insert_vertex('merging_entities', entity2_item)
 
-        if merging_list1 == None and merging_list2 != None:
+        elif merging_list1 == None and merging_list2 != None:
             # add entity1 into the second list
-            merging_list2.append(entity1['_id'])
+            if not entity1['_id'] in merging_list2:
+                merging_list2.append(entity1['_id'])
             merging_list2_item['data'] = merging_list2
 
             # update second list
-            self.merging_lists.update_vertex(merging_list2)
+            self.staging_graph.update_vertex(merging_list2_item)
 
             # update index for entity1
             entity1_item = {}
             entity1_item['_key'] = entity1['_key']
             entity1_item['_id'] = "merging_entities/" + entity1['_key']
             entity1_item['list_id'] = merging_list2_item["_id"]
-            self.merging_entities.insert_vertex('merging_entities', entity1_item)
+            self.staging_graph.insert_vertex('merging_entities', entity1_item)
 
-        if merging_list1 == None and merging_list2 == None:
+        elif merging_list1 == None and merging_list2 == None:
             # create a new list
             merging_list = []
             merging_list.append(entity1['_id'])
@@ -974,20 +994,24 @@ class StagingArea(CommonArangoDB):
             merging_list_item['data'] = merging_list
 
             # insert the new list
-            self.merging_entities.insert_vertex('merging_lists', merging_list_item)
+            self.staging_graph.insert_vertex('merging_lists', merging_list_item)
 
             # update index for the 2 entities
             entity1_item = {}
             entity1_item['_key'] = entity1['_key']
             entity1_item['_id'] = "merging_entities/" + entity1['_key']
             entity1_item['list_id'] = merging_list_item["_id"]
-            self.merging_entities.insert_vertex('merging_entities', entity1_item)
+            #if self.staging_graph.has_vertex(entity1_item['_id']):
+            #    it should not be the case, given the look-up at the beginning of this method
+            #    self.staging_graph.update_vertex(entity1_item)
+            #else:
+            self.staging_graph.insert_vertex('merging_entities', entity1_item)
 
             entity2_item = {}
             entity2_item['_key'] = entity2['_key']
             entity2_item['_id'] = "merging_entities/" + entity2['_key']
             entity2_item['list_id'] = merging_list_item["_id"]
-            self.merging_entities.insert_vertex('merging_entities', entity2_item)
+            self.staging_graph.insert_vertex('merging_entities', entity2_item)
 
 
 def _get_first_value_xpath(node, xpath_exp):
@@ -1034,6 +1058,17 @@ def _get_all_values_authors_xpath(node, xpath_exp):
             result.append(person)
     # family, given - there is no middle name in crossref, it is just concatenated to "given" without any normalization
     return result
+
+def _project_entity_id_collection(entity_id, collection_name):
+    '''
+    Take an entity id and replace the collection prefix with the provided one
+    '''
+    ind = entity_id.find("/")
+    if ind == -1:
+        return collection_name+"/"+entity_id
+    else:
+        return collection_name+entity_id[ind:]
+
 
 def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glutton_port):
     biblio_glutton_base = biblio_glutton_protocol + "://" + biblio_glutton_host

@@ -498,7 +498,7 @@ if __name__ == "__main__":
 
     if WikidataDumpPath is not None:
         local_harvester = Wikidata_harvester(config_path=config_path)
-        #local_harvester.import_entities(WikidataDumpPath, reset=to_reset)
+        local_harvester.import_entities(WikidataDumpPath, reset=to_reset)
         local_harvester.import_extra_entities(WikidataDumpPath, reset=to_reset)
     else:
         print("No Wikidata JSON dump file path indicated")
