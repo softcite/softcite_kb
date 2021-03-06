@@ -88,7 +88,7 @@ class StagingArea(CommonArangoDB):
         # init vertex collections if they don't exist
         if not self.staging_graph.has_vertex_collection('software'):
             self.software = self.staging_graph.create_vertex_collection('software')
-            self.index_software_name = self.software.add_hash_index(fields=['label'], unique=False, sparse=False)
+            self.index_software_names = self.software.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
         else:
             self.software = self.staging_graph.vertex_collection('software')
 
@@ -97,15 +97,15 @@ class StagingArea(CommonArangoDB):
             # we add a hash index on the orcid identifier
             self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
             # we add a hash index on the full name 
-            self.index_full_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
+            self.index_full_name = self.persons.add_hash_index(fields=['labels'], unique=False, sparse=False)
             # add a hash index on first letter forname+last name
             self.index_name_key = self.persons.add_hash_index(fields=['index_name_key'], unique=False, sparse=True)
-            self.index_person_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
         else:
             self.persons = self.staging_graph.vertex_collection('persons')
 
         if not self.staging_graph.has_vertex_collection('organizations'):
             self.organizations = self.staging_graph.create_vertex_collection('organizations')
+            self.index_organization_names = self.organizations.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
         else:
             self.organizations = self.staging_graph.vertex_collection('organizations')
 
@@ -121,6 +121,7 @@ class StagingArea(CommonArangoDB):
 
         if not self.staging_graph.has_vertex_collection('licenses'):
             self.licenses = self.staging_graph.create_vertex_collection('licenses')
+            self.index_licences_names = self.licenses.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
         else:
             self.licenses = self.staging_graph.vertex_collection('licenses')
 
@@ -218,20 +219,22 @@ class StagingArea(CommonArangoDB):
             self.staging_graph.delete_vertex_collection('licenses', purge=True)
 
         self.software = self.staging_graph.create_vertex_collection('software')
-        self.index_software_name = self.software.add_hash_index(fields=['label'], unique=False, sparse=False)
+        self.index_software_names = self.software.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
 
         self.persons = self.staging_graph.create_vertex_collection('persons')
         self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
-        self.index_full_name = self.persons.add_hash_index(fields=['label'], unique=False, sparse=False)
+        self.index_full_name = self.persons.add_hash_index(fields=['labels'], unique=False, sparse=False)
         self.index_name_key = self.persons.add_hash_index(fields=['index_name_key'], unique=False, sparse=True)
         
         self.organizations = self.staging_graph.create_vertex_collection('organizations')
+        self.index_organization_names = self.organizations.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
         
         self.documents = self.staging_graph.create_vertex_collection('documents')
         self.index_doi = self.documents.add_hash_index(fields=['index_doi'], unique=False, sparse=True)
         self.index_title_author = self.documents.add_hash_index(fields=['index_title_author'], unique=False, sparse=True)
 
         self.licenses = self.staging_graph.create_vertex_collection('licenses')
+        self.index_licences_names = self.licenses.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
 
         self.citations = self.staging_graph.create_edge_definition(
                 edge_collection='citations',
@@ -912,7 +915,6 @@ class StagingArea(CommonArangoDB):
 
         # check if merging_entities and merging_lists collections exist, if not create them
         if not self.staging_graph.has_vertex_collection('merging_entities'):
-            print("create merging_entities collection")
             self.merging_entities = self.staging_graph.create_vertex_collection('merging_entities')
         else:
             self.merging_entities = self.staging_graph.vertex_collection('merging_entities')
@@ -935,9 +937,9 @@ class StagingArea(CommonArangoDB):
 
         if merging_list1_id != None and merging_list2_id != None and merging_list1_id == merging_list2_id:
             # entities already registered for merging, nothing to do...
-            return
+            return True
 
-        print(merging_list1_id, merging_list2_id)
+        #print(merging_list1_id, merging_list2_id)
 
         # get the corresponding lists
         merging_list1 = None
@@ -962,11 +964,9 @@ class StagingArea(CommonArangoDB):
 
             # update index for all the entities of the second list
             for local_id in merging_list2:
-                print(_project_entity_id_collection(local_id, "merging_entities"))
                 entity_item = self.merging_entities.get(_project_entity_id_collection(local_id, "merging_entities"))
-                print(merging_list1_item)
                 entity_item['list_id'] = merging_list1_item['_id']
-                print(entity_item)
+                entity_item['collection'] = _get_collection_name(local_id)
                 self.staging_graph.update_vertex(entity_item)
 
             # remove second list
@@ -986,6 +986,7 @@ class StagingArea(CommonArangoDB):
             entity2_item['_key'] = entity2['_key']
             entity2_item['_id'] = "merging_entities/" + entity2['_key']
             entity2_item['list_id'] = merging_list1_item["_id"]
+            entity2_item['collection'] = _get_collection_name(entity2['_id'])
             self.staging_graph.insert_vertex('merging_entities', entity2_item)
 
         elif merging_list1 == None and merging_list2 != None:
@@ -1002,6 +1003,7 @@ class StagingArea(CommonArangoDB):
             entity1_item['_key'] = entity1['_key']
             entity1_item['_id'] = "merging_entities/" + entity1['_key']
             entity1_item['list_id'] = merging_list2_item["_id"]
+            entity1_item['collection'] = _get_collection_name(entity1['_id'])
             self.staging_graph.insert_vertex('merging_entities', entity1_item)
 
         elif merging_list1 == None and merging_list2 == None:
@@ -1023,17 +1025,17 @@ class StagingArea(CommonArangoDB):
             entity1_item['_key'] = entity1['_key']
             entity1_item['_id'] = "merging_entities/" + entity1['_key']
             entity1_item['list_id'] = merging_list_item["_id"]
-            #if self.staging_graph.has_vertex(entity1_item['_id']):
-            #    it should not be the case, given the look-up at the beginning of this method
-            #    self.staging_graph.update_vertex(entity1_item)
-            #else:
+            entity1_item['collection'] = _get_collection_name(entity1['_id'])
             self.staging_graph.insert_vertex('merging_entities', entity1_item)
 
             entity2_item = {}
             entity2_item['_key'] = entity2['_key']
             entity2_item['_id'] = "merging_entities/" + entity2['_key']
             entity2_item['list_id'] = merging_list_item["_id"]
+            entity2_item['collection'] = _get_collection_name(entity2['_id'])
             self.staging_graph.insert_vertex('merging_entities', entity2_item)
+
+        return True
 
 
 def _get_first_value_xpath(node, xpath_exp):
@@ -1090,6 +1092,17 @@ def _project_entity_id_collection(entity_id, collection_name):
         return collection_name+"/"+entity_id
     else:
         return collection_name+entity_id[ind:]
+
+
+def _get_collection_name(entity_id):
+    '''
+    return the name of the collection based on the given identifier
+    '''
+    ind = entity_id.find("/")
+    if ind != -1:
+        return entity_id[:ind]
+    else: 
+        return None
 
 
 def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glutton_port):

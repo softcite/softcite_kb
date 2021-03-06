@@ -135,6 +135,10 @@ def populate_wikidata(stagingArea, source_ref):
         # strong identifier
 
         matched_person = None
+        # Some person entities has stil the labels per language, which means no English label has
+        # been found. In this case, we need to update the label with the full name as available in the 
+        # claims - alternatively use the full name in one of the available language
+
         if "claims" in person:
             for key, values in person["claims"].items():
                 # insert source reference

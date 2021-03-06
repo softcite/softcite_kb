@@ -135,11 +135,34 @@ Once the staging area has been populated, we can merge/conflate entities based o
 python3 merge/merge.py --config my_config.json
 ```
 
-The entities are actually not effectively merged at this stage, we simply keep track of merging decisions in some additional dedicated collections. 
+The entities are actually not effectively merged at this step, we keep track of merging decisions in some additional dedicated collections. The process can be time-consuming as it involves soft matching and deduplication decisions for all the entities:
+
+
+```
+document merging
+entries: 94417 , mb. steps: 95
+100%|█████████████████████████████████████████████████████████████| 95/95 [10:34<00:00, 6.68s/it]
+
+organization merging
+entries: 1455 , mb. steps: 2
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,   7.00it/s]
+
+license merging
+entries: 169 , mb. steps: 1
+100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  88.18it/s]
+
+person merging
+entries: 1895 , mb. steps: 2
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:11<00:00,   5.75s/it]
+
+software merging
+entries: 177238 , mb. steps: 178
+  4%|██▋                                                        | 8/178 [12:12<4:19:18, 91.52s/it]
+```
 
 ## Conflated Knowledge base
 
-The following script launches the creation of the final Knowledge Base using the graph in the staging area and the merging decisions produced by the disambiguation process. The actual merging of entities (vertex) is realized at this stage. Relations (edges) will be updated and deduplicated based on the merged entities. The result is a denser graph which is the actual Software Knowledge base, stored in an independent third area and used by the API.
+The following script launches the creation of the final Knowledge Base using the graph in the staging area and the merging decisions produced by the disambiguation process. The actual merging of entities (vertex) is realized at this stage. Relations (edges) will be updated and deduplicated based on the merged vertex. The result is a denser graph which is the actual Software Knowledge base, stored in an independent third area and used by the API.
 
 ```bash
 python3 kb/knowledge_base.py --config my_config.json
