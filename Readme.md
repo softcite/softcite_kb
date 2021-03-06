@@ -12,7 +12,7 @@ We approximate research software as the set of software mentioned in the scienti
 
 ## Requirements and install
 
-The presents tools are implemented in Python and should work correctly with Python 3.5 or higher. An ArangoDB server must be installed, see the [installation](https://www.arangodb.com/download-major/) of the Open Source community server. 
+The presents tools are implemented in Python and should work correctly with Python 3.6 or higher. An ArangoDB server must be installed, see the [installation](https://www.arangodb.com/download-major/) of the Open Source community server. 
 
 Get the github repo:
 
@@ -23,7 +23,7 @@ cd softcite_kb
 It is strongly advised to setup first a virtual environment to avoid falling into one of these gloomy python dependency marshlands:
 
 ```sh
-virtualenv --system-site-packages -p python3 env
+virtualenv --system-site-packages -p python3.6 env
 source env/bin/activate
 ```
 

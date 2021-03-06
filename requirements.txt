@@ -1,7 +1,8 @@
-python-arango
+python-arango==7.1.0
 requests
 beautifulsoup4
 pybtex
 flask
 connexion[swagger-ui]==2.7.0
 tqdm
+lxml
