@@ -12,7 +12,7 @@ We approximate research software as the set of software mentioned in the scienti
 
 ## Requirements and install
 
-The presents tools are implemented in Python and should work correctly with Python 3.6 or higher. An ArangoDB server must be installed, see the [installation](https://www.arangodb.com/download-major/) of the Open Source community server. 
+The presents tools are implemented in Python and should work correctly with Python 3.6 or higher. An ArangoDB version 3.7.* server must be installed, see the [installation](https://www.arangodb.com/download-major/) for the Open Source community server. 
 
 Get the github repo:
 
@@ -20,7 +20,7 @@ Get the github repo:
 git clone https://github.com/kermitt2/softcite_kb
 cd softcite_kb
 ```
-It is strongly advised to setup first a virtual environment to avoid falling into one of these gloomy python dependency marshlands:
+It is strongly advised to setup first a virtual environment to avoid falling into one of these gloomy python dependency marshlands - you can adjust the version of Python to be used, but be sure to be 3.6 or higher:
 
 ```sh
 virtualenv --system-site-packages -p python3.6 env
@@ -36,6 +36,8 @@ pip3 install -r requirements.txt
 ## Create the Knowledge Base
 
 The KB uses ArangoDB to store multi-model representations. Be sure to have an ArangoDB server installed and running. Indicate the server host and port of ArangoDB in the config file - if not default (`localhost:8529`) - together with the `username` and `password` to be used for transactions. In the following, we suppose that the config file is `my_config.json`, if not indicated the file `config.json` will be used by default. 
+
+During the ingestion and processing of the data, the ArangoDB knowledges bases, collections and activity/load can be monitored and further inspected via the ArangoDB web interface (default http://localhost:8529). 
 
 ## Populate the Knowledge Base
 
@@ -140,23 +142,23 @@ The entities are actually not effectively merged at this step, we keep track of 
 
 ```
 document merging
-entries: 94417 , mb. steps: 95
+entries: 94417 , nb. steps: 95
 100%|█████████████████████████████████████████████████████████████| 95/95 [10:34<00:00, 6.68s/it]
 
 organization merging
-entries: 1455 , mb. steps: 2
+entries: 1455 , nb. steps: 2
 100%|█████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,   7.00it/s]
 
 license merging
-entries: 169 , mb. steps: 1
+entries: 169 , nb. steps: 1
 100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  88.18it/s]
 
 person merging
-entries: 1895 , mb. steps: 2
+entries: 1895 , nb. steps: 2
 100%|█████████████████████████████████████████████████████████████| 2/2 [00:11<00:00,   5.75s/it]
 
 software merging
-entries: 177238 , mb. steps: 178
+entries: 177238 , nb. steps: 178
   4%|██▋                                                        | 8/178 [12:12<4:19:18, 91.52s/it]
 ```
 
@@ -167,6 +169,12 @@ The following script launches the creation of the final Knowledge Base using the
 ```bash
 python3 kb/knowledge_base.py --config my_config.json
 ```
+
+## Incremental update
+
+Incremental update of the imported data is supported. It is thus possible to add the new and updated entries from the data sources by running the same import command sequence as for the initial load. Only the new and updated records will be ingested and merged to the existing databases. Be sure **not** to use the parameter `--reset` in the commands, which erases the existing databases/collections and restarts an ingestion from scratch.  
+
+The update process remains currently manual in the sense that the user has to launches the sequence of command lines (import, merge and KB loading) to drives the update. We plan to use Apache Airflow worflows to entirely automate initial and incremental update, with higher paralellism and efficiency.  
 
 ## API
 

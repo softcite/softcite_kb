@@ -12,7 +12,7 @@ def merge(stagingArea, reset=False):
     page_size = 1000
     nb_pages = (total_results // page_size)+1
 
-    print("entries:", total_results, ", mb. steps:", nb_pages)
+    print("entries:", total_results, ", nb. steps:", nb_pages)
 
     for page_rank in tqdm(range(0, nb_pages)):
 
@@ -87,7 +87,7 @@ def merge(stagingArea, reset=False):
     total_results = stagingArea.licenses.count()
     nb_pages = (total_results // page_size)+1
 
-    print("entries:", total_results, ", mb. steps:", nb_pages)
+    print("entries:", total_results, ", nb. steps:", nb_pages)
 
     for page_rank in tqdm(range(0, nb_pages)):
 
@@ -107,7 +107,7 @@ def merge(stagingArea, reset=False):
     total_results = stagingArea.persons.count()
     nb_pages = (total_results // page_size)+1
 
-    print("entries:", total_results, ", mb. steps:", nb_pages)
+    print("entries:", total_results, ", nb. steps:", nb_pages)
 
     for page_rank in tqdm(range(0, nb_pages)):
 
@@ -145,7 +145,7 @@ def merge(stagingArea, reset=False):
     total_results = stagingArea.software.count()
     nb_pages = (total_results // page_size)+1
 
-    print("entries:", total_results, ", mb. steps:", nb_pages)
+    print("entries:", total_results, ", nb. steps:", nb_pages)
 
     for page_rank in tqdm(range(0, nb_pages)):
 
