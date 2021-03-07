@@ -1,8 +1,8 @@
 # A Knowledge Base for Research Software
 
-**[Work In Progress]**
+**[Work In Progress]** This project is under development
 
-This repository contains the tools for creating, populating and updating a Knowledge Base dedicated to research software, as well as a set of Knowledge graph services for various data disambiguation, ranking, analytics and data discovery. 
+This repository contains the tools for creating, populating, updating and accessing a Knowledge Base dedicated to research software. It is expected to include as well as a set of Knowledge graph services for various data disambiguation, ranking, analytics, recommendation and data discovery. 
 
 We approximate research software as the set of software mentioned in the scientific litterature, considering that these mentions characterize research usage. The core of the Knowledge Base is thus relying on the import of software mentions automatically extracted from the scientific literature with this [component](https://github.com/ourresearch/software-mentions). We further match mentionned software to software entities from different curated software resources. Via software dependencies, we can then identify relations to more general resources on software, which constitutes an enlarged view on research software, providing a richer view of the research software landscape.  
 
@@ -10,9 +10,13 @@ We approximate research software as the set of software mentioned in the scienti
 
 ![overview](doc/software-kb-building-overview.png)
 
+## Internal data model
+
+The internal data model of this Knowledge Base is based on the Wikidata data model, see [here](doc/internal_data_model.md). We selected a paradigm focusing on the description of statements about resources (with scoring and probabilistic interpretation) rather than a paradigm designed for describing resources (like RDF). This allows the support of contradicting information, but more particularly of uncertain and noisy information from text mining processing. The data model is independent from any particular inference/query approach in order to take advantage of the existing efficient property graph database and graph algorithm implementations. The data model includes provenance information for every atomic data values using the Wikidata data model mechanisms.
+
 ## Requirements and install
 
-The presents tools are implemented in Python and should work correctly with Python 3.6 or higher. An ArangoDB version 3.7.* server must be installed, see the [installation](https://www.arangodb.com/download-major/) for the Open Source community server. 
+The present tools are implemented in Python and should work correctly with Python 3.6 or higher. An ArangoDB version 3.7.* server must be installed, see the [installation](https://www.arangodb.com/download-major/) for the Open Source community server. 
 
 Get the github repo:
 
@@ -35,9 +39,9 @@ pip3 install -r requirements.txt
 
 ## Create the Knowledge Base
 
-The KB uses ArangoDB to store multi-model representations. Be sure to have an ArangoDB server installed and running. Indicate the server host and port of ArangoDB in the config file - if not default (`localhost:8529`) - together with the `username` and `password` to be used for transactions. In the following, we suppose that the config file is `my_config.json`, if not indicated the file `config.json` will be used by default. 
+The KB uses ArangoDB to store multi-model representations. Be sure to have an ArangoDB server installed and running. Indicate the server host and port of ArangoDB in the config file - if not default (`localhost:8529`) - together with the `username` and `password` to be used for transactions. In the following, we suppose that the config file is `my_config.json`, if not indicated the file `config.json` at the project root will be used by default. 
 
-During the ingestion and processing of the data, the ArangoDB knowledges bases, collections and activity/load can be monitored and further inspected via the ArangoDB web interface (default http://localhost:8529). 
+During the ingestion and processing of the data, the ArangoDB databases, collections and activity/load can be monitored and further inspected via the ArangoDB web interface (default http://localhost:8529). 
 
 ## Populate the Knowledge Base
 
@@ -53,14 +57,14 @@ The main curated sources of data are currently:
 
 The extraction of software mentions and citations in the scientific literature is obtained via the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) applied to Open Access PDF. 
 
-For a larger list of relevant resources on software, with various level of curation, see [here](doc/software-resources.md).
+For a larger list of relevant resources on software, with various levels of curation, see [here](doc/software-resources.md).
 
-The following sections describe how to import these different sources of software information into the system. The initial import and the following updates are currently manual processes, but it is expected to automate this workflow via Apache Airflow in future iterations.  
+The following sections describe how to import these different sources of software information into the system. The initial import and the following updates are currently manual processes, but it is expected to automate this workflow via Apache Airflow in future iterations. For convenience, the imported entities are currently grouped in five vertex collections (`documents`, `organizations`, `licenses`, `persons`, `software`) and relations are grouped in six edge collections (`actors`, `citations`, `copyrights`, `references`, `dependencies`, `funding`). These groups are helpful for the development process and test, but we might consider a single vertex collection and a single edge collection for higher generalization and reusability of the Knowledge Base platform. 
 
 
 ### Import Wikidata software entities
 
-The import is realized via the JSON Wikidata dump. Entities corresponding to software (except video games) are imported to seed the KB, together with some relevant entities in relation to software corresponding to persons, organizations and close concepts (programming language, OS, license). 
+The import is realized via the JSON Wikidata dump. Entities corresponding to software (except video games) are imported to seed the KB, together with some relevant entities in relation to software corresponding to persons, organizations and close concepts (license, programming language, OS). 
 
 A recent full Wikidata json dump compressed with bz2 (which is more compact) is needed, which can be dowloaded [here](https://dumps.wikimedia.org/wikidatawiki/entities/). There is no need to uncompressed the json dump.
 
@@ -221,7 +225,6 @@ total references edges: 171037 , nb. steps: 172
 100%|█████████████████████████████████████████████████████████████| 172/172 [13:29<00:00, 4.71s/it]
 ```
 
-
 ## Incremental update
 
 Incremental update of the imported data is supported. It is thus possible to add the new and updated entries from the data sources by running the same import command sequence as for the initial load. Only the new and updated records will be ingested and merged to the existing databases. Be sure **not** to use the parameter `--reset` in the commands, which erases the existing databases/collections and restarts an ingestion from scratch.  
@@ -234,10 +237,10 @@ The update process remains currently manual in the sense that the user has to la
 
 ### Start the service
 
+[Work In Progress]
+
 > python3 api/service.py --config my_config.json
 
 The swagger documentation/console of the web services is then available at: http:// **service_host** : **service_port** /api/ui/, e.g, http://localhost:5000/api/ui/
-
-
 
 

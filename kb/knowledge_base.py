@@ -280,12 +280,14 @@ class knowledgeBase(CommonArangoDB):
                                 continue
                             to_merge_entity = collection_staging_area.get(local_id)
                             merged_entity = self.aggregate_with_merge(merged_entity, to_merge_entity)
-                        self.kb_graph.insert_vertex(collection_name, merged_entity)
+                        if not self.kb_graph.has_vertex(merged_entity['_id']):
+                            self.kb_graph.insert_vertex(collection_name, merged_entity)
                     else:
                         continue
                 else:
                     # no merging involved with this entity, we add it to the KB and continue
-                    self.kb_graph.insert_vertex(collection_name, entity)
+                    if not self.kb_graph.has_vertex(entity['_id']):
+                        self.kb_graph.insert_vertex(collection_name, entity)
 
     def set_up_relations(self):
         '''
@@ -343,7 +345,8 @@ class knowledgeBase(CommonArangoDB):
                         entity["_to"] = new_to_entity_id
 
                 # update relation with merged vertex
-                self.kb_graph.insert_edge(edge_collection_name, entity)
+                if not self.kb_graph.has_edge(entity['_id']):
+                    self.kb_graph.insert_edge(edge_collection_name, entity)
 
 
 def _index(the_list, the_value):
