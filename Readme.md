@@ -171,30 +171,54 @@ python3 kb/knowledge_base.py --config my_config.json
 ```
 
 ```
-document kb loading
+documents kb loading
 total documents: 94417 , nb. steps: 95
-100%|█████████████████████████████████████████████████████████████| 95/95 [04:32<00:00,  2.87s/it]
-number of loaded documents after deduplication: 73578
+100%|█████████████████████████████████████████████████████████████| 95/95 [06:03<00:00,  3.83s/it]
+number of loaded documents after deduplication: 78534
 
 organizations kb loading
 total organizations: 1455 , nb. steps: 2
-100%|█████████████████████████████████████████████████████████████| 2/2 [00:02<00:00,  1.20s/it]
-number of loaded organizations after deduplication: 1455
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:04<00:00,  2.37s/it]
+number of loaded organizations after deduplication: 1445
 
 licenses kb loading
 total licenses: 169 , nb. steps: 1
-100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  3.86it/s]
-number of loaded licenses after deduplication: 169
+100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  1.95it/s]
+number of loaded licenses after deduplication: 168
 
 persons kb loading
 total persons: 1895 , nb. steps: 2
-100%|█████████████████████████████████████████████████████████████| 2/2 [00:05<00:00,  2.65s/it]
-number of loaded persons after deduplication: 1455
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:07<00:00,  3.70s/it]
+number of loaded persons after deduplication: 1588
 
 software kb loading
 total software: 177238 , nb. steps: 178
-100%|█████████████████████████████████████████████████████████████| 178/178 [08:04<00:00, 2.72s/it]
-number of loaded software after deduplication: 59910
+100%|█████████████████████████████████████████████████████████████| 178/178 [26:36<00:00, 8.97s/it]
+number of loaded software after deduplication: 70152
+
+actors relations kb loading
+total actors edges: 1655 , nb. steps: 2
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:08<00:00,  4.23s/it]
+
+citations relations kb loading
+total citations edges: 449579 , nb. steps: 450
+100%|█████████████████████████████████████████████████████████████| 450/450 [47:30<00:00, 6.33s/it]
+
+copyrights relations kb loading
+total copyrights edges: 0 , nb. steps: 1
+100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 727.04it/s]
+
+dependencies relations kb loading
+total dependencies edges: 86839 , nb. steps: 87
+100%|█████████████████████████████████████████████████████████████| 87/87 [06:41<00:00,  4.61s/it]
+
+funding relations kb loading
+total funding edges: 0 , nb. steps: 1
+100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 717.10it/s]
+
+references relations kb loading
+total references edges: 171037 , nb. steps: 172
+100%|█████████████████████████████████████████████████████████████| 172/172 [13:29<00:00, 4.71s/it]
 ```
 
 

@@ -340,7 +340,7 @@ class knowledgeBase(CommonArangoDB):
                         merging_list_item = stagingArea.merging_lists.get(merging_list_id)
                         merging_list = merging_list_item['data']
                         new_to_entity_id = merging_list[0]
-                        entity["_to"] = new_from_entity_id
+                        entity["_to"] = new_to_entity_id
 
                 # update relation with merged vertex
                 self.kb_graph.insert_edge(edge_collection_name, entity)
