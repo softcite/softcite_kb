@@ -170,6 +170,34 @@ The following script launches the creation of the final Knowledge Base using the
 python3 kb/knowledge_base.py --config my_config.json
 ```
 
+```
+document kb loading
+total documents: 94417 , nb. steps: 95
+100%|█████████████████████████████████████████████████████████████| 95/95 [04:32<00:00,  2.87s/it]
+number of loaded documents after deduplication: 73578
+
+organizations kb loading
+total organizations: 1455 , nb. steps: 2
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:02<00:00,  1.20s/it]
+number of loaded organizations after deduplication: 1455
+
+licenses kb loading
+total licenses: 169 , nb. steps: 1
+100%|█████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  3.86it/s]
+number of loaded licenses after deduplication: 169
+
+persons kb loading
+total persons: 1895 , nb. steps: 2
+100%|█████████████████████████████████████████████████████████████| 2/2 [00:05<00:00,  2.65s/it]
+number of loaded persons after deduplication: 1455
+
+software kb loading
+total software: 177238 , nb. steps: 178
+100%|█████████████████████████████████████████████████████████████| 178/178 [08:04<00:00, 2.72s/it]
+number of loaded software after deduplication: 59910
+```
+
+
 ## Incremental update
 
 Incremental update of the imported data is supported. It is thus possible to add the new and updated entries from the data sources by running the same import command sequence as for the initial load. Only the new and updated records will be ingested and merged to the existing databases. Be sure **not** to use the parameter `--reset` in the commands, which erases the existing databases/collections and restarts an ingestion from scratch.  

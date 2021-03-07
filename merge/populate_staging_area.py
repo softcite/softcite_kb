@@ -801,7 +801,7 @@ class StagingArea(CommonArangoDB):
                         else:
                             local_title = claims[0]["value"]
                         if local_title != None and len(local_title) > 0:
-                            metadata["title"] = local_title
+                            metadata["title"] =  [ local_title ]
 
                     '''
                     elif "P50" in claim:

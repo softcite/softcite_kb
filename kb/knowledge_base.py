@@ -13,7 +13,7 @@ from arango import ArangoClient
 sys.path.append(os.path.abspath('./common'))
 from arango_common import CommonArangoDB
 sys.path.append(os.path.abspath('./merge'))
-from populate_staging_area import StagingArea
+from populate_staging_area import StagingArea, _project_entity_id_collection
 import argparse
 from tqdm import tqdm
 
@@ -253,14 +253,18 @@ class knowledgeBase(CommonArangoDB):
                 if stagingArea.staging_graph.has_vertex("merging_entities/" + document['_key']):
                     # this document has to be merged with other ones
                     merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + document['_key'])
-                    merging_list_ids = merging_entity_item['list_id']
+                    merging_list_id = merging_entity_item['list_id']
+
+                    # get the list content
+                    merging_list_item = stagingArea.merging_lists.get(merging_list_id)
+                    merging_list = merging_list_item['data']
 
                     # we have to check the rank of the document entity in the list (of entity _id), only the first one is canonical
-                    rank = _index(merging_list_ids, document['_id'])
+                    rank = _index(merging_list, document['_id'])
                     if rank != None and rank == 0:
                         # merge
                         start = True 
-                        for local_id in merging_list_ids:
+                        for local_id in merging_list:
                             if start:
                                 start = False
                                 merged_document = stagingArea.documents.get(local_id)
@@ -356,14 +360,18 @@ class knowledgeBase(CommonArangoDB):
                 if stagingArea.staging_graph.has_vertex("merging_entities/" + person['_key']):
                     # this person has to be merged with other ones
                     merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + person['_key'])
-                    merging_list_ids = merging_entity_item['list_id']
+                    merging_list_id = merging_entity_item['list_id']
+
+                    # get the list content
+                    merging_list_item = stagingArea.merging_lists.get(merging_list_id)
+                    merging_list = merging_list_item['data']
 
                     # we have to check the rank of the person entity in the list (of entity _id), only the first one is canonical
-                    rank = _index(merging_list_ids, person['_id'])
+                    rank = _index(merging_list, person['_id'])
                     if rank != None and rank == 0:
                         # merge
                         start = True 
-                        for local_id in merging_list_ids:
+                        for local_id in merging_list:
                             if start:
                                 start = False
                                 merged_person = stagingArea.persons.get(local_id)
@@ -405,14 +413,18 @@ class knowledgeBase(CommonArangoDB):
                 if stagingArea.staging_graph.has_vertex("merging_entities/" + software['_key']):
                     # this software has to be merged with other ones
                     merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + software['_key'])
-                    merging_list_ids = merging_entity_item['list_id']
+                    merging_list_id = merging_entity_item['list_id']
+
+                    # get the list content
+                    merging_list_item = stagingArea.merging_lists.get(merging_list_id)
+                    merging_list = merging_list_item['data']
 
                     # we have to check the rank of the software entity in the list (of entity _id), only the first one is canonical
-                    rank = _index(merging_list_ids, software['_id'])
+                    rank = _index(merging_list, software['_id'])
                     if rank != None and rank == 0:
                         # merge
                         start = True 
-                        for local_id in merging_list_ids:
+                        for local_id in merging_list:
                             if start:
                                 start = False
                                 merged_software = stagingArea.software.get(local_id)
@@ -433,6 +445,54 @@ class knowledgeBase(CommonArangoDB):
         '''
         Load relations from staging area and update them based on merged vertex.
         '''
+        stagingArea = StagingArea(config_path=config_path)
+
+        print("\nactor relations kb loading")
+
+        total_results = stagingArea.actors.count()
+        page_size = 1000
+        nb_pages = (total_results // page_size)+1
+
+        print("total actor edges:", total_results, ", nb. steps:", nb_pages)
+
+        for page_rank in tqdm(range(0, nb_pages)):
+
+            cursor = stagingArea.db.aql.execute(
+                'FOR doc IN actors LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
+            )
+
+            for actor in cursor:
+                # check "from" and "to" vertex
+                from_entity_id = actor["_from"]
+                to_entity_id = actor["_to"]
+
+                # if vertex does not exist, find the list and the canonical vertex where it has been merged
+                if not self.kb_graph.has_vertex(from_entity_id):
+                    from_merged_entity_id = _project_entity_id_collection(from_entity_id, "merging_entities")
+                    merging_entity_item = stagingArea.merging_entities.get(from_merged_entity_id)
+                    if merging_entity_item != None:
+                        merging_list_id = merging_entity_item['list_id']
+                        merging_list_item = stagingArea.merging_lists.get(merging_list_id)
+                        merging_list = merging_list_item['data']
+                        new_from_entity_id = merging_list[0]
+                        actor["_from"] = new_from_entity_id
+
+                if not self.kb_graph.has_vertex(to_entity_id):
+                    to_merged_entity_id = _project_entity_id_collection(to_entity_id, "merging_entities")
+                    merging_entity_item = stagingArea.merging_entities.get(to_merged_entity_id)
+                    if merging_entity_item != None:
+                        merging_list_id = merging_entity_item['list_id']
+                        merging_list_item = stagingArea.merging_lists.get(merging_list_id)
+                        merging_list = merging_list_item['data']
+                        new_to_entity_id = merging_list[0]
+                        actor["_to"] = new_from_entity_id
+
+                # update relation with merged vertex
+                print(actor)
+                self.kb_graph.insert_edge('actors', actor)
+
+        print("number of loaded software after deduplication:", self.actors.count())
+
 
 def _index(the_list, the_value):
     try:
