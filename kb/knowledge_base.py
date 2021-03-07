@@ -219,227 +219,73 @@ class knowledgeBase(CommonArangoDB):
     def init(self, reset=False):
         if reset:
             self.reset()
-            
-        self.init_documents()
-        self.init_organizations()
-        self.init_licenses()
-        self.init_persons()
-        self.init_software()
 
+        self.init_collections()
         self.set_up_relations()
 
-    def init_documents(self):
-        '''
-        Load documents with merging information from the staging area. Keep track of conflation for 
-        updating relations. 
-        '''
+    def init_collections(self):
+
         stagingArea = StagingArea(config_path=config_path)
 
-        print("\ndocument kb loading")
-        total_results = stagingArea.documents.count()
-        page_size = 1000
-        nb_pages = (total_results // page_size)+1
-
-        print("total documents:", total_results, ", nb. steps:", nb_pages)
-
-        for page_rank in tqdm(range(0, nb_pages)):
-
-            cursor = stagingArea.db.aql.execute(
-                'FOR doc IN documents LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
-            )
-        
-            for document in cursor:
-                # check if the document entry shall be merged
-                if stagingArea.staging_graph.has_vertex("merging_entities/" + document['_key']):
-                    # this document has to be merged with other ones
-                    merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + document['_key'])
-                    merging_list_id = merging_entity_item['list_id']
-
-                    # get the list content
-                    merging_list_item = stagingArea.merging_lists.get(merging_list_id)
-                    merging_list = merging_list_item['data']
-
-                    # we have to check the rank of the document entity in the list (of entity _id), only the first one is canonical
-                    rank = _index(merging_list, document['_id'])
-                    if rank != None and rank == 0:
-                        # merge
-                        start = True 
-                        for local_id in merging_list:
-                            if start:
-                                start = False
-                                merged_document = stagingArea.documents.get(local_id)
-                                continue
-                            to_merge_document = stagingArea.documents.get(local_id)
-                            merged_document = self.aggregate_with_merge(merged_document, to_merge_document)
-                        self.kb_graph.insert_vertex('documents', merged_document)
-                    else:
-                        continue
-                else:
-                    # no merging involved with this document, we add it to the KB and continue
-                    self.kb_graph.insert_vertex('documents', document)
-
+        self.init_collection(stagingArea, stagingArea.documents, "documents")
         print("number of loaded documents after deduplication:", self.documents.count())
 
-
-    def init_organizations(self):
-        '''
-        Load organizations with merging information from the staging area. Keep track of conflation for 
-        updating relations.  
-        '''
-        stagingArea = StagingArea(config_path=config_path)
-
-        print("\norganizations kb loading")
-        total_results = stagingArea.organizations.count()
-        page_size = 1000
-        nb_pages = (total_results // page_size)+1
-
-        print("total organizations:", total_results, ", nb. steps:", nb_pages)
-
-        for page_rank in tqdm(range(0, nb_pages)):
-
-            cursor = stagingArea.db.aql.execute(
-                'FOR doc IN organizations LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
-            )
-
-            for organization in cursor:
-                # note: no merging done previously for the moment
-                self.kb_graph.insert_vertex('organizations', organization)
-
+        self.init_collection(stagingArea, stagingArea.organizations, "organizations")
         print("number of loaded organizations after deduplication:", self.organizations.count())
 
-
-    def init_licenses(self):
-        '''
-        Load licenses with merging information from the staging area. Keep track of conflation for 
-        updating relations. 
-        '''
-        stagingArea = StagingArea(config_path=config_path)
-
-        print("\nlicenses kb loading")
-        total_results = stagingArea.licenses.count()
-        page_size = 1000
-        nb_pages = (total_results // page_size)+1
-
-        print("total licenses:", total_results, ", nb. steps:", nb_pages)
-
-        for page_rank in tqdm(range(0, nb_pages)):
-
-            cursor = stagingArea.db.aql.execute(
-                'FOR doc IN licenses LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
-            )
-
-            for license in cursor:
-                # no merging done previously for the moment
-                self.kb_graph.insert_vertex('licenses', license)
-
+        self.init_collection(stagingArea, stagingArea.licenses, "licenses")
         print("number of loaded licenses after deduplication:", self.licenses.count())
 
-
-    def init_persons(self):
-        '''
-        Load person entities with merging information from the staging area. Keep track of conflation for 
-        updating relations. 
-        '''
-        stagingArea = StagingArea(config_path=config_path)
-
-        print("\npersons kb loading")
-        total_results = stagingArea.persons.count()
-        page_size = 1000
-        nb_pages = (total_results // page_size)+1
-
-        print("total persons:", total_results, ", nb. steps:", nb_pages)
-
-        for page_rank in tqdm(range(0, nb_pages)):
-
-            cursor = stagingArea.db.aql.execute(
-                'FOR doc IN persons LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
-            )
-
-            for person in cursor:
-                # check if the person entry should be merged
-                if stagingArea.staging_graph.has_vertex("merging_entities/" + person['_key']):
-                    # this person has to be merged with other ones
-                    merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + person['_key'])
-                    merging_list_id = merging_entity_item['list_id']
-
-                    # get the list content
-                    merging_list_item = stagingArea.merging_lists.get(merging_list_id)
-                    merging_list = merging_list_item['data']
-
-                    # we have to check the rank of the person entity in the list (of entity _id), only the first one is canonical
-                    rank = _index(merging_list, person['_id'])
-                    if rank != None and rank == 0:
-                        # merge
-                        start = True 
-                        for local_id in merging_list:
-                            if start:
-                                start = False
-                                merged_person = stagingArea.persons.get(local_id)
-                                continue
-                            to_merge_person = stagingArea.persons.get(local_id)
-                            merged_person = self.aggregate_with_merge(merged_person, to_merge_person)
-                        self.kb_graph.insert_vertex('persons', merged_person)
-                    else:
-                        continue
-                else:
-                    # no merging involved with this person, we add it to the KB and continue
-                    self.kb_graph.insert_vertex('persons', person)
-
+        self.init_collection(stagingArea, stagingArea.persons, "persons")
         print("number of loaded persons after deduplication:", self.persons.count())
 
+        self.init_collection(stagingArea, stagingArea.software, "software")        
+        print("number of loaded software after deduplication:", self.software.count())
 
-    def init_software(self):
-        '''
-        Load software entities with merging information from the staging area. Keep track of conflation for 
-        updating relations. 
-        '''
-        stagingArea = StagingArea(config_path=config_path)
+    def init_collection(self, stagingArea, collection_staging_area, collection_name):
 
-        print("\nsoftware kb loading")
-        total_results = stagingArea.software.count()
+        print("\n" + collection_name + " kb loading")
+        total_results = collection_staging_area.count()
         page_size = 1000
         nb_pages = (total_results // page_size)+1
 
-        print("total software:", total_results, ", nb. steps:", nb_pages)
+        print("total", collection_name + ":", total_results, ", nb. steps:", nb_pages)
 
         for page_rank in tqdm(range(0, nb_pages)):
 
             cursor = stagingArea.db.aql.execute(
-                'FOR doc IN software LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
+                'FOR doc IN ' + collection_name + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
             )
-
-            for software in cursor:
-                # check if the software entry should be merged
-                if stagingArea.staging_graph.has_vertex("merging_entities/" + software['_key']):
-                    # this software has to be merged with other ones
-                    merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + software['_key'])
+        
+            for entity in cursor:
+                # check if the entry shall be merged
+                if stagingArea.staging_graph.has_vertex("merging_entities/" + entity['_key']):
+                    # this entity has to be merged with other ones
+                    merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + entity['_key'])
                     merging_list_id = merging_entity_item['list_id']
 
                     # get the list content
                     merging_list_item = stagingArea.merging_lists.get(merging_list_id)
                     merging_list = merging_list_item['data']
 
-                    # we have to check the rank of the software entity in the list (of entity _id), only the first one is canonical
-                    rank = _index(merging_list, software['_id'])
+                    # we have to check the rank of the entity in the list (of entity _id), only the first one is canonical
+                    rank = _index(merging_list, entity['_id'])
                     if rank != None and rank == 0:
                         # merge
                         start = True 
                         for local_id in merging_list:
                             if start:
                                 start = False
-                                merged_software = stagingArea.software.get(local_id)
+                                merged_entity = collection_staging_area.get(local_id)
                                 continue
-                            to_merge_software = stagingArea.software.get(local_id)
-                            merged_software = self.aggregate_with_merge(merged_software, to_merge_software)
-                        self.kb_graph.insert_vertex('software', merged_software)
+                            to_merge_entity = collection_staging_area.get(local_id)
+                            merged_entity = self.aggregate_with_merge(merged_entity, to_merge_entity)
+                        self.kb_graph.insert_vertex(collection_name, merged_entity)
                     else:
                         continue
                 else:
-                    # no merging involved with this software, we add it to the KB and continue
-                    self.kb_graph.insert_vertex('software', software)
-
-        print("number of loaded software after deduplication:", self.software.count())
-
+                    # no merging involved with this entity, we add it to the KB and continue
+                    self.kb_graph.insert_vertex(collection_name, entity)
 
     def set_up_relations(self):
         '''
@@ -447,24 +293,33 @@ class knowledgeBase(CommonArangoDB):
         '''
         stagingArea = StagingArea(config_path=config_path)
 
-        print("\nactor relations kb loading")
+        self.set_up_relation(stagingArea, stagingArea.actors, "actors")
+        self.set_up_relation(stagingArea, stagingArea.citations, "citations")
+        self.set_up_relation(stagingArea, stagingArea.copyrights, "copyrights")
+        self.set_up_relation(stagingArea, stagingArea.dependencies, "dependencies")
+        self.set_up_relation(stagingArea, stagingArea.funding, "funding")
+        self.set_up_relation(stagingArea, stagingArea.references, "references")
 
-        total_results = stagingArea.actors.count()
+    def set_up_relation(self, stagingArea, collection_staging_area, edge_collection_name):
+
+        print("\n" + edge_collection_name + " relations kb loading")
+
+        total_results = collection_staging_area.count()
         page_size = 1000
         nb_pages = (total_results // page_size)+1
 
-        print("total actor edges:", total_results, ", nb. steps:", nb_pages)
+        print("total " + edge_collection_name + " edges:", total_results, ", nb. steps:", nb_pages)
 
         for page_rank in tqdm(range(0, nb_pages)):
 
             cursor = stagingArea.db.aql.execute(
-                'FOR doc IN actors LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
+                'FOR doc IN ' + edge_collection_name + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
             )
 
-            for actor in cursor:
+            for entity in cursor:
                 # check "from" and "to" vertex
-                from_entity_id = actor["_from"]
-                to_entity_id = actor["_to"]
+                from_entity_id = entity["_from"]
+                to_entity_id = entity["_to"]
 
                 # if vertex does not exist, find the list and the canonical vertex where it has been merged
                 if not self.kb_graph.has_vertex(from_entity_id):
@@ -475,7 +330,7 @@ class knowledgeBase(CommonArangoDB):
                         merging_list_item = stagingArea.merging_lists.get(merging_list_id)
                         merging_list = merging_list_item['data']
                         new_from_entity_id = merging_list[0]
-                        actor["_from"] = new_from_entity_id
+                        entity["_from"] = new_from_entity_id
 
                 if not self.kb_graph.has_vertex(to_entity_id):
                     to_merged_entity_id = _project_entity_id_collection(to_entity_id, "merging_entities")
@@ -485,13 +340,10 @@ class knowledgeBase(CommonArangoDB):
                         merging_list_item = stagingArea.merging_lists.get(merging_list_id)
                         merging_list = merging_list_item['data']
                         new_to_entity_id = merging_list[0]
-                        actor["_to"] = new_from_entity_id
+                        entity["_to"] = new_from_entity_id
 
                 # update relation with merged vertex
-                print(actor)
-                self.kb_graph.insert_edge('actors', actor)
-
-        print("number of loaded software after deduplication:", self.actors.count())
+                self.kb_graph.insert_edge(edge_collection_name, entity)
 
 
 def _index(the_list, the_value):
