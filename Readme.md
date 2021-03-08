@@ -12,7 +12,7 @@ We approximate research software as the set of software mentioned in the scienti
 
 ## Internal data model
 
-The internal data model of this Knowledge Base is based on the Wikidata data model, see [here](doc/internal_data_model.md). We selected a paradigm focusing on the description of statements about resources (with scoring and probabilistic interpretation) rather than a paradigm designed for describing resources (like RDF). This allows the support of contradicting information, but more particularly of uncertain and noisy information from text mining processing. The data model is independent from any particular inference/query approach in order to take advantage of the existing efficient property graph database and graph algorithm implementations. The data model includes provenance information for every atomic data values using the Wikidata data model mechanisms.
+The internal data model of this Knowledge Base is based on the Wikidata data model, see [here](doc/internal_data_model.md). We selected a paradigm focusing on the description of statements about resources (with scoring and probabilistic interpretation) rather than a paradigm designed for describing resources (like RDF). This allows the support of contradicting information, but more particularly of uncertain and noisy information coming from text mining. The data model is independent from any particular inference/query approach in order to take advantage of the existing efficient property graph database and graph algorithm implementations. The data model includes provenance information for every atomic data values using the Wikidata data model mechanisms.
 
 ## Requirements and install
 
