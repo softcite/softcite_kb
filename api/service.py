@@ -1,16 +1,33 @@
-from flask import make_response, abort
-import connexion
-from datetime import datetime
+import uvicorn
+from typing import Optional
+from fastapi import FastAPI, Response
+from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 
-from swagger_ui_bundle import swagger_ui_3_path
-options = {'swagger_path': swagger_ui_3_path, 'docExpansion': 'list'}
+tags_metadata = [
+    {
+        "name": "generic",
+        "description": "general information on the web service",
+    }
+]
 
-# Create the application instance
-app = connexion.App(__name__, specification_dir='swagger/', options=options)
+app = FastAPI(
+    title="Software KB web API",
+    description="Web API for the Software KB",
+    version="0.1.0",
+    openapi_tags=tags_metadata
+)
 
-# Read the swagger.yml file to configure the endpoints and get the nice GUI for the same price
-app.add_api("openapi.yaml", arguments={'docExpansion': 'list'})
+@app.get("/alive", response_class=PlainTextResponse, tags=["generic"])
+def is_alive_status():
+    return "true"
 
-# If we're running in stand alone mode, run the application
+@app.get("/version", response_class=PlainTextResponse, tags=["generic"])
+def get_version():
+    return "0.1.0"
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # stand alone mode, run the application
+    uvicorn.run(app)
+
+
