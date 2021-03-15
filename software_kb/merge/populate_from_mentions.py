@@ -15,7 +15,7 @@ def populate(stagingArea):
     if not stagingArea.sys_db.has_database(database_name_mentions):
         print("Software mention import database does not exist: you need to first import the software mention resources")
 
-    stagingArea.db = stagingArea.client.db(database_name_mentions, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
+    stagingArea.db = stagingArea.client.db(database_name_mentions, username=stagingArea.config['arangodb']['arango_user'], password=stagingArea.config['arangodb']['arango_pwd'])
 
     populate_mentions(stagingArea, stagingArea.get_source(database_name_mentions))
 

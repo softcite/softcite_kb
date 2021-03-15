@@ -1,10 +1,7 @@
 import re 
 import sys
 
-sys.path.append('.')
-sys.path.append('..')
-
-from common import process_author_field, process_r_author_field, process_maintainer_field, process_url_field
+from software_kb.common import process_author_field, process_r_author_field, process_maintainer_field, process_url_field
 
 known_attributes = ['role', 'given', 'email', 'comment', 'family']
 

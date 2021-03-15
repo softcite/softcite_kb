@@ -5,10 +5,7 @@ from pybtex import format_from_string
 import json
 import argparse
 
-sys.path.append('.')
-sys.path.append('..')
-
-from merge.populate_staging_area import StagingArea
+from software_kb.merge.populate_staging_area import StagingArea
 
 ref_field = { "References": [ { "raw": "Scott Fortmann-Roe (2015). Consistent and Clear Reporting of Results from Diverse Modeling Techniques: The A3 Method. Journal of Statistical Software, 66(7), 1-23. URL http://www.jstatsoft.org/v66/i07/." }, 
                               { "bibtex": "@Article{,\n    title = {Consistent and Clear Reporting of Results from Diverse\n      Modeling Techniques: The A3 Method},\n    author = {Scott Fortmann-Roe},\n    journal = {Journal of Statistical Software},\n    year = {2015},\n    volume = {66},\n    number = {7},\n    pages = {1--23},\n    url = {http://www.jstatsoft.org/v66/i07/},\n  }" }, 
@@ -127,7 +124,7 @@ def test_tei2json(stagingArea):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Test bibliographicla reference processing during import/populate of the KB")
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
 
     args = parser.parse_args()
     config_path = args.config

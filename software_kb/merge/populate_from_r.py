@@ -17,7 +17,7 @@ def populate(stagingArea):
     if not stagingArea.sys_db.has_database(database_name_rOpenSci):
         print("rOpenSci import database does not exist: you need to first import rOpenSci resources")
 
-    stagingArea.db = stagingArea.client.db(database_name_rOpenSci, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
+    stagingArea.db = stagingArea.client.db(database_name_rOpenSci, username=stagingArea.config['arangodb']['arango_user'], password=stagingArea.config['arangodb']['arango_pwd'])
     packages = stagingArea.db.collection('packages')
 
     populate_r(stagingArea, packages, stagingArea.get_source(database_name_rOpenSci))
@@ -26,19 +26,19 @@ def populate(stagingArea):
     if not stagingArea.sys_db.has_database(database_name_cran):
         print("CRAN import database does not exist: you need to first import CRAN resources")
 
-    stagingArea.db = stagingArea.client.db(database_name_cran, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
+    stagingArea.db = stagingArea.client.db(database_name_cran, username=stagingArea.config['arangodb']['arango_user'], password=stagingArea.config['arangodb']['arango_pwd'])
     packages = stagingArea.db.collection('packages')
 
     populate_r(stagingArea, packages, stagingArea.get_source(database_name_cran))
 
     # we set the dependencies in a second pass, having all the packages entities put in relation now set
     print("dependencies rOpenSci...")
-    stagingArea.db = stagingArea.client.db(database_name_rOpenSci, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
+    stagingArea.db = stagingArea.client.db(database_name_rOpenSci, username=stagingArea.config['arangodb']['arango_user'], password=stagingArea.config['arangodb']['arango_pwd'])
     packages = stagingArea.db.collection('packages')
     set_dependencies(stagingArea, packages, stagingArea.get_source(database_name_rOpenSci))
 
     print("dependencies CRAN...")
-    stagingArea.db = stagingArea.client.db(database_name_cran, username=stagingArea.config['arango_user'], password=stagingArea.config['arango_pwd'])
+    stagingArea.db = stagingArea.client.db(database_name_cran, username=stagingArea.config['arangodb']['arango_user'], password=stagingArea.config['arangodb']['arango_pwd'])
     packages = stagingArea.db.collection('packages')
     set_dependencies(stagingArea, packages, stagingArea.get_source(database_name_cran))
     

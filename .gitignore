@@ -5,6 +5,8 @@ __pycache__
 **/.ipynb_checkpoints/*
 env
 my_config.json
+my_config.yaml
 data/CRAN
 data/rOpenSci
 data/mentions
+software_kb.egg-info/

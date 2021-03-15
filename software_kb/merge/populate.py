@@ -23,7 +23,7 @@ def populate_from_import(stagingArea, reset=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Populate the staging area graph with imported document resources")
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
     parser.add_argument("--reset", action="store_true", help="reset existing graph and re-ingest all imported resources") 
 
     args = parser.parse_args()

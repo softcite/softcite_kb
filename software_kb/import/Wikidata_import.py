@@ -67,7 +67,7 @@ class Wikidata_harvester(Harvester):
     # list of properties that we consider for importing publications (additional constraint: P31 instance of scholar article Q13442814)
     publications_properties = ["P1343"]
 
-    def __init__(self, config_path="./config.json"):
+    def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
         self.init_naming()
 
@@ -75,7 +75,7 @@ class Wikidata_harvester(Harvester):
         if not self.sys_db.has_database(self.database_name):
             self.sys_db.create_database(self.database_name)
 
-        self.db = self.client.db(self.database_name, username=self.config['arango_user'], password=self.config['arango_pwd'])
+        self.db = self.client.db(self.database_name, username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
         if not self.db.has_collection('software'):
             self.software = self.db.create_collection('software')
@@ -488,7 +488,7 @@ def _replace_element(jsonEntity, element, lang):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Import relevant Wikidata entities")
     parser.add_argument("WikidataDumpPath", default=None, help="path to a complete Wikidata JSON dump file in bz2 format") 
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
     parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all Wikidata records") 
 
     args = parser.parse_args()

@@ -1,0 +1,83 @@
+## This is the unique configuration file for the software Knowledge Base framework
+
+version: "0.1.0"
+
+## configuration related to ArangoDB
+arangodb:
+  "arango_host": "localhost"
+  "arango_port": 8529
+  "arango_protocol": "http"
+  "arango_user": "root"
+  "arango_pwd": "root"
+
+## for using GROBID as additional data normalization service (for raw bibliographical references, name, dates)
+grobid:
+  "grobid_host": "cloud.science-miner.com/grobid"
+  "grobid_protocol": "https"
+  "grobid_port": ~
+
+## for using biblio-glutton for reference matching
+biblio-glutton:
+  "biblio_glutton_host": "cloud.science-miner.com/glutton"
+  "biblio_glutton_protocol": "https"
+  "biblio_glutton_port": ~
+
+crossref:
+  "crossref_base": "https://api.crossref.org"
+  "crossref_email": ~
+    
+unpaywall:
+  "unpaywall_base": "http://api.unpaywall.org/v2/"
+  "unpaywall_email": ~
+
+# logging, see https://docs.python.org/3/library/logging.config.html#logging-config-fileformat
+logging:
+  formatters:
+    simple:
+      format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: simple
+      stream: ext://sys.stdout
+  loggers:
+    simpleExample:
+      level: DEBUG
+      handlers: [console]
+      propagate: no
+  root:
+    level: DEBUG
+    handlers: [console]
+
+## CORS setting for the web API
+CORS:
+  allowed_origins:
+    - "*"
+  allowed_methods:
+    - "OPTIONS"
+    - "GET"
+    - "PUT"
+    - "POST"
+    - "DELETE"
+    - "HEAD"
+  allowed_headers:
+    - "X-Requested-With"
+    - "Content-Type"
+    - "Accept"
+    - "Origin"
+
+## web API settings
+web_api:
+  port: 8080 
+  host: "localhost"
+  # to specify a custom default header in the response
+  #header: 
+  reload: false 
+  log_level: "debug"
+  reload: false
+  # the following is used in the generated API documentation
+  version: "0.1.0"
+  name: "Software KB web API"
+  description: "Web API for the Software Knowledge Base"
+  api_route: ""

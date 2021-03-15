@@ -215,7 +215,7 @@ def _capitalized_variant(term):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Disambiguate/conflate entities in the staging area")
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
 
     args = parser.parse_args()
     config_path = args.config

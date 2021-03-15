@@ -10,10 +10,8 @@ import os
 import sys
 import json
 from arango import ArangoClient
-sys.path.append(os.path.abspath('./common'))
-from arango_common import CommonArangoDB
-sys.path.append(os.path.abspath('./merge'))
-from populate_staging_area import StagingArea, _project_entity_id_collection
+from software_kb.common.arango_common import CommonArangoDB
+from software_kb.merge.populate_staging_area import StagingArea, _project_entity_id_collection
 import argparse
 from tqdm import tqdm
 
@@ -37,14 +35,14 @@ class knowledgeBase(CommonArangoDB):
     database_name = "kb"
     graph_name = "kb_graph"
 
-    def __init__(self, config_path="./config.json"):
+    def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
 
         # create database if it doesn't exist
         if not self.sys_db.has_database(self.database_name):
             self.sys_db.create_database(self.database_name)
 
-        self.db = self.client.db(self.database_name, username=self.config['arango_user'], password=self.config['arango_pwd'])
+        self.db = self.client.db(self.database_name, username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
         if not self.db.has_collection('cache'):
             self.cache = self.db.create_collection('cache')
@@ -216,14 +214,14 @@ class knowledgeBase(CommonArangoDB):
                 to_vertex_collections=['organizations']
             )
 
-    def init(self, reset=False):
+    def init(self, config_path="./config.yaml", reset=False):
         if reset:
             self.reset()
 
-        self.init_collections()
+        self.init_collections(config_path=config_path)
         self.set_up_relations()
 
-    def init_collections(self):
+    def init_collections(self, config_path="./config.yaml"):
 
         stagingArea = StagingArea(config_path=config_path)
 
@@ -357,7 +355,7 @@ def _index(the_list, the_value):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Create the knowledge base using the staging area graph and the produced deduplication/disambiguation decisions")
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
     parser.add_argument("--reset", action="store_true", help="reset existing graph and reload the processed staging area graph") 
 
     args = parser.parse_args()
@@ -365,5 +363,5 @@ if __name__ == "__main__":
     to_reset = args.reset
 
     kb = knowledgeBase(config_path=config_path)
-    kb.init(reset=to_reset)
+    kb.init(config_path=config_path, reset=to_reset)
 

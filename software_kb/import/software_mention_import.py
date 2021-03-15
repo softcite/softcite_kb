@@ -20,14 +20,14 @@ class Software_mention_import(Harvester):
 
     database_name = "mentions"
 
-    def __init__(self, config_path="./config.json"):
+    def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
 
         # create database and collection
         if not self.sys_db.has_database(self.database_name):
             self.sys_db.create_database(self.database_name)
 
-        self.db = self.client.db(self.database_name, username=self.config['arango_user'], password=self.config['arango_pwd'])
+        self.db = self.client.db(self.database_name, username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
         if not self.db.has_collection('annotations'):
             self.annotations = self.db.create_collection('annotations')
@@ -111,7 +111,7 @@ class Software_mention_import(Harvester):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Import collection of automatically extracted software mention")
     parser.add_argument("mongoExportPath", default=None, help="path to the directory with MongoDB JSON export containing the software mentions") 
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
     parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all software mention records") 
 
     args = parser.parse_args()

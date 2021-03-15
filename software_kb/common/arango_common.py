@@ -4,6 +4,7 @@
 
 import os
 import json
+import yaml
 from arango import ArangoClient
 import copy
 
@@ -20,12 +21,28 @@ class CommonArangoDB(object):
     # for readability purposes 
     naming_wikidata = None
 
-    def load_config(self, path='./config.json'):
+    def load_config(self, config_file='./config.yaml'):
         """
         Load the json configuration 
         """
-        config_json = open(path).read()
-        self.config = json.loads(config_json)
+        if config_file and os.path.exists(config_file) and os.path.isfile(config_file):
+            with open(config_file, 'r') as the_file:
+                raw_configuration = the_file.read()
+
+            try:
+                configuration = yaml.safe_load(raw_configuration)
+            except:
+                # note: it appears complicated to get parse error details from the exception
+                configuration = None
+
+            if configuration == None:
+                msg = "Error: yaml config file cannot be parsed: " + str(config_file)
+                raise Exception(msg)
+        else:
+            msg = "Error: configuration file is not valid: " + str(config_file)
+            raise Exception(msg)
+
+        self.config = configuration
 
         # check ArangoDB availability
         if not self.validate_arangodb_conn_params(): 
@@ -35,8 +52,8 @@ class CommonArangoDB(object):
         # Connect to "_system" database as user indicated in the config
         try:
             # Initialize the client for ArangoDB
-            self.client = ArangoClient(hosts=self.config['arango_protocol']+"://"+self.config['arango_host']+':'+str(self.config['arango_port']))
-            self.sys_db = self.client.db('_system', username=self.config['arango_user'], password=self.config['arango_pwd'])
+            self.client = ArangoClient(hosts=self.config['arangodb']['arango_protocol']+"://"+self.config['arangodb']['arango_host']+':'+str(self.config['arangodb']['arango_port']))
+            self.sys_db = self.client.db('_system', username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
         except:
             print('Connection to ArangoDb failed')
 
@@ -51,23 +68,27 @@ class CommonArangoDB(object):
     def validate_arangodb_conn_params(self):
         valid_conn_params = True
         
-        if not 'arango_host' in self.config:
+        if not 'arangodb' in self.config:
+            # missing ArangoDB settings block
+            return False
+
+        if not 'arango_host' in self.config['arangodb']:
             print("ArangoDB host information not provided in config file")
             valid_conn_params = False
         
-        if not 'arango_port' in self.config:
+        if not 'arango_port' in self.config['arangodb']:
             print("ArangoDB port information not provided in config file")
             valid_conn_params = False
         
-        if not 'arango_protocol' in self.config:
+        if not 'arango_protocol' in self.config['arangodb']:
             print("ArangoDB connection protocol not provided in config file")
             valid_conn_params = False
         
-        if not 'arango_user' in self.config:
+        if not 'arango_user' in self.config['arangodb']:
             print("User name for ArangoDb not provided in config file")
             valid_conn_params = False
         
-        if not 'arango_pwd' in self.config:
+        if not 'arango_pwd' in self.config['arangodb']:
             print("Password for ArangoDb user not provided in config file")
             valid_conn_params = False
         
@@ -79,7 +100,7 @@ class CommonArangoDB(object):
         if not self.sys_db.has_database("naming"):
             self.sys_db.create_database("naming")
 
-        self.naming_db = self.client.db("naming", username=self.config['arango_user'], password=self.config['arango_pwd'])
+        self.naming_db = self.client.db("naming", username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
         # naming key-value store... it's actually simply a collection with a unique key per document
         if not self.naming_db.has_collection('naming_wikidata'):

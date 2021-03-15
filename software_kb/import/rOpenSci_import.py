@@ -25,14 +25,14 @@ class rOpenSci_harvester(Harvester):
 
     database_name = "rOpenSci"
 
-    def __init__(self, config_path="./config.json"):
+    def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
 
         # create database and collection
         if not self.sys_db.has_database(self.database_name):
             self.sys_db.create_database(self.database_name)
 
-        self.db = self.client.db(self.database_name, username=self.config['arango_user'], password=self.config['arango_pwd'])
+        self.db = self.client.db(self.database_name, username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
         if not self.db.has_collection('packages'):
             self.packages = self.db.create_collection('packages')
@@ -216,7 +216,7 @@ class rOpenSci_harvester(Harvester):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Harvest and update rOpenSci public data")
-    parser.add_argument("--config", default="./config.json", help="path to the config file, default is ./config.json") 
+    parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
     parser.add_argument("--reset", action="store_true", help="reset existing collections and re-import all rOpenSci records") 
 
     args = parser.parse_args()

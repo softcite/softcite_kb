@@ -1,10 +1,8 @@
 import os
 import json
 import sys
-sys.path.append('.')
-sys.path.append('..')
 
-from cran_import import _convert_raw_package_record, convert_reference_information 
+from software_kb.cran_import import _convert_raw_package_record, convert_reference_information 
 
 # CRAN package metadata page
 

@@ -37,6 +37,12 @@ Install the dependencies:
 pip3 install -r requirements.txt
 ```
 
+Finally install the project in editable state
+
+```sh
+pip3 install -e .
+```
+
 ## Create the Knowledge Base
 
 The KB uses ArangoDB to store multi-model representations. Be sure to have an ArangoDB server installed and running. Indicate the server host and port of ArangoDB in the config file - if not default (`localhost:8529`) - together with the `username` and `password` to be used for transactions. In the following, we suppose that the config file is `my_config.json`, if not indicated the file `config.json` at the project root will be used by default. 
@@ -71,7 +77,7 @@ A recent full Wikidata json dump compressed with bz2 (which is more compact) is 
 The import is launched as follow, with `latest-all.json.bz2` as Wikidata dump file:
 
 ```bash
-python3 import/Wikidata_import.py --config my_config.json latest-all.json.bz2
+python3 software_kb/import/Wikidata_import.py --config my_config.json latest-all.json.bz2
 ```
 
 To force the import to recreate the Wikidata database from scratch, use `--reset`.
@@ -81,7 +87,7 @@ To force the import to recreate the Wikidata database from scratch, use `--reset
 From the project root, launch:
 
 ```bash
-python3 import/rOpenSci_import.py --config my_config.json
+python3 software_kb/import/rOpenSci_import.py --config my_config.json
 ```
 
 This will populate the rOpenSci import document database from scratch or update it if already present. 
@@ -89,7 +95,7 @@ This will populate the rOpenSci import document database from scratch or update 
 To force the import to recreate the rOpenSci database from scratch, use:
 
 ```bash
-python3 import/rOpenSci_import.py --config my_config.json --reset
+python3 software_kb/import/rOpenSci_import.py --config my_config.json --reset
 ```
 
 The import uses a cache to avoid reloading the JSON from the rOpenSci API. The metadata are reloaded only when a new version of a package is available.
@@ -97,7 +103,7 @@ The import uses a cache to avoid reloading the JSON from the rOpenSci API. The m
 ### Import CRAN metadata
 
 ```
-python3 import/cran_import.py --config my_config.json
+python3 software_kb/import/cran_import.py --config my_config.json
 ```
 
 To force the import to recreate the CRAN metadata database from scratch, use `--reset`.
@@ -108,7 +114,7 @@ To force the import to recreate the CRAN metadata database from scratch, use `--
 To import software mentions automatically extracted from scientific literature with https://github.com/ourresearch/software-mentions:
 
 ```
-python3 import/software_mention_import.py --config my_config.json data/mentions/
+python3 software_kb/import/software_mention_import.py --config my_config.json data/mentions/
 ```
 
 The script expects as parameter the path to the repository where the software mention JSON objects are available (for example `data/mentions/`), obtained with `mongoexport`. `mongoexport` produces 3 JSON file (one JSON object per line) corresponding to 3 collections: `annotations`, `documents` and `references`. Usage of `mongoexport`is as follow:
@@ -130,7 +136,7 @@ GitHub public data come as an enrichment of a populated knowledge base. The foll
 Once imported, the following command will load the different imported data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
 
 ```bash
-python3 merge/populate.py --config my_config.json
+python3 software_kb/merge/populate.py --config my_config.json
 ```
 
 The option `--reset` will re-init entirely the staging area. 
@@ -138,7 +144,7 @@ The option `--reset` will re-init entirely the staging area.
 Once the staging area has been populated, we can merge/conflate entities based on a matching and disambiguation process:
 
 ```bash
-python3 merge/merge.py --config my_config.json
+python3 software_kb/merge/merge.py --config my_config.json
 ```
 
 The entities are actually not effectively merged at this step, we keep track of merging decisions in some additional dedicated collections. The process can be time-consuming as it involves soft matching and deduplication decisions for all the entities:
@@ -171,7 +177,7 @@ entries: 177238 , nb. steps: 178
 The following script launches the creation of the final Knowledge Base using the graph in the staging area and the merging decisions produced by the disambiguation process. The actual merging of entities (vertex) is realized at this stage. Relations (edges) will be updated and deduplicated based on the merged vertex. The result is a denser graph which is the actual Software Knowledge base, stored in an independent third area and used by the API.
 
 ```bash
-python3 kb/knowledge_base.py --config my_config.json
+python3 software_kb/kb/knowledge_base.py --config my_config.json
 ```
 
 ```
@@ -239,8 +245,22 @@ The update process remains currently manual in the sense that the user has to la
 
 [Work In Progress]
 
-> python3 api/service.py --config my_config.json
+> python3 software_kb/api/service.py --config my_config.yaml
 
-The swagger documentation/console of the web services is then available at: http:// **service_host** : **service_port** /api/ui/, e.g, http://localhost:5000/api/ui/
+```
+INFO:     Started server process [25723]
+INFO:     Waiting for application startup.
+ ____         __ _                            _  ______       _    ____ ___ 
+/ ___|  ___  / _| |___      ____ _ _ __ ___  | |/ / __ )     / \  |  _ \_ _|
+\___ \ / _ \| |_| __\ \ /\ / / _` | '__/ _ \ | ' /|  _ \    / _ \ | |_) | | 
+ ___) | (_) |  _| |_ \ V  V / (_| | | |  __/ | . \| |_) |  / ___ \|  __/| | 
+|____/ \___/|_|  \__| \_/\_/ \__,_|_|  \___| |_|\_\____/  /_/   \_\_|  |___|
+                                                                            
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://localhost:8050 (Press CTRL+C to quit)
+```
+
+The documentation of the service is available at `http(s)://*host*:*port*/docs`, e.g. `http://localhost:8050/docs` (based on Swagger), for ReDoc documentation style, use `http://localhost:8050/redoc`).
 
 

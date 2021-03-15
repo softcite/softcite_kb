@@ -25,7 +25,7 @@ A graph structure is built on top of these vertex collections, with the followin
 The staging area graph is then populated with method specific from the sources of imported documents, projecting 
 the relevant information into the common graph, with additional data transformation if necessary:
 
-> python3 merge/populate.py --config my_config.json
+> python3 merge/populate.py --config my_config.yaml
 
 '''
 
@@ -33,8 +33,7 @@ import os
 import sys
 import json
 from arango import ArangoClient
-sys.path.append(os.path.abspath('./common'))
-from arango_common import CommonArangoDB
+from software_kb.common.arango_common import CommonArangoDB
 import requests 
 import uuid 
 import hashlib
@@ -66,14 +65,14 @@ class StagingArea(CommonArangoDB):
 
     bibtex_types = ["Article", "Manual", "Unpublished", "InCollection", "Book", "Misc", "InProceedings", "TechReport", "PhdThesis", "InBook", "Proceedings", "MastersThesis"]
 
-    def __init__(self, config_path="./config.json"):
+    def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
 
         # create database if it doesn't exist
         if not self.sys_db.has_database(self.database_name):
             self.sys_db.create_database(self.database_name)
 
-        self.db = self.client.db(self.database_name, username=self.config['arango_user'], password=self.config['arango_pwd'])
+        self.db = self.client.db(self.database_name, username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
         if not self.db.has_collection('cache'):
             self.cache = self.db.create_collection('cache')
@@ -332,7 +331,7 @@ class StagingArea(CommonArangoDB):
 
         The query and result are not cached. 
         """
-        biblio_glutton_url = _biblio_glutton_url(self.config["biblio_glutton_protocol"], self.config["biblio_glutton_host"], self.config["biblio_glutton_port"])
+        biblio_glutton_url = _biblio_glutton_url(self.config['biblio-glutton']["biblio_glutton_protocol"], self.config['biblio-glutton']["biblio_glutton_host"], self.config['biblio-glutton']["biblio_glutton_port"])
         success = False
         jsonResult = None
 
@@ -361,8 +360,8 @@ class StagingArea(CommonArangoDB):
             # let's call crossref as fallback for the X-months gap
             # https://api.crossref.org/works/10.1037/0003-066X.59.1.29
             user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
-                + self.config['crossref_email'] + ')'} 
-            the_result, success, _ = self.access_web_api_get(self.config['crossref_base']+"/works/"+doi, headers=user_agent)
+                + self.config['crossref']['crossref_email'] + ')'} 
+            the_result, success, _ = self.access_web_api_get(self.config['crossref']['crossref_base']+"/works/"+doi, headers=user_agent)
             if success:
                 jsonResult = the_result['message']
 
@@ -387,20 +386,6 @@ class StagingArea(CommonArangoDB):
             if success:
                 jsonResult = the_result
 
-        '''
-        if not success and raw_ref != None:
-            # fallback for raw reference with CrossRef
-            user_agent = {'User-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0 (mailto:' 
-                + self.config['crossref_email'] + ')'} 
-            params = { "query.bibliographic": raw_ref }
-            response = requests.get(self.config['crossref_base']+"/works/", params=params, headers=user_agent)
-            if response.status_code == 200:
-                jsonResult = response.json()['message']
-            else:
-                success = False
-                jsonResult = None
-        '''
-
         # filter out references if present
         if jsonResult != None:
             if "reference" in jsonResult:
@@ -414,19 +399,19 @@ class StagingArea(CommonArangoDB):
         We need to use the Unpaywall API to get fresh information, because biblio-glutton is based on the 
         Unpaywall dataset dump which has a 7-months gap.
         """
-        params = {'email': self.config["unpaywall_email"]}
-        response, success, _ = self.access_web_api_get(self.config["unpaywall_base"] + doi, data=params)
+        params = {'email': self.config['unpaywall']["unpaywall_email"]}
+        response, success, _ = self.access_web_api_get(self.config['unpaywall']["unpaywall_base"] + doi, data=params)
         if success:
             if response['best_oa_location'] and response['best_oa_location']['url_for_pdf']:
                 return response['best_oa_location']['url_for_pdf']
-            elif response['best_oa_location']['url'].startswith(self.config['pmc_base_web']):
+            elif response['best_oa_location']['url'].startswith(self.config['unpaywall']['pmc_base_web']):
                 return response['best_oa_location']['url']+"/pdf/"
             # we have a look at the other "oa_locations", which might have a `url_for_pdf` ('best_oa_location' has not always a 
             # `url_for_pdf`, for example for Elsevier OA articles)
             for other_oa_location in response['oa_locations']:
                 # for a PMC file, we can concatenate /pdf/ to the base, eg https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7029158/pdf/
                 # but the downloader will have to use a good User-Agent and follow redirection
-                if other_oa_location['url'].startswith(self.config['pmc_base_web']):
+                if other_oa_location['url'].startswith(self.config['unpaywall']['pmc_base_web']):
                     return other_oa_location['url']+"/pdf/"
                 if other_oa_location['url_for_pdf']:
                     return other_oa_location['url_for_pdf']

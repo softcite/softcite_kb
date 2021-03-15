@@ -1,10 +1,7 @@
 import re 
 import sys
 
-sys.path.append('.')
-sys.path.append('..')
-
-from arango_common import aggregate_no_merge, aggregate_with_merge
+from software_kb.arango_common import aggregate_no_merge, aggregate_with_merge
 
 entity1 = {}
 
