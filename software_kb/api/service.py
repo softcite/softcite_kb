@@ -11,7 +11,7 @@ from software_kb.kb.knowledge_base import knowledgeBase
 import yaml
 import argparse
 from pathlib import Path
-from router import router
+from router import router, set_kb
 
 '''
     The web API uses the FastAPI framework. 
@@ -45,6 +45,7 @@ def get_app(server_config) -> FastAPI:
         description=server_config['description'], 
         version=server_config['version'],
         openapi_tags=tags_metadata)
+    set_kb(kb)
     server.include_router(router, prefix=server_config['api_route'])
 
     @server.on_event("startup")
