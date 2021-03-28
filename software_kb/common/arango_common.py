@@ -213,7 +213,7 @@ class CommonArangoDB(object):
                     # do we have this property in the first entity ? 
                     if the_property in entity1["claims"]:
                         # if yes add the value to the property entry
-                        result["claims"][the_property].append(claim)
+                        result["claims"][the_property].extend(claim)
                     else:
                         # if no just append it to the claims
                         result["claims"][the_property] = claim
@@ -254,33 +254,33 @@ class CommonArangoDB(object):
                         result["aliases"].append(alias)
             elif key == "summary":
                 # only add summary if missing... we might want to manage multiple summaries in the future
-                if not "summary" in entity1:
+                if not "summary" in entity1 or len(entity1["summary"]) == 0:
                     result["summary"] = value
             elif key == "descriptions":
                 # only add description if missing... we might want to manage multiple description in the future
-                if not "descriptions" in entity1:
+                if not "descriptions" in entity1 or len(entity1["descriptions"]) == 0:
                     result["descriptions"] = value
             elif key == "claims":
                 for the_property, claim in entity2_[key].items():
                     # do we have this property in the first entity ? 
                     if the_property in entity1["claims"]:
-                        local_merge = False
                         # check if the new values for this property are identical by comparing value and data type
-                        for the_value2 in entity2["claims"][the_property]:
+                        for the_value2 in claim:
                             local_value2 = the_value2["value"]
                             local_datatype2 = the_value2["datatype"]
-
+                            local_merge = False
+                            '''
                             i = 0
                             for the_value in entity1["claims"][the_property]:
                                 local_value = the_value["value"]
                                 local_datatype = the_value["datatype"]
 
-                                # this is the value in the newly build merge entity
-                                the_new_value = result["claims"][the_property][i]
-
                                 if local_value == local_value2 and local_datatype == local_datatype2:
                                     # if yes add we simply add the provenance information the property entry
                                     
+                                    # this is the value in the newly build merge entity
+                                    the_new_value = result["claims"][the_property][i]
+
                                     if not "references" in the_new_value:
                                         the_new_value["references"] = []
                                     sources_to_add = the_value2["references"]
@@ -289,13 +289,25 @@ class CommonArangoDB(object):
                                     local_merge = True
                                     break
                                 i += 1
+                            '''
+                            for the_value in result["claims"][the_property]:
+                                local_value = the_value["value"]
+                                local_datatype = the_value["datatype"]
 
-                            if local_merge:
-                                break
+                                if local_value == local_value2 and local_datatype == local_datatype2:
+                                    # if yes add we simply add the provenance information the property entry
+
+                                    if not "references" in the_value:
+                                        the_value["references"] = []
+                                    sources_to_add = the_value2["references"]
+                                    for source_to_add in sources_to_add:
+                                        add_ref_if_not_present(the_value["references"], source_to_add)
+                                    local_merge = True
+                                    break
 
                             if not local_merge:
-                                # if no add the value to the property entry
-                                result["claims"][the_property].append(the_value)
+                                # if no merge, add the value to the property entry
+                                result["claims"][the_property].append(the_value2)
                             
                     else:
                         # if no just append it to the other claims
@@ -345,7 +357,7 @@ def add_ref_if_not_present(references, ref_to_add):
         if found:
             break
 
-    if not found:
+    if not found or len(references) == 0:
         references.append(ref_to_add)
 
     return references

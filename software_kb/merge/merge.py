@@ -156,8 +156,9 @@ def merge(stagingArea, reset=False):
         # note: given the possible number of documents, we should rather use pagination than a large ttl 
         for software in cursor:
             # we have already merged same software name in the same document
-            # other merging: same person in relation, same organization (publisher attribute in mention), 
-            # same entity disambiguation, same co-occuring reference, software with same name in closely 
+            # other merging: same entity disambiguation, 
+            # same person in relation, same organization (publisher attribute in mention), 
+            # same co-occuring reference, software with same name in closely 
             # related documents, same non trivial version
 
             merging = False
@@ -174,7 +175,7 @@ def merge(stagingArea, reset=False):
             if software_name_variant != None:
                 software_name_variant = software_name_variant.replace('"', '')
                 aql_query += 'OR doc.labels == "' + software_name_variant + '" OR "' + software_name_variant + '" IN doc.aliases '
-            aql_query += 'RETURN doc'
+            aql_query += ' RETURN doc'
 
             match_cursor = stagingArea.db.aql.execute(aql_query, ttl=600)
 
@@ -190,6 +191,32 @@ def merge(stagingArea, reset=False):
                 if success:
                     merging = True
                     break
+
+            # merge by same disambiguated entity
+            if not merging:
+                # do we have a disambiguated entity?
+                local_entity = None
+                if "index_entity" in software:
+                    local_entity = software['index_entity']
+
+                if local_entity != None and local_entity.startswith("Q"): 
+                    aql_query = 'FOR doc IN software FILTER doc["index_entity"] == "' + local_entity + '"'
+                    aql_query += ' RETURN doc'
+
+                    match_cursor = stagingArea.db.aql.execute(aql_query, ttl=600)
+
+                    for software_match in match_cursor:
+                        if software_match['_key'] == software['_key']:
+                            continue
+
+                        # TBD: a post validation here
+
+                        # update/store merging decision list 
+                        #print("register...", software_name, software_match['labels'])
+                        success = stagingArea.register_merging(software_match, software)
+                        if success:
+                            merging = True
+                            break
 
 
 def _capitalized_variant(term):

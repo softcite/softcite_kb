@@ -10,6 +10,20 @@ arangodb:
   "arango_user": "root"
   "arango_pwd": "root"
 
+## indexing and search via ElasticSearch
+elasticsearch:
+  "cluster": ""
+  "host": ""
+  "port": 9200
+  "index_name": "software-kb"
+  "batch_size": 1000
+  "thread_count": 6
+  "keep_alive": false
+  "log": "error"
+  "request_timeout": 1000000
+  "sniff_on_start": true
+  "suggest_compression": true
+
 ## for using GROBID as additional data normalization service (for raw bibliographical references, name, dates)
 grobid:
   "grobid_host": "cloud.science-miner.com/grobid"

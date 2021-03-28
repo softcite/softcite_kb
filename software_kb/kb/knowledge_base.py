@@ -96,6 +96,7 @@ class knowledgeBase(CommonArangoDB):
                 from_vertex_collections=['software', 'documents'],
                 to_vertex_collections=['software', 'documents']
             )
+            self.index_referring_software = self.references.add_hash_index(fields=['index_software'], unique=False, sparse=False)
         else:
             self.references = self.kb_graph.edge_collection('references')
 
@@ -189,6 +190,7 @@ class knowledgeBase(CommonArangoDB):
                 from_vertex_collections=['software', 'documents'],
                 to_vertex_collections=['software', 'documents']
             )
+        self.index_referring_software = self.references.add_hash_index(fields=['index_software'], unique=False, sparse=False)
 
         self.actors = self.kb_graph.create_edge_definition(
                 edge_collection='actors',
@@ -254,11 +256,11 @@ class knowledgeBase(CommonArangoDB):
             cursor = stagingArea.db.aql.execute(
                 'FOR doc IN ' + collection_name + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
             )
-        
+            
             for entity in cursor:
                 # check if the entry shall be merged
                 if stagingArea.staging_graph.has_vertex("merging_entities/" + entity['_key']):
-                    # this entity has to be merged with other ones
+                    # this entity has to be merged with other ones of its merging group
                     merging_entity_item = stagingArea.merging_entities.get("merging_entities/" + entity['_key'])
                     merging_list_id = merging_entity_item['list_id']
 
@@ -342,9 +344,37 @@ class knowledgeBase(CommonArangoDB):
                         new_to_entity_id = merging_list[0]
                         entity["_to"] = new_to_entity_id
 
+                # in the case of reference, we might have a software identifier in the "P2860" property to keep track
+                # of the mentioned software in the bibliographical reference context - this identifier need to be
+                # updated as well wrt. to deduplication, e.g.:
+                '''
+                "claims": {
+                    "P2860": [
+                      {
+                        "value": "software/fa553d69b7364767a13caa4c",
+                        "datatype": "external-id",
+                '''
+                if edge_collection_name == "references" and "claims" in entity and "P2860" in entity["claims"]:
+                    for the_value in entity["claims"]["P2860"]:
+                        if "value" in the_value:
+                            local_software_id = the_value["value"]
+                            if not self.kb_graph.has_vertex(local_software_id):
+                                merged_entity_id = _project_entity_id_collection(local_software_id, "merging_entities")
+                                merging_entity_item = stagingArea.merging_entities.get(merged_entity_id)
+                                if merging_entity_item != None:
+                                    merging_list_id = merging_entity_item['list_id']
+                                    merging_list_item = stagingArea.merging_lists.get(merging_list_id)
+                                    merging_list = merging_list_item['data']
+                                    new_entity_id = merging_list[0]
+                                    the_value["value"] = new_entity_id
+                                    entity['index_software'] = new_entity_id
+                                    # only one software associated to a reference in a software citation context
+                                    break
+
                 # update relation with merged vertex
                 if not self.kb_graph.has_edge(entity['_id']):
                     self.kb_graph.insert_edge(edge_collection_name, entity)
+
 
 
 def _index(the_list, the_value):
