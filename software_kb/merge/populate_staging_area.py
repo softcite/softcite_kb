@@ -88,6 +88,7 @@ class StagingArea(CommonArangoDB):
         if not self.staging_graph.has_vertex_collection('software'):
             self.software = self.staging_graph.create_vertex_collection('software')
             self.index_software_names = self.software.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
+            self.index_entity = self.software.add_hash_index(fields=['index_entity'], unique=False, sparse=True)
         else:
             self.software = self.staging_graph.vertex_collection('software')
 
@@ -219,6 +220,7 @@ class StagingArea(CommonArangoDB):
 
         self.software = self.staging_graph.create_vertex_collection('software')
         self.index_software_names = self.software.add_hash_index(fields=['labels', 'aliases[*]'], unique=False, sparse=False)
+        self.index_entity = self.software.add_hash_index(fields=['index_entity'], unique=False, sparse=True)
 
         self.persons = self.staging_graph.create_vertex_collection('persons')
         self.index_orcid = self.persons.add_hash_index(fields=['index_orcid'], unique=True, sparse=True)
@@ -294,13 +296,13 @@ class StagingArea(CommonArangoDB):
         '''
         Reinit the collections to keep track of merging decisions for the different entities (vertex only). 
         '''
-        if self.staging_graph.has_vertex_collection('merging_list'):
-            self.staging_graph.delete_vertex_collection('merging_list', purge=True)
+        if self.staging_graph.has_vertex_collection('merging_lists'):
+            self.staging_graph.delete_vertex_collection('merging_lists', purge=True)
 
         if self.staging_graph.has_vertex_collection('merging_entities'):
             self.staging_graph.delete_vertex_collection('merging_entities', purge=True)
 
-        self.merging_list = self.staging_graph.create_vertex_collection('merging_list')
+        self.merging_list = self.staging_graph.create_vertex_collection('merging_lists')
         self.merging_entities = self.staging_graph.create_vertex_collection('merging_entities')
 
     def init_entity_from_template(self, template="software", source=None):
@@ -1096,16 +1098,16 @@ def _biblio_glutton_url(biblio_glutton_protocol, biblio_glutton_host, biblio_glu
         res = biblio_glutton_base[:-1]
     else: 
         res = biblio_glutton_base
-    if biblio_glutton_port is not None and len(biblio_glutton_port)>0:
-        res += ":"+biblio_glutton_port
+    if biblio_glutton_port is not None and biblio_glutton_port>0:
+        res += ":"+str(biblio_glutton_port)
     return res+"/service/lookup?"
 
 def _grobid_url(grobid_protocol, grobid_url, grobid_port):
     the_url = grobid_protocol + "://" + grobid_base
     if the_url.endswith("/"):
         the_url = the_url[:-1]
-    if grobid_port is not None and len(grobid_port)>0:
-        the_url += ":"+grobid_port
+    if grobid_port is not None and grobid_port>0:
+        the_url += ":"+str(grobid_port)
     the_url += "/api/"
     return the_url
 

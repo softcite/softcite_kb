@@ -38,6 +38,7 @@ def populate_wikidata(stagingArea, source_ref):
 
         # "depends on software" is P1547
 
+        software["index_entity"] = software["id"]
         matched_software = None
         if "claims" in software:
             for key, values in software["claims"].items():
@@ -65,6 +66,8 @@ def populate_wikidata(stagingArea, source_ref):
 
         if matched_software != None:
             existing_software = stagingArea.aggregate_with_merge(matched_software, software)
+            if not "index_entity" in existing_software and "index_entity" in software:
+                existing_software["index_entity"] = software["index_entity"]
             stagingArea.staging_graph.update_vertex(existing_software)
         else:
             if not stagingArea.staging_graph.has_vertex(software["_id"]):

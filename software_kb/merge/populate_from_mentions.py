@@ -23,7 +23,8 @@ def populate_mentions(stagingArea, source_ref):
     '''
     Software mentions at this stage are all represented as independent software entity (very light weight and with 
     the few extracted attributes). The information related to the mention in context are represented with the edge 
-    relation "citations", with a "quotes work" (P6166) property to store the context. 
+    relation "citations", with a "quotes work" (P6166) property to store the software (=work) mentioned and "quotation" 
+    (P7081) for storing the whole context of mention (the target sentence). 
     Other relations built are authorship, funding and references. 
     '''
     cursor = stagingArea.db.aql.execute(
@@ -153,6 +154,7 @@ def populate_mentions(stagingArea, source_ref):
                 if not "P460" in software["claims"]:
                     software["claims"]["P460"] = []
                 software["claims"]["P460"].append(local_value)
+                software["index_entity"] = annotation["wikidataId"]
                 changed = True
 
             # bibliographical references associated to the software could be aggregated here, possibly with count information
@@ -177,6 +179,29 @@ def populate_mentions(stagingArea, source_ref):
             relation = stagingArea.init_entity_from_template("citation", source=source_ref)
             if relation is None:
                 raise("cannot init citation relation from default template")
+
+            # store original software name string - always present normally
+            # we use property P6166 ("quote work", here the work is the mentioned software)
+            if "software-name" in annotation:
+                local_value = {}
+                local_value["value"] = annotation["software-name"]["normalizedForm"]
+                local_value["datatype"] = "string"
+                local_value["references"] = []
+                local_value["references"].append(source_ref)
+                
+                # bounding box in qualifier
+                # relevant property is "relative position within image" (P2677) 
+                if "boundingBoxes" in annotation["software-name"]:
+                    local_qualifier = {}
+                    local_qualifier_value = {}
+                    local_qualifier_value["value"] = annotation["software-name"]["boundingBoxes"]
+                    local_qualifier_value["datatype"] = "string"
+                    local_qualifier["P2677"] = local_qualifier_value
+                    local_value["qualifiers"] = []
+                    local_value["qualifiers"].append(local_qualifier)
+
+                relation["claims"]["P6166"] = []
+                relation["claims"]["P6166"].append(local_value)
 
             # store all original attributes in this citation relation, as they are in this annotation
             # version info (P348)
@@ -384,15 +409,22 @@ def populate_mentions(stagingArea, source_ref):
                         relation["claims"]["P2860"] = []
                     relation["claims"]["P2860"].append(local_value)
 
-                    # reference relationwith specific edge
+                     # reference relation with specific edge
                     relation_ref = {}
+
                     relation_ref["claims"] = {}
-                    # "P2860" property "cites work "
+                    # "P2860" property "cites work ", add software associated to the citation context,
                     relation_ref["claims"]["P2860"] = []
                     local_value = {}
+                    local_value["value"] = "software/" + software['_key']
+                    local_value["datatype"] = "external-id"
                     local_value["references"] = []
                     local_value["references"].append(source_ref)
                     relation_ref["claims"]["P2860"].append(local_value)
+
+                    # we add an index to the software identifier, which will be useful when filtering the
+                    # references related to a given software
+                    relation_ref["index_software"] = "software/" + software['_key']
 
                     relation_ref["_from"] = local_doc['_id']
                     relation_ref["_to"] = referenced_document['_id']

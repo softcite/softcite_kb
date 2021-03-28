@@ -57,7 +57,7 @@ def populate_r(stagingArea, collection, source_ref):
     )
 
     for package in cursor:
-        print(package['Package'], "...")
+        #print(package['Package'], "...")
 
         # package as software vertex collection
         software = stagingArea.init_entity_from_template("software", source=source_ref)
