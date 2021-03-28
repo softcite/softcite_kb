@@ -123,7 +123,7 @@ def test_tei2json(stagingArea):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Test bibliographicla reference processing during import/populate of the KB")
+    parser = argparse.ArgumentParser(description = "Test bibliographical reference processing during import/populate of the KB")
     parser.add_argument("--config", default="./config.yaml", help="path to the config file, default is ./config.yaml") 
 
     args = parser.parse_args()
