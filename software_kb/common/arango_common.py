@@ -64,7 +64,6 @@ class CommonArangoDB(object):
         else:
             print('Source description json file not found:', source_path)
         
-
     def validate_arangodb_conn_params(self):
         valid_conn_params = True
         
@@ -94,7 +93,7 @@ class CommonArangoDB(object):
         
         return valid_conn_params
 
-    def init_naming(self):
+    def init_naming(self, reset=False):
         # we store the naming key-value in a distinct database (not sure it's the best)
         # create database and collection
         if not self.sys_db.has_database("naming"):
@@ -102,78 +101,65 @@ class CommonArangoDB(object):
 
         self.naming_db = self.client.db("naming", username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
 
+        if reset:
+            if self.naming_db.has_collection('naming_wikidata'):
+                self.naming_db.delete_collection('naming_wikidata')
+
         # naming key-value store... it's actually simply a collection with a unique key per document
         if not self.naming_db.has_collection('naming_wikidata'):
             self.naming_wikidata = self.naming_db.create_collection('naming_wikidata')
+            # we add an index to get the identifier back from the canonical string
+            self.index_reverse_name = self.naming_wikidata.add_hash_index(fields=['value'], unique=True, sparse=False)
         else:
             self.naming_wikidata = self.naming_db.collection('naming_wikidata')
 
-        # we maintain a synchronized reverse mapping, in particular to ensure a unique string for a wikidata id 
-        if not self.naming_db.has_collection('naming_reverse_wikidata'):
-            self.naming_reverse_wikidata = self.naming_db.create_collection('naming_reverse_wikidata')
-        else:
-            self.naming_reverse_wikidata = self.naming_db.collection('naming_reverse_wikidata')
-
     def naming_wikidata_string(self, wikidata_id):
         # wikidata id -> canonical string
+        if not wikidata_id.startswith("P") and not wikidata_id.startswith("Q"):
+            return None
+
         if wikidata_id in self.naming_wikidata:
-            return self.naming_wikidata[wikidata_id]
+            return self.naming_wikidata[wikidata_id]["value"]
         else:
             return None
 
     def naming_wikidata_id(self, string):
         # canonical string -> wikidata id
-        if string in self.naming_reverse_wikidata:
-            return self.naming_reverse_wikidata[string]
+        cursor = self.naming_wikidata.find({'value': string}, skip=0, limit=1)
+        if cursor.has_more():
+            result = cursor.next()
+            return result['_key']
         else:
             return None
 
     def add_naming_wikidata(self, wikidata_id, string):
         # check if the entry if not already present
-        if wikidata_id in self.naming_wikidata and self.naming_wikidata[wikidata_id] == string:
+        if wikidata_id in self.naming_wikidata and self.naming_wikidata[wikidata_id]["value"] == string:
             # nothing to do
             return
 
         # check string uniqueness
         try:
-            if string in self.naming_reverse_wikidata:
+            cursor = self.naming_wikidata.find({'value': string}, skip=0, limit=1)
+            if cursor.has_more():
                 raise Exception("error adding Wikidata ID mapping: the target string is not unique")
         except:
-            print("Invalid the target string key:", string)
+            print("Invalid target string key:", string)
 
         if wikidata_id in self.naming_wikidata:
-            self.naming_wikidata[wikidata_id] = string
+            self.naming_wikidata[wikidata_id] = { "_key": wikidata_id, "value": string }
         else:
-            self.naming_wikidata.insert({wikidata_id: string})
-
-        try:
-            self.naming_reverse_wikidata.insert({string:wikidata_id})
-        except:
-            print("Invalid the target string key:", string)    
-
+            try:
+                self.naming_wikidata.insert({ "_key": wikidata_id, "value": string })
+            except:
+                print("Invalid key:", string)    
+  
     def remove_naming_wikidata(self, wikidata_id):
         if not wikidata_id in self.naming_wikidata:
             # do nothing
             return
 
-        string = self.naming_wikidata[wikidata_id]
         self.naming_wikidata.delete(wikidata_id)
-        if string in self.naming_reverse_wikidata:
-            self.naming_reverse_wikidata.delete(string)
-
-
-    def normalize_naming_string(string):
-        '''
-        As the string is identifier in the reverse mapping, we have to ensure a valid key form for ArangoDB
-        see https://www.arangodb.com/docs/stable/data-modeling-naming-conventions-document-keys.html
-        '''
-        string = string.replace("/", "%%")
-        return string
-
-    def recover_naming_string(string):
-        string = string.replace("%%", "/")
-        return string
-
 
     def aggregate_no_merge(self, entity1, entity2):
         '''

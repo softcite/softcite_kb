@@ -5,7 +5,6 @@ No new entities and relations are created at this level, they are imported from 
 This database is used by the service API and appropiate index are built for this purpose.  
 '''
 
- 
 import os
 import sys
 import json
@@ -37,6 +36,7 @@ class knowledgeBase(CommonArangoDB):
 
     def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
+        self.init_naming()
 
         # create database if it doesn't exist
         if not self.sys_db.has_database(self.database_name):

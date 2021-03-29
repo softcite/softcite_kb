@@ -11,7 +11,7 @@ import hashlib
 import time
 from random import randint, seed
 sys.path.append(os.path.abspath('./common'))
-from arango_common import CommonArangoDB
+from software_kb.common.arango_common import CommonArangoDB
 
 seed(1)
 

@@ -45,6 +45,9 @@ class Wikidata_harvester(Harvester):
 
     database_name = "wikidata"
 
+    # list of software entities 
+    software_list = []
+
     # list of entity identifiers corresponding to persons in relation to the entity software
     persons_list = []
     # list of properties that we consider for importing persons (P178 "developer" can also be an organization")
@@ -109,7 +112,6 @@ class Wikidata_harvester(Harvester):
 
         # list of valid entities (this is relatively small, but we might want to use a key/value store, 
         # like LMDB map, in the future)
-        self.software_list = []
         with open("data/resources/software.wikidata.entities", "rt") as fp:
             for line in fp:
                 self.software_list.append(line.rstrip())

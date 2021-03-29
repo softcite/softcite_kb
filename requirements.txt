@@ -7,4 +7,4 @@ uvicorn
 tqdm
 lxml
 pyfiglet
-elasticsearch
+elasticsearch>=7.0.0,<8.0.0
