@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse
 import time 
+from software_kb.kb.converter import convert_to_simple_format, convert_to_wikidata, convert_to_codemeta
 
 router = APIRouter()
 
@@ -24,25 +25,25 @@ def get_version():
 
 # the value for "collection" of entitites are "software", "documents", "persons", "organizations" and "licenses"
 @router.get("/entities/{collection}/{identifier}", tags=["entities"])
-async def get_entity(collection: str, identifier: str):
+async def get_entity(collection: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
     if not kb.kb_graph.has_vertex(collection + '/' + identifier):
         raise HTTPException(status_code=404, detail="Entity not found in collection "+collection)
     result = {}
     result['full_count'] = 1
-    result['records'] = kb.kb_graph.vertex(collection + '/' + identifier)
+    result['record'] = _convert_target_format(kb.kb_graph.vertex(collection + '/' + identifier), format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 
 # the value for "collection" of relations are "references", "citations", "actors", "fundings", "dependencies" and "copyrights"
 @router.get("/relations/{collection}/{identifier}", tags=["relations"])
-async def get_relation(collection: str, identifier: str):
+async def get_relation(collection: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
     if not kb.kb_graph.has_edge(collection + '/' + identifier):
         raise HTTPException(status_code=404, detail="Relation not found in collection "+collection)
     result = {}
     result['full_count'] = 1
-    result['records'] = kb.kb_graph.edge(collection + '/' + identifier)
+    result['record'] = _convert_target_format(kb.kb_graph.edge(collection + '/' + identifier), format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 
@@ -99,7 +100,6 @@ async def get_software(page_rank: int = 0, page_size: int = 10, ranker: str = 'c
         return result
 
     #elif ranker == 'date':
-
 
     else:
         raise HTTPException(status_code=422, detail="Ranker parameter is unknown: "+ranker)
@@ -213,7 +213,8 @@ async def get_document_software(identifier: str, page_rank: int = 0, page_size: 
         records.append(entity)
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
-    return records
+
+    return result
 
 
 '''
@@ -244,7 +245,8 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
         records.append(entity)
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
-    return records
+    
+    return result
 
 '''
 return all the software entities an organization has been involved with via its members 
@@ -271,7 +273,8 @@ async def get_organization_software(identifier: str, page_rank: int = 0, page_si
         records.append(entity)
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
-    return records
+    
+    return result
 
 
 '''
@@ -280,6 +283,9 @@ return the n-best references to a software, following the criteria of the CiteAs
 @router.get("/entities/software/{identifier}/citeas", tags=["entities"])
 async def get_software_citeas(identifier: str, n_best: int = 10):
     start_time = time.time()
+
+    if not kb.kb_graph.has_vertex('software/' + identifier):
+        raise HTTPException(status_code=404, detail="Software entity not found")
 
     records1 = []
     # do we have a reference directly from this software? these are the best, developer requested citations
@@ -331,4 +337,19 @@ async def get_software_citeas(identifier: str, n_best: int = 10):
     
     result['records'] = records[:n_best]
     result['runtime'] = round(time.time() - start_time, 3)
-    return records
+    return result
+
+def _convert_target_format(result, format="simple"):
+    if format == 'internal':
+        return result
+    else:
+        if format == 'simple':
+            print(result)
+            print(convert_to_simple_format(kb, result))
+            return convert_to_simple_format(kb, result)
+        elif format == 'wikidata':
+            return convert_to_wikidata(kb, result)
+        elif format == 'codemeta':
+            return convert_to_codemeta(kb, result)
+
+    

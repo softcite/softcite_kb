@@ -1,0 +1,82 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "",
+  "description": "",
+  "name": "",
+  "codeRepository": "",
+  "issueTracker": "",
+  "license": "",
+  "version": "2.0",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "",
+      "familyName": "",
+      "email": "",
+      "@id": ""
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Person",
+      "givenName": "",
+      "familyName": "",
+      "email": "",
+      "@id": ""
+    }
+  ],
+  "maintainer": {
+    "@type": "Person",
+    "givenName": "",  
+    "familyName": "",
+    "email": "",
+    "@id": ""
+  },
+  "copyrightHolder": [ 
+    {
+      "@type": "Organization",
+      "name": "",  
+      "url": "",
+      "@id": ""
+    },
+    {
+    "@type": "Person",
+    "givenName": "",  
+    "familyName": "",
+    "email": "",
+    "@id": ""
+    }
+  ],
+  "contIntegration": "",
+  "developmentStatus": "",
+  "downloadUrl": "",
+  "funder": { 
+    "@id": "",
+    "@type": "Organization",
+    "name": ""
+  },
+  "softwareRequirements": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "",
+      "version": "",
+      "provider": {
+        "@id": "",
+        "@type": "",
+        "name": "",
+        "url": ""
+      }
+    }
+  ],
+  "funding":"",
+  "keywords": [],
+  "dateCreated": "",
+  "datePublished": "",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "",
+    "version": "",
+    "url": ""
+  }
+}
