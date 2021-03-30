@@ -31,11 +31,55 @@ async def get_entity(collection: str, identifier: str, format: str = 'internal')
         raise HTTPException(status_code=404, detail="Entity not found in collection "+collection)
     result = {}
     result['full_count'] = 1
-    result['record'] = _convert_target_format(kb.kb_graph.vertex(collection + '/' + identifier), format)
+
+    record = kb.kb_graph.vertex(collection + '/' + identifier)
+
+    # we inject the information stored in relations actors, copyrights, funding (other relation-based information 
+    # have their dedicated routes - for instance for software sub-routes citations and dependencies)
+
+    # actors
+    cursor = kb.db.aql.execute(
+        'FOR actor IN actors \
+            FILTER actor._to == "software/' + identifier + '" \
+            RETURN actor')
+
+    if collection == 'software' or collection == 'documents':
+        for actor in cursor:
+            # get the role of the person
+            if "claims" in actor:
+                for property_key in actor["claims"]:
+                    # only one value for the property in actor relation
+                    property_value = actor["claims"][property_key][0]
+
+                    # get the person entity
+                    local_person_id = actor["_from"]
+                    #local_person = kb.kb_graph.vertex('person/' + identifier)
+                    property_value['value'] = local_person_id
+                    property_value['datatype'] = 'internal-id'
+
+                    # add the property value in the entity
+                    if not property_key in record["claims"]:
+                        record["claims"][property_key] = []
+                    record["claims"][property_key].append(property_value)
+
+        # copyrights
+        cursor = kb.db.aql.execute(
+            'FOR copyright IN copyrights \
+                FILTER copyright._to == "software/' + identifier + '" \
+                RETURN copyright')
+
+        # funding
+        cursor = kb.db.aql.execute(
+            'FOR fund IN funding \
+                FILTER fund._to == "software/' + identifier + '" \
+                RETURN fund')
+
+    result['record'] = _convert_target_format(record, format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 
-# the value for "collection" of relations are "references", "citations", "actors", "fundings", "dependencies" and "copyrights"
+# the value for "collection" of relations are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
+'''
 @router.get("/relations/{collection}/{identifier}", tags=["relations"])
 async def get_relation(collection: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
@@ -46,7 +90,7 @@ async def get_relation(collection: str, identifier: str, format: str = 'internal
     result['record'] = _convert_target_format(kb.kb_graph.edge(collection + '/' + identifier), format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
-
+'''
 
 '''
 for returning list of entities or relations, the following parameters are used in every endpoints:  
@@ -157,6 +201,64 @@ async def get_software(identifier: str, page_rank: int = 0, page_size: int = 10,
 
     else:
         raise HTTPException(status_code=422, detail="Ranker parameter is unknown: "+ranker)
+
+
+
+'''
+return all depedencies for a given software
+'''
+@router.get("/entities/software/{identifier}/dependencies", tags=["entities"])
+async def get_dependencies(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
+    start_time = time.time()
+
+    cursor = kb.db.aql.execute(
+            'FOR dependency IN dependencies '
+            + ' FILTER dependency._from == "software/' + identifier + '"'
+            + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+            + ' RETURN dependency._to', full_count=True)
+
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+
+    return result
+
+
+'''
+return all reverse depedencies for a software, so all the software depending on the given software
+'''
+@router.get("/entities/software/{identifier}/reverse_dependencies", tags=["entities"])
+async def get_reverse_dependencies(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
+    start_time = time.time()
+
+    cursor = kb.db.aql.execute(
+            'FOR dependency IN dependencies '
+            + ' FILTER dependency._to == "software/' + identifier + '"'
+            + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+            + ' RETURN dependency._from', full_count=True)
+
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+
+    return result
+
 
 
 '''
@@ -344,8 +446,6 @@ def _convert_target_format(result, format="simple"):
         return result
     else:
         if format == 'simple':
-            print(result)
-            print(convert_to_simple_format(kb, result))
             return convert_to_simple_format(kb, result)
         elif format == 'wikidata':
             return convert_to_wikidata(kb, result)

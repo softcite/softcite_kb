@@ -133,18 +133,101 @@ def convert_to_codemeta(kb, entity):
         codemeta_json["identifier"] = jsonEntity['labels']
 
     if "summary" in jsonEntity:
-        codemeta_json["name"] = jsonEntity['summary']
+        codemeta_json["description"] = jsonEntity['summary']
 
     if "descriptions" in jsonEntity:
-        codemeta_json["description"] = jsonEntity['descriptions']
+        codemeta_json["name"] = jsonEntity['descriptions']
 
     '''
+    codeRepository  P1324
+    programmingLanguage     P277
+    runtimePlatform     P400
+    downloadUrl     P4945
+    fileSize    P3575
+    operatingSystem     P306
+    softwareRequirements    P1547
+    softwareVersion     P348
+    author  P50
+    citation    P2860
+    contributor     P767
+    dateCreated     P571
+    dateModified    P5017
+    datePublished   P577
+    editor  P98
+    fileFormat  P2701
+    funder  P859
+    keywords    P921
+    license     P275
+    producer    P162
+    publisher   P123
+    isPartOf    P361
+    hasPart     P527
+    sameAs  P2888
+    url     P856
+    givenName   P735
+    familyName  P734
+    email   P968 
+    issueTracker    Q956086
+    '''
+
     if "claims" in jsonEntity:
         for wikidata_property in jsonEntity["claims"]:
-            if wikidata_property == 'P854':
+            if wikidata_property == 'P1324':
+                # codeRepository
+                codemeta_json['codeRepository'] = jsonEntity["claims"][wikidata_property]['value']
+            elif wikidata_property == 'P277':
+                # programmingLanguage
+                converted_name = kb.naming_wikidata_string(jsonEntity["claims"][wikidata_property]['value'])
+                if converted_name == None:
+                    converted_name = jsonEntity["claims"][wikidata_property]['value']
+                # short cut here, we should get these infos from the KB itself normally...
+                if converted_name == 'R' or converted_name == 'Q206904':
+                    codemeta_json['programmingLanguage']['name'] = 'R'
+                    codemeta_json['programmingLanguage']['name']['url'] = 'https://r-project.org'
+                else:
+                    codemeta_json['programmingLanguage']['name'] = converted_name
+            elif wikidata_property == 'P400':
+                # runtimePlatform
+                codemeta_json['runtimePlatform'] = jsonEntity["claims"][wikidata_property]['value']
+            elif wikidata_property == 'P4945':
+                # downloadUrl
+                codemeta_json['downloadUrl'] = jsonEntity["claims"][wikidata_property]['value']
+            elif wikidata_property == 'P3575':
+                # fileSize
+                codemeta_json['fileSize'] = jsonEntity["claims"][wikidata_property]['value']
+            elif wikidata_property == 'P306':
+                # operatingSystem
+                # I would put a list here, but it's a string apparently (or maybe it's more generic than I think)
+                codemeta_json['operatingSystem'] = jsonEntity["claims"][wikidata_property]['value']
+                
+                '''
+                elif wikidata_property == 'P1547':
+                    # softwareRequirements
+
+                elif wikidata_property == 'P348':
+                    # softwareVersion
+                '''
+
+            elif wikidata_property == 'P854':
                 # url
-                # ...
-    '''
+                # project/homepage URL is not directly covered by the codemeta term description, but in usual jsonld
+                # this is the 'url' attribute at top level
+                codemeta_json['url'] = jsonEntity["claims"][wikidata_property]['value']
+
+
+            # some information are obtained via the relations, e.g. authors, contributors, etc. and for codemeta output
+            # we need to access related entities
+
+            elif wikidata_property == 'P50':
+                # author
+                authors = []
+
+            elif wikidata_property == 'P767':
+                # contributor
+                contributors = []
+
+
+    # clean remaining empty fields from the template
 
     return codemeta_json
 
