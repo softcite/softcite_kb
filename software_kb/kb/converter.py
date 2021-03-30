@@ -3,6 +3,7 @@
 '''
 
 import json
+import os
 from software_kb.kb.knowledge_base import knowledgeBase
 import copy
 
@@ -66,6 +67,43 @@ def convert_to_wikidata(kb, entity):
     _expend_element(jsonEntity, "descriptions", "en")
     _expend_element(jsonEntity, "aliases", "en")
 
+    # recomplexify the "snark" as "value" attribute
+    '''
+    if "claims" in jsonEntity:
+        properties_to_be_removed = []
+        for wikidata_property in jsonEntity["claims"]:
+            new_statements = []
+            for statement in jsonEntity["claims"][wikidata_property]:
+                new_statement = {}
+                if not "datavalue" in statement["mainsnak"]:
+                    continue
+                datavalue = statement["mainsnak"]["datavalue"]
+                new_statement["value"] = datavalue["value"]
+                new_statement["datatype"] = statement["mainsnak"]["datatype"]
+                # simplify the value based on the datatype
+                the_value = new_statement["value"]
+                if new_statement["datatype"] == "wikibase-item":
+                    del the_value["numeric-id"]
+                    del the_value["entity-type"]
+                    new_statement["value"] = datavalue["value"]["id"]
+                elif new_statement["datatype"] == "time":
+                    del the_value["before"]
+                    del the_value["timezone"]
+                    del the_value["calendarmodel"]
+                    del the_value["after"]
+                    del the_value["precision"]
+                new_statements.append(new_statement)
+            if len(new_statements) > 0:
+                jsonEntity["claims"][wikidata_property] = new_statements
+            else:
+                properties_to_be_removed.append(wikidata_property)
+
+        for wikidata_property in properties_to_be_removed:
+            del jsonEntity["claims"][wikidata_property]
+    '''
+
+    jsonEntity["type"] = "item"
+
     return jsonEntity
 
 def _expend_element(jsonEntity, element, lang):
@@ -74,7 +112,7 @@ def _expend_element(jsonEntity, element, lang):
             lang_lab_val = jsonEntity[element]
             lang_lab = {}
             lang_lab[lang] = lang_lab_val
-            jsonEntity[element] = en_lab
+            jsonEntity[element] = lang_lab
     return jsonEntity
 
 def convert_to_codemeta(kb, entity):
@@ -84,7 +122,7 @@ def convert_to_codemeta(kb, entity):
     of our representation, and some metadata. 
     '''
     global codemeta_template
-    converted = copy.deepcopy(entity)
+    jsonEntity = copy.deepcopy(entity)
 
     # load codemeta template if not already done
     if codemeta_template == None:
@@ -92,6 +130,23 @@ def convert_to_codemeta(kb, entity):
 
     codemeta_json = copy.deepcopy(codemeta_template)
 
+    if "labels" in jsonEntity:
+        codemeta_json["identifier"] = jsonEntity['labels']
+
+    if "summary" in jsonEntity:
+        codemeta_json["name"] = jsonEntity['summary']
+
+    if "descriptions" in jsonEntity:
+        codemeta_json["description"] = jsonEntity['descriptions']
+
+    '''
+    if "claims" in jsonEntity:
+        for wikidata_property in jsonEntity["claims"]:
+            if wikidata_property == 'P854':
+                # url
+                # ...
+    '''
+    
     return codemeta_json
 
 def _load_codemeta_template():
@@ -103,9 +158,6 @@ def _load_codemeta_template():
 
     with open(template_file) as template_f:
         json_template_string = template_f.read()
-        if not source is None:
-            json_template_string = json_template_string.replace('[]', '[' + json.dumps(source) + ']')
-
         json_template = json.loads(json_template_string)
 
     return json_template
