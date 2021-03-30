@@ -62,7 +62,19 @@ class Wikidata_naming_harvester(Wikidata_harvester):
                         if "en" in local_labels:
                             string_name = local_labels["en"]["value"]
                         self.add_naming_wikidata(entityJson["id"], string_name)
-                    
+
+        # add the few custom properties
+        custom_properties = None
+        custom_properties_file = os.path.join("data", "resources", "custom_properties.json")
+        if not os.path.isfile(custom_properties_file): 
+            print("Warning: no custom Wikidata properties file defintion:", custom_properties_file)
+        else:
+            with open(custom_properties_file) as properties_f:
+                custom_properties_string = properties_f.read()
+                custom_properties = json.loads(custom_properties_string)
+
+            for key, value in custom_properties.items():
+                self.add_naming_wikidata(key, value['label'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Import relevant Wikidata entities")

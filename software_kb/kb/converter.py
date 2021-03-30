@@ -45,7 +45,6 @@ def _convert_to_simple_format_item(kb, item):
                 result[key] = value
             else:
                 converted_key = kb.naming_wikidata_string(key)
-                print(key, " ", converted_key)
                 if converted_key != None:
                     result[converted_key] = _convert_to_simple_format_item(kb, value)
                 else:
@@ -146,7 +145,7 @@ def convert_to_codemeta(kb, entity):
                 # url
                 # ...
     '''
-    
+
     return codemeta_json
 
 def _load_codemeta_template():

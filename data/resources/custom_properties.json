@@ -12,12 +12,12 @@
     },
     "PA2": {
         "label": "refkey", 
-        "title": "associated key/rank in a reference list",
+        "title": "associated key/rank in a reference list"
     },
     "PA3": {
         "label": "callout",
         "aliases": ["reference marker"],
-        "title": "callout used in text to reference a bibliographical entry",
+        "title": "callout used in text to reference a bibliographical entry"
     }
 }
 

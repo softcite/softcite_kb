@@ -158,7 +158,7 @@ class Wikidata_harvester(Harvester):
                         local_labels = entityJson["labels"]
                         if "en" in local_labels:
                             string_name = local_labels["en"]["value"]
-                        self.add_naming_wikidata(entityJson["id"], string_name)
+                        #self.add_naming_wikidata(entityJson["id"], string_name)
                 
         
         # write list of related entities
