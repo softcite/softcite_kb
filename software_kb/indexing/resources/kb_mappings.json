@@ -18,7 +18,8 @@
     },
     "all": {
       "type": "text",
-      "analyzer": "case_insensitive_folding_text_stopwords"
+      "analyzer": "case_insensitive_folding_text_stopwords",
+      "index_options": "offsets"
     },
     "contexts": {
       "type": "text",

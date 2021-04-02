@@ -22,8 +22,8 @@ class Indexer(CommonArangoDB):
         self.kb = knowledgeBase(config_path=config_path)
 
         self.es = Elasticsearch(
-            ['localhost'],
-            port=9200,
+            [self.config["elasticsearch"]["host"]],
+            port=self.config["elasticsearch"]["port"],
             sniff_on_start=True,
             # refresh nodes after a node fails to respond
             sniff_on_connection_fail=True,
@@ -148,6 +148,7 @@ class Indexer(CommonArangoDB):
             cursor = self.kb.db.aql.execute(
                     'FOR mention IN citations '
                         + ' FILTER mention._to == "' + entity["_id"] + '"'
+                        + ' LIMIT 0, 10'
                         + ' RETURN mention._id', full_count=True)
             total_results = 0
             stats = cursor.statistics()
@@ -163,11 +164,15 @@ class Indexer(CommonArangoDB):
                     'FOR mention IN citations '
                         + ' FILTER mention._to == "' + entity["_id"] + '"'
                         + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
-                        + ' RETURN mention["claims"]["P7081"][0]["value"]')
+                        + ' RETURN mention')
 
-                for mention_context in cursor:
-                    if mention_context != None and len(mention_context)>0:
-                        contexts.append(mention_context)
+                for mention in cursor:
+                    if "claims" in mention and "P7081" in mention["claims"]:
+                        for the_context in mention["claims"]["P7081"]:
+                            if "value" in the_context:
+                                mention_context = the_context["value"]
+                                if len(mention_context)>0:
+                                    contexts.append(mention_context)
 
             if len(contexts) > 0:
                 doc['contexts'] = contexts
@@ -205,8 +210,9 @@ class Indexer(CommonArangoDB):
             for author in doc['authors']:
                 doc["all"] += " " + author
 
-
-
+        if "contexts" in doc:
+            for context in doc["contexts"]:
+                doc["all"] += " " + context
 
         return doc
 
