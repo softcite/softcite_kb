@@ -181,6 +181,12 @@ def populate_r(stagingArea, collection, source_ref):
                     maintainer_consumed = process_author(stagingArea, author, software['_key'], relator_code_cran, source_ref, maintainer)
                     if maintainer_consumed:
                         maintainer = None
+            elif "Authors" in package:
+                # author field is relevant only if Authors@R is not 
+                for author in package["Authors"]:
+                    maintainer_consumed = process_author(stagingArea, author, software['_key'], relator_code_cran, source_ref, maintainer)
+                    if maintainer_consumed:
+                        maintainer = None
             elif "Author" in package:
                 # author field is relevant only if Authors@R is not 
                 for author in package["Author"]:
