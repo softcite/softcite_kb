@@ -1,0 +1,61 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    },
+    "labels": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text"
+    },
+    "descriptions": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text_stopwords"
+    },
+    "summary": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text_stopwords",
+      "index_options": "offsets"
+    },
+    "all": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text_stopwords"
+    },
+    "contexts": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text_stopwords",
+      "index_options": "offsets"
+    },
+    "authors": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text"
+    },
+    "authors_full": {
+      "type": "keyword"
+    },
+    "organizations": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text"
+    },
+    "licenses": {
+      "type": "text",
+      "analyzer": "case_insensitive_folding_text"
+    },
+    "collection": {
+      "type": "keyword"
+    },
+    "date": {
+      "type": "date",
+      "format": "yyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+    },
+    "programming_language": {
+      "type": "text",
+      "analyzer": "case_insensitive_keyword"
+    },
+    "programming_language_class": {
+      "type": "keyword"
+    },
+    "number_mentions": {
+      "type": "integer"  
+    }
+  }
+}
