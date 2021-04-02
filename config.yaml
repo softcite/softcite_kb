@@ -36,6 +36,12 @@ biblio-glutton:
   biblio_glutton_protocol: "https"
   biblio_glutton_port: ~
 
+## for using entity-fishing for additional disambiguation and text summaries
+entity-fishing:
+  entity_fishing_host: "cloud.science-miner.com/nerd"
+  entity_fishing_protocol: "https"
+  entity_fishing_port: 
+
 crossref:
   crossref_base: "https://api.crossref.org"
   crossref_email: ~
