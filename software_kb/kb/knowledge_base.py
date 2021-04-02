@@ -11,8 +11,11 @@ import json
 from arango import ArangoClient
 from software_kb.common.arango_common import CommonArangoDB
 from software_kb.merge.populate_staging_area import StagingArea, _project_entity_id_collection
+from software_kb.common.arango_common import simplify_entity
 import argparse
 from tqdm import tqdm
+import requests
+from requests.exceptions import HTTPError
 
 class knowledgeBase(CommonArangoDB):
 
@@ -220,8 +223,10 @@ class knowledgeBase(CommonArangoDB):
         if reset:
             self.reset()
 
-        self.init_collections(config_path=config_path)
-        self.set_up_relations()
+        #self.init_collections(config_path=config_path)
+        #self.set_up_relations()
+
+        self.complete_entities()
 
     def init_collections(self, config_path="./config.yaml"):
 
@@ -258,6 +263,9 @@ class knowledgeBase(CommonArangoDB):
             )
             
             for entity in cursor:
+                # init count to 1 at source levels
+                entity = _init_count(entity)
+
                 # check if the entry shall be merged
                 if stagingArea.staging_graph.has_vertex("merging_entities/" + entity['_key']):
                     # this entity has to be merged with other ones of its merging group
@@ -319,6 +327,9 @@ class knowledgeBase(CommonArangoDB):
             )
 
             for entity in cursor:
+                # init count to 1 at source levels
+                entity = _init_count(entity)
+
                 # check "from" and "to" vertex
                 from_entity_id = entity["_from"]
                 to_entity_id = entity["_to"]
@@ -375,13 +386,177 @@ class knowledgeBase(CommonArangoDB):
                 if not self.kb_graph.has_edge(entity['_id']):
                     self.kb_graph.insert_edge(edge_collection_name, entity)
 
+    def complete_entities(self):
+        ''' 
+        The mentions introduce entities via disambiguisation, which might have been imported via software
+        instance properties. In order to import only safe missing entities, we exploit the count information
+        after merging to compute a probability. If this probability is high enough, we add the wikidata entity
+        in the import list. 
+        '''
 
+        software_list = []
+        with open("data/resources/software.wikidata.entities", "rt") as fp:
+            for line in fp:
+                software_list.append(line.rstrip())
+
+        total_results = self.software.count()
+        page_size = 1000
+        nb_pages = (total_results // page_size)+1
+
+        print("Quality check on software entity disambiguation...")
+
+        for page_rank in tqdm(range(0, nb_pages)):
+
+            cursor = self.db.aql.execute(
+                'FOR doc IN software LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
+            )
+            
+            for soft in cursor:
+                # get mention count
+                contexts = []
+                cursor = self.db.aql.execute(
+                    'FOR mention IN citations '
+                        + ' FILTER mention._to == "' + soft["_id"] + '"'
+                        + ' RETURN mention._id', full_count=True)
+                total_mentions = 0
+                stats = cursor.statistics()
+                if 'fullCount' in stats:
+                    total_mentions = stats['fullCount']
+
+                # check the disambiguated entity and the number of disambiguation against the total number of mentions
+                count = 0
+                entity_id = None
+                if "claims" in soft:
+                    if "P460" in soft["claims"]:
+                        for the_value in soft["claims"]["P460"]:
+                            if isinstance(the_value["value"], str) and the_value["value"].startswith("Q"):
+                                local_entity_id = the_value["value"]
+                                if "references" in the_value and "count" in the_value["references"][0]["P248"]:
+                                    local_count = the_value["references"][0]["P248"]["count"]
+
+                                    if local_count > count:
+                                        count = local_count
+                                        entity_id = local_entity_id
+
+                if entity_id == None:
+                    continue
+
+                # if no summary but a wikidata entity, try to get one via entity-fishing which has extracted summaries from
+                # the corresponding Wikipedia English pages
+                new_summary = None
+                if not "summary" in soft or len(soft["summary"]) == 0:
+                    local_summary = self.get_summary(entity_id)
+                    if local_summary != None:
+                        new_summary = local_summary
+
+                if total_mentions < 10: 
+                    continue
+
+                if count <= 1:
+                    continue
+
+                if count > total_mentions/2:
+                    # valid entity... keep track of the entity if not imported yet
+                    if not entity_id in software_list:
+                        software_list.append(entity_id)
+
+                    # update summary
+                    if new_summary != None:
+                        soft["summary"] = new_summary
+
+                    # to immediatly integrate this missing entity, we can retrieve it online and merge it 
+                    entity_json = _get_entity_from_wikidata(entity_id)
+                    if entity_json != None:
+                        soft = self.aggregate_with_merge(soft, entity_json)
+
+                    # finally update the software entity in the KB
+                    self.kb_graph.update_vertex(soft)
+
+
+        # update entity list
+        with open("data/resources/software.wikidata.entities2", "wt") as fp:
+            for wikipedia_entity_id in software_list:
+                fp.write(wikipedia_entity_id)
+                fp.write("\n")
+
+
+    def get_summary(self, wikidata_id):
+        nerd_url = self.config["entity-fishing"]["entity_fishing_protocol"] + "://" + self.config["entity-fishing"]["entity_fishing_host"]
+        if self.config["entity-fishing"]["entity_fishing_port"] != None and self.config["entity-fishing"]["entity_fishing_port"] != 0:
+             nerd_url += ":" + self.config["entity-fishing"]["entity_fishing_port"]
+
+        nerd_url += "/service/kb/concept/" + wikidata_id
+        result_json = None
+        try:
+            response = requests.get(nerd_url)
+            response.raise_for_status()
+            result_json = response.json()
+        except HTTPError as http_err:
+            print('HTTP error occurred:', http_err)
+        except Exception as err:
+            print('Error occurred:', err)
+
+        if result_json == None:
+            return None
+
+        summary = None
+        if "definitions" in result_json:
+            for definition_object in result_json["definitions"]:
+                if "lang" in definition_object and definition_object["lang"] == 'en' and "definition" in definition_object:
+                    local_summary = definition_object["definition"]
+                    if len(local_summary) > 10:
+                        summary = local_summary
+                        break
+        return summary
+
+
+def _get_entity_from_wikidata(entity_id):
+    wikidata_url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' + entity_id + '&format=json'
+
+    result_json = None
+    try:
+        response = requests.get(wikidata_url)
+        response.raise_for_status()
+        result_json = response.json()
+    except HTTPError as http_err:
+        print('HTTP error occurred:', http_err)
+    except Exception as err:
+        print('Error occurred:', err)
+
+    if result_json == None:
+        return None
+
+    result_json = simplify_entity(result_json)
+
+    return result_json
 
 def _index(the_list, the_value):
     try:
         return the_list.index(the_value)
     except ValueError:
         return None
+
+def _init_count(entity):
+    '''
+    Init a count attribute to 1 for every source references (P248)/
+    This is done recursively directly on the dictionary instance.
+    '''
+    if entity == None:
+        return None
+    elif isinstance(entity, list):
+        for value in entity:
+            _init_count(value)
+    elif isinstance(entity, dict):
+        for key, value in entity.items():
+            if key == "P248":
+                if not 'count' in entity["P248"]:
+                    try:
+                        entity["P248"]['count'] = 1
+                    except:
+                        pass
+            else:
+                _init_count(entity[key])
+    return entity
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Create the knowledge base using the staging area graph and the produced deduplication/disambiguation decisions")

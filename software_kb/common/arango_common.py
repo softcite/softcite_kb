@@ -324,8 +324,9 @@ class CommonArangoDB(object):
 
 def add_ref_if_not_present(references, ref_to_add):
     '''
-    check if a reference entry is not already present in a reference list, if no
-    add it to the list
+    check if a reference entry is not already present in a reference list:
+    - if no, add it to the list
+    - if yes, increase origin count to keep track of the number of times the same source is claiming the same fact
     '''
     found = False
     value_to_add = None
@@ -339,12 +340,98 @@ def add_ref_if_not_present(references, ref_to_add):
         for key, value in reference.items():
             if "value" in value and value["value"] == value_to_add:
                 found = True
+                # increase count attribute (no count attribute means count == 1)
+                if "count" in value:
+                    value["count"] += 1
+                else:
+                    value["count"] = 2
                 break
         if found:
             break
 
     if not found or len(references) == 0:
-        references.append(ref_to_add)
+        references.append(ref_to_add)        
 
     return references
 
+def simplify_entity(jsonEntity):
+    """
+    As we focus on English (at least for the moment), we ignore other language fields 
+    """
+    _replace_element(jsonEntity, "labels", "en")
+    _replace_element(jsonEntity, "descriptions", "en")
+    _replace_element(jsonEntity, "aliases", "en")
+
+    if 'sitelinks' in jsonEntity:
+        del jsonEntity['sitelinks']
+
+    # remove language levels because we restrict to English only currently
+    if "descriptions" in jsonEntity:
+        if "en" in jsonEntity["descriptions"]:
+            jsonEntity["descriptions"] = jsonEntity["descriptions"]["en"]["value"]
+    
+    if "labels" in jsonEntity:
+        if "en" in jsonEntity["labels"]:    
+            jsonEntity["labels"] = jsonEntity["labels"]["en"]["value"]
+
+    if "aliases" in jsonEntity:
+        if "en" in jsonEntity["aliases"]:
+            all_aliases = []
+            for alias in jsonEntity["aliases"]["en"]:
+                all_aliases.append(alias["value"])
+            jsonEntity["aliases"] = all_aliases
+        else:
+            jsonEntity["aliases"] = []
+
+    # note: we also have some property of datatype "monolingualtext" introducing language information 
+    # this will be preserved because not reversible
+
+    # simplifying the "snark" as "value" attribute
+    if "claims" in jsonEntity:
+        properties_to_be_removed = []
+        for wikidata_property in jsonEntity["claims"]:
+            new_statements = []
+            for statement in jsonEntity["claims"][wikidata_property]:
+                new_statement = {}
+                if not "datavalue" in statement["mainsnak"]:
+                    continue
+                datavalue = statement["mainsnak"]["datavalue"]
+                new_statement["value"] = datavalue["value"]
+                new_statement["datatype"] = statement["mainsnak"]["datatype"]
+                # simplify the value based on the datatype
+                the_value = new_statement["value"]
+                if new_statement["datatype"] == "wikibase-item":
+                    del the_value["numeric-id"]
+                    del the_value["entity-type"]
+                    new_statement["value"] = datavalue["value"]["id"]
+                elif new_statement["datatype"] == "time":
+                    del the_value["before"]
+                    del the_value["timezone"]
+                    del the_value["calendarmodel"]
+                    del the_value["after"]
+                    del the_value["precision"]
+                new_statements.append(new_statement)
+            if len(new_statements) > 0:
+                jsonEntity["claims"][wikidata_property] = new_statements
+            else:
+                properties_to_be_removed.append(wikidata_property)
+
+        for wikidata_property in properties_to_be_removed:
+            del jsonEntity["claims"][wikidata_property]
+
+    if "lastrevid" in jsonEntity:
+        del jsonEntity["lastrevid"]
+
+    if "type" in jsonEntity:
+        del jsonEntity["type"]
+
+    return jsonEntity
+                
+def _replace_element(jsonEntity, element, lang):
+    if element in jsonEntity:
+        if lang in jsonEntity[element]:
+            en_lab_val = jsonEntity[element][lang]
+            en_lab = {}
+            en_lab[lang] = en_lab_val
+            jsonEntity[element] = en_lab
+    return jsonEntity

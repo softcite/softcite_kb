@@ -40,6 +40,7 @@ from import_common import clean_field, is_git_repo
 import sys
 import os
 import bz2
+from software_kb.common.arango_common import simplify_entity
 
 class Wikidata_harvester(Harvester):
 
@@ -147,7 +148,7 @@ class Wikidata_harvester(Harvester):
 
                 if not entityJson is None:    
                     if self._valid_software(entityJson):
-                        entityJson = self._simplify(entityJson)
+                        entityJson = simplify_entity(entityJson)
                         # store entity in arangodb as document
                         local_id = entityJson['id']
                         if not self.software.has(local_id):
@@ -229,79 +230,6 @@ class Wikidata_harvester(Harvester):
                 if "value" in value and value["value"] == "Q13442814":
                     return True
         return False 
-
-    def _simplify(self, jsonEntity):
-        """
-        As we focus on English (at least for the moment), we ignore other language fields 
-        """
-        _replace_element(jsonEntity, "labels", "en")
-        _replace_element(jsonEntity, "descriptions", "en")
-        _replace_element(jsonEntity, "aliases", "en")
-
-        if 'sitelinks' in jsonEntity:
-            del jsonEntity['sitelinks']
-
-        # remove language levels because we restrict to English only currently
-        if "descriptions" in jsonEntity:
-            if "en" in jsonEntity["descriptions"]:
-                jsonEntity["descriptions"] = jsonEntity["descriptions"]["en"]["value"]
-        
-        if "labels" in jsonEntity:
-            if "en" in jsonEntity["labels"]:    
-                jsonEntity["labels"] = jsonEntity["labels"]["en"]["value"]
-
-        if "aliases" in jsonEntity:
-            if "en" in jsonEntity["aliases"]:
-                all_aliases = []
-                for alias in jsonEntity["aliases"]["en"]:
-                    all_aliases.append(alias["value"])
-                jsonEntity["aliases"] = all_aliases
-            else:
-                jsonEntity["aliases"] = []
-
-        # note: we also have some property of datatype "monolingualtext" introducing language information 
-        # this will be preserved because not reversible
-
-        # simplifying the "snark" as "value" attribute
-        if "claims" in jsonEntity:
-            properties_to_be_removed = []
-            for wikidata_property in jsonEntity["claims"]:
-                new_statements = []
-                for statement in jsonEntity["claims"][wikidata_property]:
-                    new_statement = {}
-                    if not "datavalue" in statement["mainsnak"]:
-                        continue
-                    datavalue = statement["mainsnak"]["datavalue"]
-                    new_statement["value"] = datavalue["value"]
-                    new_statement["datatype"] = statement["mainsnak"]["datatype"]
-                    # simplify the value based on the datatype
-                    the_value = new_statement["value"]
-                    if new_statement["datatype"] == "wikibase-item":
-                        del the_value["numeric-id"]
-                        del the_value["entity-type"]
-                        new_statement["value"] = datavalue["value"]["id"]
-                    elif new_statement["datatype"] == "time":
-                        del the_value["before"]
-                        del the_value["timezone"]
-                        del the_value["calendarmodel"]
-                        del the_value["after"]
-                        del the_value["precision"]
-                    new_statements.append(new_statement)
-                if len(new_statements) > 0:
-                    jsonEntity["claims"][wikidata_property] = new_statements
-                else:
-                    properties_to_be_removed.append(wikidata_property)
-
-            for wikidata_property in properties_to_be_removed:
-                del jsonEntity["claims"][wikidata_property]
-
-        if "lastrevid" in jsonEntity:
-            del jsonEntity["lastrevid"]
-
-        if "type" in jsonEntity:
-            del jsonEntity["type"]
-
-        return jsonEntity
 
     def add_extra_entities(self, software):
         '''
@@ -450,7 +378,7 @@ class Wikidata_harvester(Harvester):
                 if not entityJson is None:
                     # first rough filtering
                     if entityJson["id"] in self.persons_list or entityJson["id"] in self.licenses_list or entityJson["id"] in self.organizations_list or entityJson["id"] in self.publications_list:
-                        entityJson = self._simplify(entityJson)
+                        entityJson = simplify_entity(entityJson)
 
                         if self._valid_person(entityJson):
                             # store entity in arangodb as document
@@ -476,16 +404,6 @@ class Wikidata_harvester(Harvester):
                             if not self.publications.has(local_id):
                                 entityJson['_id'] = 'publications/' + local_id
                                 self.publications.insert(entityJson)        
-
-                
-def _replace_element(jsonEntity, element, lang):
-    if element in jsonEntity:
-        if lang in jsonEntity[element]:
-            en_lab_val = jsonEntity[element][lang]
-            en_lab = {}
-            en_lab[lang] = en_lab_val
-            jsonEntity[element] = en_lab
-    return jsonEntity
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Import relevant Wikidata entities")
