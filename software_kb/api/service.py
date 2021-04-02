@@ -12,6 +12,8 @@ import yaml
 import argparse
 from pathlib import Path
 from router import router, set_kb
+from fastapi.middleware.cors import CORSMiddleware
+
 
 '''
     The web API uses the FastAPI framework. 
@@ -55,6 +57,16 @@ def get_app(server_config) -> FastAPI:
         openapi_tags=tags_metadata)
     set_kb(kb)
     server.include_router(router, prefix=server_config['api_route'])
+
+    origins = ["*"]
+
+    server.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @server.on_event("startup")
     async def startup_message() -> None:
