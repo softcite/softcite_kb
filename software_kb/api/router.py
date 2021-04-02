@@ -36,14 +36,14 @@ async def get_entity(collection: str, identifier: str, format: str = 'internal')
 
     # we inject the information stored in relations actors, copyrights, funding (other relation-based information 
     # have their dedicated routes - for instance for software sub-routes citations and dependencies)
-
-    # actors
-    cursor = kb.db.aql.execute(
-        'FOR actor IN actors \
-            FILTER actor._to == "software/' + identifier + '" \
-            RETURN actor')
-
     if collection == 'software' or collection == 'documents':
+
+        # actors
+        cursor = kb.db.aql.execute(
+            'FOR actor IN actors \
+                FILTER actor._to == "software/' + identifier + '" \
+                RETURN actor')
+
         for actor in cursor:
             # get the role of the person
             if "claims" in actor:
@@ -63,6 +63,7 @@ async def get_entity(collection: str, identifier: str, format: str = 'internal')
                     record["claims"][property_key].append(property_value)
 
         # copyrights
+        '''
         cursor = kb.db.aql.execute(
             'FOR copyright IN copyrights \
                 FILTER copyright._to == "software/' + identifier + '" \
@@ -73,6 +74,15 @@ async def get_entity(collection: str, identifier: str, format: str = 'internal')
             'FOR fund IN funding \
                 FILTER fund._to == "software/' + identifier + '" \
                 RETURN fund')
+        '''
+
+    # removing all the local index field
+    key_to_remove = []
+    for key, value in record.items():
+        if key.startswith("index_"):
+            key_to_remove.append(key)
+    for key in key_to_remove:
+        del record[key]
 
     result['record'] = _convert_target_format(record, format)
     result['runtime'] = round(time.time() - start_time, 3)
@@ -153,8 +163,8 @@ async def get_software(page_rank: int = 0, page_size: int = 10, ranker: str = 'c
 return all mentions for a software, mentions are ranked following the parameter 
 @ranker, default value count (return the mentions in the document containing most mentions of this software first)
 '''
-@router.get("/entities/software/{identifier}/citations", tags=["entities"])
-async def get_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
+@router.get("/entities/software/{identifier}/mentions", tags=["relations"])
+async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
     cursor = kb.db.aql.execute(
@@ -207,7 +217,7 @@ async def get_software(identifier: str, page_rank: int = 0, page_size: int = 10,
 '''
 return all depedencies for a given software
 '''
-@router.get("/entities/software/{identifier}/dependencies", tags=["entities"])
+@router.get("/entities/software/{identifier}/dependencies", tags=["relations"])
 async def get_dependencies(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -235,7 +245,7 @@ async def get_dependencies(identifier: str, page_rank: int = 0, page_size: int =
 '''
 return all reverse depedencies for a software, so all the software depending on the given software
 '''
-@router.get("/entities/software/{identifier}/reverse_dependencies", tags=["entities"])
+@router.get("/entities/software/{identifier}/reverse_dependencies", tags=["relations"])
 async def get_reverse_dependencies(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -265,7 +275,7 @@ async def get_reverse_dependencies(identifier: str, page_rank: int = 0, page_siz
 return all documents mentioning a software, documents are ranked following the parameter 
 @ranker, default value count (return the document containing most mentions of this software first)
 '''
-@router.get("/entities/software/{identifier}/documents", tags=["entities"])
+@router.get("/entities/software/{identifier}/documents", tags=["relations"])
 async def get_software_documents(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -294,7 +304,7 @@ async def get_software_documents(identifier: str, page_rank: int = 0, page_size:
 return all the software entities, mentioned in a particular paper, ranked following the parameter 
 @ranker, default value count (return first the software with most mentions in the document)
 '''
-@router.get("/entities/document/{identifier}/software", tags=["entities"])
+@router.get("/entities/document/{identifier}/software", tags=["relations"])
 async def get_document_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -322,13 +332,13 @@ async def get_document_software(identifier: str, page_rank: int = 0, page_size: 
 '''
 return all the software entities a person has contributed to
 '''
-@router.get("/entities/person/{identifier}/software", tags=["entities"])
+@router.get("/entities/person/{identifier}/software", tags=["relations"])
 async def get_person_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
     cursor = kb.db.aql.execute(
         'FOR actor IN actors '
-        + ' FILTER rights._from == "persons/' + identifier + '"'
+        + ' FILTER actor._from == "persons/' + identifier + '"'
         + ' && (SPLIT(actor._to, "/", 1)[0]) IN ["software"]'
         + ' COLLECT soft_id = actor._to' 
         + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) 
@@ -354,7 +364,7 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
 return all the software entities an organization has been involved with via its members 
 @ranker, default value count (return first the software with most members of the organization have contributed to)
 '''
-@router.get("/entities/organization/{identifier}/software", tags=["entities"])
+@router.get("/entities/organization/{identifier}/software", tags=["relations"])
 async def get_organization_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -382,7 +392,7 @@ async def get_organization_software(identifier: str, page_rank: int = 0, page_si
 '''
 return the n-best references to a software, following the criteria of the CiteAs service 
 '''
-@router.get("/entities/software/{identifier}/citeas", tags=["entities"])
+@router.get("/entities/software/{identifier}/citeas", tags=["recommenders"])
 async def get_software_citeas(identifier: str, n_best: int = 10):
     start_time = time.time()
 

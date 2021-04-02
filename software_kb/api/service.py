@@ -20,11 +20,19 @@ from router import router, set_kb
 tags_metadata = [
     {
         "name": "generic",
-        "description": "general information on the web service",
+        "description": "general information on the web service"
     },
     {
         "name": "entities",
-        "description": "retrieve information about knowledge base entities",
+        "description": "retrieve information about knowledge base entities"
+    },
+    {
+        "name": "relations",
+        "description": "retrieve information about relations between knowledge base entities"
+    },
+    {
+        "name": "recommenders",
+        "description": "filter and predict information about knowledge base entities"
     }
 ]
 
