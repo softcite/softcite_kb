@@ -118,10 +118,13 @@ class CommonArangoDB(object):
         if not wikidata_id.startswith("P") and not wikidata_id.startswith("Q"):
             return None
 
-        if wikidata_id in self.naming_wikidata:
-            return self.naming_wikidata[wikidata_id]["value"]
-        else:
+        try:
+            if wikidata_id in self.naming_wikidata:
+                return self.naming_wikidata[wikidata_id]["value"]
+        except:
             return None
+
+        return None
 
     def naming_wikidata_id(self, string):
         # canonical string -> wikidata id
@@ -320,6 +323,7 @@ class CommonArangoDB(object):
             local_value["value"] = self.sources[database_name]["term"]
             local_value["datatype"] = "string"
         source["P248"] = local_value
+        source["count"] = 1
         return source
 
 def add_ref_if_not_present(references, ref_to_add):

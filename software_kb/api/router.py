@@ -330,7 +330,8 @@ async def get_document_software(identifier: str, page_rank: int = 0, page_size: 
 
 
 '''
-return all the software entities a person has contributed to
+Return all the software entities a person has contributed to.
+For each software, we indicate the person role. 
 '''
 @router.get("/entities/person/{identifier}/software", tags=["relations"])
 async def get_person_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
@@ -340,11 +341,9 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
         'FOR actor IN actors '
         + ' FILTER actor._from == "persons/' + identifier + '"'
         + ' && (SPLIT(actor._to, "/", 1)[0]) IN ["software"]'
-        + ' COLLECT soft_id = actor._to' 
+        + ' COLLECT soft_id = actor._to, the_role = actor["claims"]' 
         + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) 
-        + ' RETURN soft_id', full_count=True)
-
-    # note: aggregated by roles ?
+        + ' RETURN { soft_id, the_role }', full_count=True)
 
     result = {}
     records = []
@@ -354,7 +353,20 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
     result['page_rank'] = page_rank
     result['page_size'] = page_size
     for entity in cursor:
-        records.append(entity)
+        record = {}
+        record['_id'] = entity['soft_id']
+        # get the role of the person regarding the software work
+        roles = []
+        if "the_role" in entity:
+            for key in entity["the_role"]:
+                role = kb.relator_role_wikidata(key)
+                if role != None:
+                    roles.append(role)
+
+        if len(roles) > 0:
+            record['roles'] = roles
+
+        records.append(record)
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
     

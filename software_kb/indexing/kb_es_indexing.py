@@ -57,6 +57,7 @@ class Indexer(CommonArangoDB):
 
     def index(self):
 
+        # document are not indexed for search at the present time
         #self.index_collection(self.kb.documents, "documents")
         #print("number of indexed documents:", self.kb.documents.count())
 
@@ -102,13 +103,6 @@ class Indexer(CommonArangoDB):
                 index=self.config['elasticsearch']['index_name'], 
                 chunk_size=500,
                 refresh=True)
-            
-            '''
-            self.es.indices.refresh(index=self.config['elasticsearch']['index_name'])
-            print("results:")
-            for doc in self.es.search(index=self.config['elasticsearch']['index_name'])['hits']['hits']:
-                print(doc)
-            '''
 
     def flatten(self, entity, collection_name):
         '''

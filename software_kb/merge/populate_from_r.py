@@ -197,9 +197,7 @@ def populate_r(stagingArea, collection, source_ref):
         if "References" in package:
             for reference in package["References"]:
                 stagingArea.process_reference_block(package["References"], software, source_ref)
-
-                # update software entity
-                #stagingArea.staging_graph.update_vertex(software)
+                # this will add "references" relation between the software and the referenced documents
 
         
 def set_dependencies(stagingArea, collection, source_ref):

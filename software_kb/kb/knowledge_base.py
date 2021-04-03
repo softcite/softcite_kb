@@ -37,6 +37,9 @@ class knowledgeBase(CommonArangoDB):
     database_name = "kb"
     graph_name = "kb_graph"
 
+    # for mapping Wikidata property to person roles
+    relator_map = None
+
     def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
         self.init_naming()
@@ -509,6 +512,31 @@ class knowledgeBase(CommonArangoDB):
                         break
         return summary
 
+    def relator_role_wikidata(self, wikidata_property):
+        '''
+        Map a Wikidata property to a role dictionary with relator information (MARC/CRAN, codemeta) on person role
+        '''
+        if self.relator_map == None:
+            # load relator resource file and create inverse wikidata property map
+            relator_file = os.path.join("data", "resources", "relator_code_cran.json")
+            if not os.path.isfile(relator_file): 
+                print("Error when loading relator code:", relator_file)
+                return None
+
+            self.relator_map = {}
+            with open(relator_file) as relator_f:
+                relator_code_cran = json.load(relator_f)
+                for key in relator_code_cran:
+                    if "wikidata" in relator_code_cran[key]:
+                        if not relator_code_cran[key]["wikidata"] in self.relator_map:
+                            self.relator_map[relator_code_cran[key]["wikidata"]] = relator_code_cran[key]
+
+        if wikidata_property in self.relator_map:
+            return self.relator_map[wikidata_property]
+        else:
+            # by default we return "P767" - contributor
+            return self.relator_map["P767"]
+            
 
 def _get_entity_from_wikidata(entity_id):
     wikidata_url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' + entity_id + '&format=json'
