@@ -163,6 +163,7 @@ def merge(stagingArea, reset=False):
 
             merging = False
 
+            # merge by software matching name
             software_name = software["labels"].replace('"', '')
 
             # note: if the length of the the string is too short, it can easily lead to non-meaningful deduplication,

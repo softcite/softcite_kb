@@ -88,5 +88,11 @@
         "marc_term": "Degree supervisor",
         "wikidata": "P184",
         "codemeta": ""
+    },
+    "maintainer": {
+        "cran": "Maintainer",
+        "marc_term": "Maintainer",
+        "wikidata" : "P126",
+        "codemeta": "maintainer"
     }
 }

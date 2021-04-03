@@ -285,11 +285,11 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
     '''
     Process an author in the Author or Author@R fields
 
-    If the role is funder (fnd), we actually don't have a person but an organization and the relation
+    If the role is funder (fnd), we normally don't have a person but an organization and the relation
     should be an edge "funding".
 
     If the role is "copyright holder" (cph), the relation is the edge "copyrights". In this case, and 
-    also observed for authorship, we could habe an organization and not a person. 
+    also observed for authorship, we could habe an organization and not always a person. 
     '''
     person = stagingArea.init_entity_from_template("person", source=source_ref)
     if person is None:
@@ -353,7 +353,7 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
     # github identifier P2037
     # Google Scholar author ID P1960
 
-    # if only full_name is available, we will need grobid to further parse the name
+    # if only full_name is available, we would need grobid to further parse the name
 
     # check orcid duplicate
     matched_person = None
