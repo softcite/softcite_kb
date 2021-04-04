@@ -82,6 +82,8 @@ python3 software_kb/importing/Wikidata_import.py --config my_config.yaml latest-
 
 To force the import to recreate the Wikidata database from scratch, use `--reset`.
 
+Note: this import is time-consuming because the complete Wikidata dump is parsed. However it should be done only one time to seed the database. In the next steps and incremental updates, the library uses the Wikidata web API to retrieve missing referenced Wikidata JSON entities.
+
 ### Import rOpenSci metadata
 
 From the project root, launch:
@@ -106,7 +108,7 @@ The import uses a cache to avoid reloading the JSON from the rOpenSci API. The m
 python3 software_kb/importing/cran_import.py --config my_config.yaml
 ```
 
-To force the import to recreate the CRAN metadata database from scratch, use `--reset`.
+To force the import to recreate the CRAN metadata database from scratch, use `--reset`. Similarly to the rOpenSci import, a cache is used to store the metadata pages. 
 
 
 ### Import software mentions 
