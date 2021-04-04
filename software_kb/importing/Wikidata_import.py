@@ -117,7 +117,7 @@ class Wikidata_harvester(Harvester):
             for line in fp:
                 self.software_list.append(line.rstrip())
 
-    def import_entities(self, jsonWikidataDumpPath, reset=False):
+    def import_software_entities_and_properties(self, jsonWikidataDumpPath, reset=False):
         if reset:
             self.db.delete_collection('software')
             self.software = self.db.create_collection('software')
@@ -155,12 +155,6 @@ class Wikidata_harvester(Harvester):
                             entityJson['_id'] = 'software/' + local_id
                             self.software.insert(entityJson)
                             self.add_extra_entities(entityJson)
-                    if self._valid_property(entityJson):
-                        local_labels = entityJson["labels"]
-                        if "en" in local_labels:
-                            string_name = local_labels["en"]["value"]
-                        #self.add_naming_wikidata(entityJson["id"], string_name)
-                
         
         # write list of related entities
         self.write_extra_entity_lists()
@@ -405,6 +399,90 @@ class Wikidata_harvester(Harvester):
                                 entityJson['_id'] = 'publications/' + local_id
                                 self.publications.insert(entityJson)        
 
+    def import_all(self, jsonWikidataDumpPath, reset=False):
+        '''
+        Import all relevant entities and all properties
+        '''
+        if reset:
+            self.db.delete_collection('software')
+            self.software = self.db.create_collection('software')
+
+            self.db.delete_collection('persons')
+            self.persons = self.db.create_collection('persons')
+
+            self.db.delete_collection('licenses')
+            self.licenses = self.db.create_collection('licenses')
+
+            self.db.delete_collection('organizations')
+            self.organizations = self.db.create_collection('organizations')
+
+            self.db.delete_collection('publications')
+            self.publications = self.db.create_collection('publications')
+
+
+        # load non-software entity lists if exist
+        self.load_extra_entity_list()
+
+        # read compressed dump line by line
+        print(jsonWikidataDumpPath)
+        with bz2.open(jsonWikidataDumpPath, "rt") as bzinput:
+            bzinput.read(2) # skip first 2 bytes 
+            for i, line in enumerate(bzinput):
+                if i % 1000000 == 0 and i != 0:
+                    sys.stdout.write(str(i))
+                    sys.stdout.flush()
+                elif i % 100000 == 0 and i != 0:
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
+                
+                if len(line.strip()) == 0:
+                    # this is usually the end
+                    continue
+
+                entityJson = None
+                try:
+                    entityJson = json.loads(line.rstrip(',\n'))
+                except Exception as e:
+                    print("Failed to parse json line at line", i, str(e))
+                    #print("Failed to parse json line at line", i, "json content:", line.rstrip(',\n'))
+
+                if not entityJson is None:
+                    # first rough filtering
+                    if entityJson["id"] in self.persons_list or entityJson["id"] in self.licenses_list or entityJson["id"] in self.organizations_list or entityJson["id"] in self.publications_list:
+                        entityJson = simplify_entity(entityJson)
+
+                        if self._valid_software(entityJson):
+                            # store entity in arangodb as document
+                            local_id = entityJson['id']
+                            if not self.software.has(local_id):
+                                entityJson['_id'] = 'software/' + local_id
+                                self.software.insert(entityJson)
+                        elif self._valid_person(entityJson):
+                            # store entity in arangodb as document
+                            local_id = entityJson['id']
+                            if not self.persons.has(local_id):
+                                entityJson['_id'] = 'persons/' + local_id
+                                self.persons.insert(entityJson)
+                        elif self._valid_license(entityJson):
+                            # store entity in arangodb as document
+                            local_id = entityJson['id']
+                            if not self.licenses.has(local_id):
+                                entityJson['_id'] = 'licenses/' + local_id
+                                self.licenses.insert(entityJson)
+                        elif self._valid_organization(entityJson):
+                            # store entity in arangodb as document
+                            local_id = entityJson['id']
+                            if not self.organizations.has(local_id):
+                                entityJson['_id'] = 'organizations/' + local_id
+                                self.organizations.insert(entityJson)        
+                        elif self._valid_publication(entityJson):
+                            # store entity in arangodb as document
+                            local_id = entityJson['id']
+                            if not self.publications.has(local_id):
+                                entityJson['_id'] = 'publications/' + local_id
+                                self.publications.insert(entityJson)        
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Import relevant Wikidata entities")
     parser.add_argument("WikidataDumpPath", default=None, help="path to a complete Wikidata JSON dump file in bz2 format") 
@@ -418,8 +496,9 @@ if __name__ == "__main__":
 
     if WikidataDumpPath is not None:
         local_harvester = Wikidata_harvester(config_path=config_path)
-        local_harvester.import_entities(WikidataDumpPath, reset=to_reset)
-        local_harvester.import_extra_entities(WikidataDumpPath, reset=to_reset)
+        #local_harvester.import_entities(WikidataDumpPath, reset=to_reset)
+        #local_harvester.import_extra_entities(WikidataDumpPath, reset=to_reset)
+        local_harvester.import_all(WikidataDumpPath, reset=to_reset)
     else:
         print("No Wikidata JSON dump file path indicated")
 
