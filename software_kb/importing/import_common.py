@@ -105,7 +105,7 @@ def process_r_author_field(author_field):
                     if orcid != None:
                         person['orcid'] = orcid
                 
-                if attribute == 'given' and value.find("@") != -1:
+                if attribute == 'given' and isinstance(value, str) and value.find("@") != -1:
                     # it happens that we have an email address directly after the name
                     person["email"] = value
                 elif attribute in person:

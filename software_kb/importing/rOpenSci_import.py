@@ -153,7 +153,7 @@ class rOpenSci_harvester(Harvester):
 
         # the field Authors@R is not JSON, we need a custom parse
         if not 'Authors@R' in package_json:
-            print("missing Authors@R field for", package_json["Package"])
+            print("no Authors@R field for", package_json["Package"])
             # in this case the author field, also parsed, will be the fqall back
             return package_json
 
