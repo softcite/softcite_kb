@@ -319,11 +319,12 @@ class CommonArangoDB(object):
         if "wikidata" in self.sources[database_name]:
             local_value["value"] = self.sources[database_name]["wikidata"]
             local_value["datatype"] = "wikibase-item"
+            local_value["count"] = 1
         else:
             local_value["value"] = self.sources[database_name]["term"]
             local_value["datatype"] = "string"
+            local_value["count"] = 1
         source["P248"] = local_value
-        source["count"] = 1
         return source
 
 def add_ref_if_not_present(references, ref_to_add):
