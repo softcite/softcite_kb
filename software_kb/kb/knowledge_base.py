@@ -226,9 +226,10 @@ class knowledgeBase(CommonArangoDB):
         if reset:
             self.reset()
 
-        #self.init_collections(config_path=config_path)
-        #self.set_up_relations()
+        self.init_collections(config_path=config_path)
+        self.set_up_relations()
 
+        # the following import additional missing Wikidata entities via the Wikdata REST API 
         self.complete_entities()
 
     def init_collections(self, config_path="./config.yaml"):
