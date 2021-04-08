@@ -10,3 +10,4 @@ data/rOpenSci
 data/mentions
 software_kb.egg-info/
 software_kb/api/static
+!software_kb/api/static/.gitkeep
