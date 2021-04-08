@@ -13,7 +13,7 @@ import argparse
 from pathlib import Path
 from router import router, set_kb
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.staticfiles import StaticFiles
 
 '''
     The web API uses the FastAPI framework. 
@@ -67,6 +67,8 @@ def get_app(server_config) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    server.mount("/frontend", StaticFiles(directory="software_kb/api/static"), name="static")
 
     @server.on_event("startup")
     async def startup_message() -> None:

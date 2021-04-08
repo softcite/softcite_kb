@@ -233,6 +233,20 @@ total references edges: 171037 , nb. steps: 172
 100%|█████████████████████████████████████████████████████████████| 172/172 [13:29<00:00, 4.71s/it]
 ```
 
+## Indexing KB content for search
+
+Requirement: ElasticSearch version 7.* 
+
+ElasticSearch can be used to search efficiently and to provide analytics insights about the Knowledge Base. For indexing the content, after setting the connection parameters and index name of your ElasticSearch server in the `config.yaml` file, use the following script:
+
+```bash
+python3 software_kb/indexing/kb_es_indexing.py --config my_config.yaml 
+```
+
+Use the additional parameter `--reset` to delete existing ES index and restart the indexing from scratch. 
+
+The document data model used for indexing is available under `software_kb/indexing/resources/kb_mappings.json`.
+
 ## Incremental update
 
 Incremental update of the imported data is supported. It is thus possible to add the new and updated entries from the data sources by running the same import command sequence as for the initial load. Only the new and updated records will be ingested and merged to the existing databases. Be sure **not** to use the parameter `--reset` in the commands, which erases the existing databases/collections and restarts an ingestion from scratch.  
