@@ -123,4 +123,5 @@ if __name__ == '__main__':
         host=server_config['host'], 
         reload=server_config['reload'], 
         #workers=server_config['nb_workers'], 
+        root_path=server_config['api_route'],
         log_level=server_config['log_level'])
