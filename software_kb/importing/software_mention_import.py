@@ -19,6 +19,7 @@ import gzip
 class Software_mention_import(Harvester):
 
     database_name = "mentions"
+    blacklist_files = [ "data/mentions/blacklists/cord-19.blacklist.software-mentions.txt" ]
 
     def __init__(self, config_path="./config.yaml"):
         self.load_config(config_path)
@@ -45,6 +46,17 @@ class Software_mention_import(Harvester):
             self.references = self.db.create_collection('references')
         else:
             self.references = self.db.collection('references')
+
+        # blacklist
+        self.blacklist = []
+        for black_file in self.blacklist_files:
+            if not os.path.isfile(black_file): 
+                continue
+            with open(black_file) as fp:
+                for line in fp:
+                    line = line.strip()
+                    if len(line)>0 and not line in self.blacklist:
+                        self.blacklist.append(line)
 
     def import_mentions(self, mongoExportPath, reset=False):
         '''
@@ -102,6 +114,12 @@ class Software_mention_import(Harvester):
             local_id = json_object['_id']
             local_id = local_id['$oid']
             json_object['_id'] = collection_name + "/" + local_id
+            # check blacklist
+            if collection_name == "annotations":
+                if "software-name" in json_object:
+                    term = json_object["software-name"]["normalizedForm"]
+                    if term in self.blacklist or term.find("SARS") != -1:
+                        return
             # insert
             if not collection.has(json_object['_id']):
                 collection.insert(json_object)
