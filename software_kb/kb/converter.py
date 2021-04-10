@@ -177,15 +177,16 @@ def convert_to_codemeta(kb, entity):
                 codemeta_json['codeRepository'] = jsonEntity["claims"][wikidata_property]['value']
             elif wikidata_property == 'P277':
                 # programmingLanguage
-                converted_name = kb.naming_wikidata_string(jsonEntity["claims"][wikidata_property]['value'])
-                if converted_name == None:
-                    converted_name = jsonEntity["claims"][wikidata_property]['value']
-                # short cut here, we should get these infos from the KB itself normally...
-                if converted_name == 'R' or converted_name == 'Q206904':
-                    codemeta_json['programmingLanguage']['name'] = 'R'
-                    codemeta_json['programmingLanguage']['name']['url'] = 'https://r-project.org'
-                else:
-                    codemeta_json['programmingLanguage']['name'] = converted_name
+                for the_value in jsonEntity["claims"][wikidata_property]:
+                    converted_name = kb.naming_wikidata_string(the_value['value'])
+                    if converted_name == None:
+                        converted_name = the_value['value']
+                    # short cut here, we should get these infos from the KB itself normally...
+                    if converted_name == 'R' or converted_name == 'Q206904':
+                        codemeta_json['programmingLanguage']['name'] = 'R'
+                        codemeta_json['programmingLanguage']['name']['url'] = 'https://r-project.org'
+                    else:
+                        codemeta_json['programmingLanguage']['name'] = converted_name
             elif wikidata_property == 'P400':
                 # runtimePlatform
                 codemeta_json['runtimePlatform'] = jsonEntity["claims"][wikidata_property]['value']
@@ -197,9 +198,10 @@ def convert_to_codemeta(kb, entity):
                 codemeta_json['fileSize'] = jsonEntity["claims"][wikidata_property]['value']
             elif wikidata_property == 'P306':
                 # operatingSystem
-                # I would put a list here, but it's a string apparently (or maybe it's more generic than I think)
-                codemeta_json['operatingSystem'] = jsonEntity["claims"][wikidata_property]['value']
-                
+                for the_value in jsonEntity["claims"][wikidata_property]:
+                    # I would put a list here, but it's a string apparently in codemeta examples (or maybe it's more generic than I think)
+                    codemeta_json['operatingSystem'] = the_value['value']
+                    
                 '''
                 elif wikidata_property == 'P1547':
                     # softwareRequirements
@@ -210,9 +212,10 @@ def convert_to_codemeta(kb, entity):
 
             elif wikidata_property == 'P854':
                 # url
-                # project/homepage URL is not directly covered by the codemeta term description, but in usual jsonld
-                # this is the 'url' attribute at top level
-                codemeta_json['url'] = jsonEntity["claims"][wikidata_property]['value']
+                for the_value in jsonEntity["claims"][wikidata_property]:
+                    # project/homepage URL is not directly covered by the codemeta term description, but in usual jsonld
+                    # this is the 'url' attribute at top level
+                    codemeta_json['url'] = the_value['value']
 
 
             # some information are obtained via the relations, e.g. authors, contributors, etc. and for codemeta output
