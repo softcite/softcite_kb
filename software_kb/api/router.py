@@ -109,7 +109,7 @@ for returning list of entities or relations, the following parameters are used i
 @page_size number of results per page (default is 10)
 '''
 
-# get list of values for a "collection" of entitites, one of "software", "documents", "persons", "organizations" and "licenses"
+# get list of software ranked by their number of mentions
 # default ranker is per count of relations from or to the entity
 @router.get("/entities/software", tags=["entities"])
 async def get_software(page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
@@ -326,6 +326,32 @@ async def get_document_software(identifier: str, page_rank: int = 0, page_size: 
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
 
+    return result
+
+
+'''
+return all documents ranked by their number of software mentions
+'''
+@router.get("/entities/documents", tags=["entities"])
+async def get_documents(page_rank: int = 0, page_size: int = 10):
+    start_time = time.time()
+    cursor = kb.db.aql.execute(
+        'FOR mention IN citations \
+            COLLECT document_id = mention._from WITH COUNT INTO counter \
+            SORT counter DESC ' 
+            + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+            + ' RETURN {_id: document_id, mentions: counter}', full_count=True)
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
     return result
 
 
