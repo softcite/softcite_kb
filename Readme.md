@@ -259,7 +259,7 @@ The update process remains currently manual in the sense that the user has to la
 
 ### Start the service
 
-[Work In Progress]
+The SoftCite REST API service is implemented with [FastAPI](https://fastapi.tiangolo.com) and can be started as follow:  
 
 > python3 software_kb/api/service.py --config my_config.yaml
 
@@ -278,5 +278,3 @@ INFO:     Uvicorn running on http://localhost:8050 (Press CTRL+C to quit)
 ```
 
 The documentation of the service is available at `http(s)://*host*:*port*/docs`, e.g. `http://localhost:8050/docs` (based on Swagger), for ReDoc documentation style, use `http://localhost:8050/redoc`).
-
-
