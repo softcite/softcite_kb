@@ -55,7 +55,7 @@ class Software_mention_import(Harvester):
             with open(black_file) as fp:
                 for line in fp:
                     line = line.strip()
-                    if len(line)>0 and not line in self.blacklist:
+                    if len(line)>0 and not line in self.blacklist and not line.startswith("#"):
                         self.blacklist.append(line)
 
     def import_mentions(self, mongoExportPath, reset=False):
