@@ -103,7 +103,7 @@ class Software_mention_import(Harvester):
                         for line in fjson:
                             self._load_json(line, self.references, "references")
             else:
-                print("File skipped:", os.path.joint(mongoExportPath, thefile))
+                print("File skipped:", os.path.join(mongoExportPath, thefile))
 
     def _load_json(self, json_string, collection, collection_name):
         '''
