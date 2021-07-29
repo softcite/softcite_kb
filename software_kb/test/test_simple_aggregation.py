@@ -1,6 +1,6 @@
 import re 
 import sys
-from software_kb.merge.populate_staging_area import StagingArea
+from software_kb.merging.populate_staging_area import StagingArea
 from software_kb.kb.knowledge_base import _init_count
 import argparse
 

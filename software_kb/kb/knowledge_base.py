@@ -10,7 +10,7 @@ import sys
 import json
 from arango import ArangoClient
 from software_kb.common.arango_common import CommonArangoDB
-from software_kb.merge.populate_staging_area import StagingArea, _project_entity_id_collection
+from software_kb.merging.populate_staging_area import StagingArea, _project_entity_id_collection
 from software_kb.common.arango_common import simplify_entity
 import argparse
 from tqdm import tqdm

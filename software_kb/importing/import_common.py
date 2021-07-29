@@ -118,6 +118,7 @@ def process_r_author_field(author_field):
 
         persons.append(person)
 
+    persons = [ pers for pers in persons if not len(pers) == 0 ]
     return persons
 
 
@@ -191,11 +192,22 @@ def process_author_field(author_field):
             if pos < last_pos:
                 last_pos = pos
 
-        # forname name
-        person["full_name"] = piece[:last_pos].strip()
-
-        persons.append(person)
+        # full name - but still the rare possibility of several names separated by a colon
+        final_name = piece[:last_pos].strip()
+        pos3 = final_name.find(",")
+        if pos3 != -1:
+            last_pos = 0
+            subnames = final_name.split(",")
+            for subname in subnames:
+                person = {}
+                person["full_name"] = subname.strip()
+                persons.append(person)
+        else:
+            person["full_name"] = final_name
+            persons.append(person)
         
+    persons = [ pers for pers in persons if not len(pers) == 0 ]
+    
     return persons
 
 def process_maintainer_field(maintainer_field):

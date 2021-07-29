@@ -138,7 +138,7 @@ GitHub public data come as an enrichment of a populated knowledge base. The foll
 Once imported, the following command will load the different imported data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
 
 ```bash
-python3 software_kb/merge/populate.py --config my_config.yaml
+python3 software_kb/merging/populate.py --config my_config.yaml
 ```
 
 The option `--reset` will re-init entirely the staging area. 
@@ -146,7 +146,7 @@ The option `--reset` will re-init entirely the staging area.
 Once the staging area has been populated, we can merge/conflate entities based on a matching and disambiguation process:
 
 ```bash
-python3 software_kb/merge/merge.py --config my_config.yaml
+python3 software_kb/merging/merge.py --config my_config.yaml
 ```
 
 The entities are actually not effectively merged at this step, we keep track of merging decisions in some additional dedicated collections. The process can be time-consuming as it involves soft matching and deduplication decisions for all the entities:

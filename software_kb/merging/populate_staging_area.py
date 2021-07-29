@@ -25,7 +25,7 @@ A graph structure is built on top of these vertex collections, with the followin
 The staging area graph is then populated with method specific from the sources of imported documents, projecting 
 the relevant information into the common graph, with additional data transformation if necessary:
 
-> python3 merge/populate.py --config my_config.yaml
+> python3 merging/populate.py --config my_config.yaml
 
 '''
 
