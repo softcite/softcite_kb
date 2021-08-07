@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse
 import time 
 from software_kb.kb.converter import convert_to_simple_format, convert_to_wikidata, convert_to_codemeta
+from enum import Enum
 
 router = APIRouter()
 
@@ -23,20 +24,29 @@ def get_version():
 
 # generic access
 
+class Collection(str, Enum):
+    software = "software"
+    documents = "documents"
+    persons = "persons"
+    organizations = "organizations"
+    licenses = "licenses"
+
+
 # the value for "collection" of entitites are "software", "documents", "persons", "organizations" and "licenses"
 @router.get("/entities/{collection}/{identifier}", tags=["entities"])
-async def get_entity(collection: str, identifier: str, format: str = 'internal'):
+async def get_entity(collection: Collection, identifier: str, format: str = 'internal'):
+    the_collection = collection.value
     start_time = time.time()
-    if not kb.kb_graph.has_vertex(collection + '/' + identifier):
-        raise HTTPException(status_code=404, detail="Entity not found in collection "+collection)
+    if not kb.kb_graph.has_vertex(the_collection + '/' + identifier):
+        raise HTTPException(status_code=404, detail="Entity not found in collection "+the_collection)
     result = {}
     result['full_count'] = 1
 
-    record = kb.kb_graph.vertex(collection + '/' + identifier)
+    record = kb.kb_graph.vertex(the_collection + '/' + identifier)
 
     # we inject the information stored in relations actors, copyrights, funding (other relation-based information 
     # have their dedicated routes - for instance for software sub-routes citations and dependencies)
-    if collection == 'software' or collection == 'documents':
+    if the_collection == 'software' or the_collection == 'documents':
 
         # actors
         cursor = kb.db.aql.execute(
