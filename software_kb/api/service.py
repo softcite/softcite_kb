@@ -35,6 +35,10 @@ tags_metadata = [
     {
         "name": "recommenders",
         "description": "filter and predict information about knowledge base entities"
+    },
+    {
+        "name": "search",
+        "description": "search knowledge base entities and relations"
     }
 ]
 

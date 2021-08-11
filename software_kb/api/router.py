@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import PlainTextResponse
 import time 
 from software_kb.kb.converter import convert_to_simple_format, convert_to_wikidata, convert_to_codemeta
 from enum import Enum
+import httpx
 
 router = APIRouter()
 
@@ -498,6 +499,41 @@ async def get_software_citeas(identifier: str, n_best: int = 10):
     result['records'] = records[:n_best]
     result['runtime'] = round(time.time() - start_time, 3)
     return result
+
+
+'''
+Mapper to elasticsearch service 
+'''
+@router.post("/search/{path:path}", tags=["search"])
+async def search_request(path: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        es_host = kb.config["elasticsearch"]["host"]
+        if es_host == None or len(es_host.strip()) == 0:
+            es_host = "localhost"
+        es_port = kb.config["elasticsearch"]["port"]
+        if es_port != None:
+            es_port = ":" + str(es_port)
+        else:
+            es_port = ""
+        headers = { "content-type": "application/json" }
+        proxy = await client.post("http://"+es_host+es_port+"/"+path, headers=headers, json=await request.json())
+    response = Response(proxy.content, status_code=proxy.status_code, media_type="application/json; charset=UTF-8")
+    return response
+
+@router.get("/search/{path:path}", tags=["search"])
+async def search_request(path: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        es_host = kb.config["elasticsearch"]["host"]
+        if es_host == None or len(es_host.strip()) == 0:
+            es_host = "localhost"
+        es_port = kb.config["elasticsearch"]["port"]
+        if es_port != None:
+            es_port = ":" + str(es_port)
+        else:
+            es_port = ""
+        proxy = await client.get("http://"+es_host+es_port+"/"+path, params=request.query_params)
+    response = Response(proxy.content, status_code=proxy.status_code, media_type="application/json; charset=UTF-8")
+    return response
 
 def _convert_target_format(result, format="simple"):
     if format == 'internal':
