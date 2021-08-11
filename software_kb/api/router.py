@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Response
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 import time 
 from software_kb.kb.converter import convert_to_simple_format, convert_to_wikidata, convert_to_codemeta
 from enum import Enum
@@ -22,9 +22,18 @@ def get_version():
     api_settings = get_api_settings()
     return api_settings.version
 
+# to redirect the static /api/frontend/ to  /api/frontend/index.html
+@router.get("/frontend", response_class=RedirectResponse, include_in_schema=False)
+def static_root():
+    return RedirectResponse(url="/frontend/index.html")
+
+# to redirect the static /api/frontend/ to  /api/frontend/index.html
+@router.get("/frontend/", response_class=RedirectResponse, include_in_schema=False)
+def static_root_():
+    return RedirectResponse(url="/frontend/index.html")
+
 
 # generic access
-
 class Collection(str, Enum):
     software = "software"
     documents = "documents"
