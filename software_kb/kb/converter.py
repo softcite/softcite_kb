@@ -118,16 +118,21 @@ def convert_to_codemeta(kb, entity):
     ''' 
     Conversion into codemeta JsonLD format. Because codemeta describes a resource and not "the resources
     about a resource" as we are doing, we are losing the contradictory and numerical dimensions
-    of our representation, and some metadata. 
+    of our representation (we need to select the "best" value), and some metadata. 
     '''
     global codemeta_template
-    jsonEntity = copy.deepcopy(entity)
+    #jsonEntity = copy.deepcopy(entity)
+    jsonEntity = entity
 
     # load codemeta template if not already done
-    if codemeta_template == None:
-        codemeta_template = _load_codemeta_template()
+    #if codemeta_template == None:
+    #    codemeta_template = _load_codemeta_template()
 
-    codemeta_json = copy.deepcopy(codemeta_template)
+    #codemeta_json = copy.deepcopy(codemeta_template)
+    codemeta_json = {}
+    codemeta_json["@context"] = "https://doi.org/10.5063/schema/codemeta-2.0"
+    codemeta_json["@type"] = "SoftwareSourceCode"
+    codemeta_json["version"] = "2.0"
 
     if "labels" in jsonEntity:
         codemeta_json["identifier"] = jsonEntity['labels']
@@ -182,20 +187,22 @@ def convert_to_codemeta(kb, entity):
                     if converted_name == None:
                         converted_name = the_value['value']
                     # short cut here, we should get these infos from the KB itself normally...
-                    if converted_name == 'R' or converted_name == 'Q206904':
+                    codemeta_json['programmingLanguage'] = {}
+                    codemeta_json['programmingLanguage']["@type"] = "ComputerLanguage"
+                    if converted_name == 'R' or converted_name == 'Q206904':    
                         codemeta_json['programmingLanguage']['name'] = 'R'
-                        codemeta_json['programmingLanguage']['name']['url'] = 'https://r-project.org'
+                        codemeta_json['programmingLanguage']['url'] = 'https://r-project.org'
                     else:
                         codemeta_json['programmingLanguage']['name'] = converted_name
             elif wikidata_property == 'P400':
                 # runtimePlatform
-                codemeta_json['runtimePlatform'] = jsonEntity["claims"][wikidata_property]['value']
+                codemeta_json['runtimePlatform'] = jsonEntity["claims"][wikidata_property][0]['value']
             elif wikidata_property == 'P4945':
                 # downloadUrl
-                codemeta_json['downloadUrl'] = jsonEntity["claims"][wikidata_property]['value']
+                codemeta_json['downloadUrl'] = jsonEntity["claims"][wikidata_property][0]['value']
             elif wikidata_property == 'P3575':
                 # fileSize
-                codemeta_json['fileSize'] = jsonEntity["claims"][wikidata_property]['value']
+                codemeta_json['fileSize'] = jsonEntity["claims"][wikidata_property][0]['value']
             elif wikidata_property == 'P306':
                 # operatingSystem
                 for the_value in jsonEntity["claims"][wikidata_property]:
@@ -212,11 +219,14 @@ def convert_to_codemeta(kb, entity):
 
             elif wikidata_property == 'P854':
                 # url
+                best_count = 0
                 for the_value in jsonEntity["claims"][wikidata_property]:
                     # project/homepage URL is not directly covered by the codemeta term description, but in usual jsonld
                     # this is the 'url' attribute at top level
-                    codemeta_json['url'] = the_value['value']
-
+                    local_count = _get_count(the_value)
+                    if local_count >= best_count:
+                        codemeta_json['url'] = the_value['value']
+                        best_count = local_count
 
             # some information are obtained via the relations, e.g. authors, contributors, etc. and for codemeta output
             # we need to access related entities
@@ -233,6 +243,21 @@ def convert_to_codemeta(kb, entity):
     # clean remaining empty fields from the template
 
     return codemeta_json
+
+def _get_count(the_value):
+    '''
+    in the value block, the count is the sum of the count of all the reference sources
+    '''
+    if not "references" in the_value:
+        return 0
+    references = the_value["references"]
+    total_count = 0
+    for reference in references:
+        if "P248" in reference and "count" in reference["P248"]:
+            total_count += reference["P248"]["count"]
+        else:
+            total_count += 1
+    return total_count
 
 def _load_codemeta_template():
     json_template = None

@@ -32,6 +32,10 @@ def static_root():
 def static_root_():
     return RedirectResponse(url="/frontend/index.html")
 
+# to redirect root favicon
+@router.get("/favicon.ico", response_class=RedirectResponse, include_in_schema=False)
+def static_root_():
+    return RedirectResponse(url="/frontend/data/images/favicon.ico")
 
 # generic access
 class Collection(str, Enum):
