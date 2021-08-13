@@ -14,24 +14,24 @@ The starting point is the Unpaywall dataset dump. Used version is `unpaywall_sna
 
 Each partition contains around 14K entries, for a total of approx. 28.3M entries have an OA link. The size of the partition is adapted to the total of 60GB of storage attached to each instance, considering around 15GB already used by the system and the Softcite docker image. 
 
-A processing instance is prepared as an Ubuntu image containing the following:
+A processing instance is prepared as an Ubuntu instance containing the following:
 
-- base Ubuntu 18.04 Devel and Docker (~ 4.4 GB)
-- Docker image of the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) https://hub.docker.com/r/grobid/software-mentions (`0.7.1-SNAPSHOT`)
+- base Ubuntu 18.04 Devel and Docker (~ 4.4 GB, very optimized for space) (https://use.jetstream-cloud.org/application/images/717)
+- Docker image of the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions) https://hub.docker.com/r/grobid/software-mentions (`0.7.1-SNAPSHOT`) and [grobid](https://github.com/kermitt2/grobid) https://hub.docker.com/r/lfoppiano/grobid (`0.7.0`) 
 - Install of [biblio-glutton-harvester](https://github.com/kermitt2/biblio-glutton-harvester)
 - Install of the python client for the Softcite software mention recognizer: https://github.com/softcite/software_mentions_client
 
-Up to 20 instances based on this Ubuntu image can be started at the same time on Jetstream. Deploying one image appears time consuming, several ten minutes each. ssh keys are set at the Jetstream web interface and it will ensure that every instance is available over ssh. 
+More than 20 instances based on this Ubuntu settings can be started at the same time on Jetstream. Deploying one image appears relatively time consuming, around ten minutes each. ssh keys are set at the Jetstream web interface and it will ensure that every instance is available over ssh without copying the public key on the instance. 
 
-The process for each instance is as follow:
+The process for each instance is then as follow:
 
-- we upload one Unpaywall partition: 
+- we upload one Unpaywall partition to the instance: 
 
 ```bash
 scp /media/lopez/data2/biblio/unpaywall_partitions_2000/unpaywall_snapshot_2021-07-02T151134.jsonl_XXXX.jsonl.gz patricelopez@XXX.XXX.XX.XXX:/home/patricelopez/
 ```
 
-- we launch an harvesting process for this partition: 
+- in the instance, we launch an harvesting process for this partition: 
 
 ```bash
 cd biblio-glutton-harvester
@@ -39,21 +39,23 @@ python3 OAHarvester.py --unpaywall ../unpaywall_snapshot_2021-07-02T151134.jsonl
 
 ```
 
-- we launch a software mention recognition for this partition, using a config file for using the SciBERT-CRF model with a `batch-size` parameter adapted to the available RAM memory (we use only CPU):
+- after a few hours, we launch a software mention recognition for this partition, using a config file for using the SciBERT-CRF model (we use only CPU):
 
 ```bash
 cd software_mentions_client
 python3 software_mention_client.py --data-path ../biblio-glutton-harvester/data
 ```
 
-The results are produced as json file along with the PDFs (under `biblio-glutton-harvester/data`), in the harvested file hierarchy, we don't use a MongoDB storage at this point. After removing the PDF files to keep only the software extractions, we centralize then the results in one machine (this machine having with back-up!) with rsync to merge all the data directories:
+The results are produced as json file along with the PDFs (under `biblio-glutton-harvester/data`), in the harvested file hierarchy, we don't use a MongoDB storage at this point. Optionally we can run Grobid too on the PDF, to produce XML TEI representations that can be used for additional extractions (e.g. affiliations, funding or paper abstract).
+
+After removing the PDF files to keep only the software extractions (and optionally the Grobid TEI XML), we centralize then the results in one machine (this machine having back-up!) with rsync to merge all the data directories:
 
 ```bash
 find biblio-glutton-harvester/data -name *.pdf -delete
 rsync -avh --progress biblio-glutton-harvester/data patricelopez@XXX.XXX.XX.XXX:/home/patricelopez/softcite_run/data
 ```
 
-The centralized results can then be loaded in one time in MongoDB:
+The centralized results can then be loaded in one step in MongoDB:
 
 ```bash
 cd software_mentions_client
