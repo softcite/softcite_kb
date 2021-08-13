@@ -98,7 +98,7 @@ async def get_entity(collection: Collection, identifier: str, format: str = 'int
             'FOR fund IN funding \
                 FILTER fund._to == "software/' + identifier + '" \
                 RETURN fund')
-        '''
+        '''        
 
     # removing all the local index field
     key_to_remove = []
@@ -108,20 +108,20 @@ async def get_entity(collection: Collection, identifier: str, format: str = 'int
     for key in key_to_remove:
         del record[key]
 
-    result['record'] = _convert_target_format(record, format)
+    result['record'] = _convert_target_format(record, collection, format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 
-# the value for "collection" of relations are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
+# the value for "relations" are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
 '''
-@router.get("/relations/{collection}/{identifier}", tags=["relations"])
-async def get_relation(collection: str, identifier: str, format: str = 'internal'):
+@router.get("/relations/{relations}/{identifier}", tags=["relations"])
+async def get_relation(relations: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
-    if not kb.kb_graph.has_edge(collection + '/' + identifier):
-        raise HTTPException(status_code=404, detail="Relation not found in collection "+collection)
+    if not kb.kb_graph.has_edge(relations + '/' + identifier):
+        raise HTTPException(status_code=404, detail="Relation not found in "+relations)
     result = {}
     result['full_count'] = 1
-    result['record'] = _convert_target_format(kb.kb_graph.edge(collection + '/' + identifier), format)
+    result['record'] = _convert_target_format(kb.kb_graph.edge(relations + '/' + identifier), relations, format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 '''
@@ -380,6 +380,32 @@ async def get_documents(page_rank: int = 0, page_size: int = 10):
 
 
 '''
+return all persons ranked by their number of contributions to software
+'''
+@router.get("/entities/persons", tags=["entities"])
+async def get_persons(page_rank: int = 0, page_size: int = 10):
+    start_time = time.time()
+    cursor = kb.db.aql.execute(
+        'FOR actor IN actors \
+            COLLECT person_id = actor._from WITH COUNT INTO counter \
+            SORT counter DESC ' 
+            + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+            + ' RETURN {_id: person_id, contributions: counter}', full_count=True)
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+    return result
+
+
+'''
 Return all the software entities a person has contributed to.
 For each software, we indicate the person role. 
 '''
@@ -548,15 +574,15 @@ async def search_request(path: str, request: Request):
     response = Response(proxy.content, status_code=proxy.status_code, media_type="application/json; charset=UTF-8")
     return response
 
-def _convert_target_format(result, format="simple"):
+def _convert_target_format(kb_object, collection, format="simple"):
     if format == 'internal':
-        return result
+        return kb_object
     else:
         if format == 'simple':
-            return convert_to_simple_format(kb, result)
+            return convert_to_simple_format(kb, kb_object)
         elif format == 'wikidata':
-            return convert_to_wikidata(kb, result)
+            return convert_to_wikidata(kb, kb_object)
         elif format == 'codemeta':
-            return convert_to_codemeta(kb, result)
+            return convert_to_codemeta(kb, kb_object, collection)
 
     

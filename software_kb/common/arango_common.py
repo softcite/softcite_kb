@@ -7,6 +7,8 @@ import json
 import yaml
 from arango import ArangoClient
 import copy
+import requests
+from requests.exceptions import HTTPError
 
 class CommonArangoDB(object):
 
@@ -118,13 +120,23 @@ class CommonArangoDB(object):
         if not wikidata_id.startswith("P") and not wikidata_id.startswith("Q"):
             return None
 
+        name = None
         try:
             if wikidata_id in self.naming_wikidata:
                 return self.naming_wikidata[wikidata_id]["value"]
         except:
-            return None
+            name = None
 
-        return None
+        if name == None:
+            # we have no corresponding stored name yet, we need to request Wikidata API to access and cache the name
+            entity_json = _get_entity_from_wikidata(wikidata_id, simplify=False)
+            if entity_json != None:
+                # get the canonical name
+                local_labels = entity_json["labels"]
+                if "en" in local_labels:
+                    name = local_labels["en"]["value"]
+                    self.add_naming_wikidata(wikidata_id, name)
+        return name
 
     def naming_wikidata_id(self, string):
         # canonical string -> wikidata id
@@ -440,3 +452,34 @@ def _replace_element(jsonEntity, element, lang):
             en_lab[lang] = en_lab_val
             jsonEntity[element] = en_lab
     return jsonEntity
+
+def _get_entity_from_wikidata(entity_id, simplify=True):
+    wikidata_url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' + entity_id + '&format=json'
+
+    result_json = None
+    try:
+        response = requests.get(wikidata_url)
+        response.raise_for_status()
+        result_json = response.json()
+    except HTTPError as http_err:
+        print('HTTP error occurred:', http_err)
+    except Exception as err:
+        print('Error occurred:', err)
+
+    if result_json == None:
+        return None
+
+    if "labels" not in result_json:
+        result_json = result_json["entities"]
+        if "labels" not in result_json:
+            result_json = result_json[entity_id]
+            if "labels" not in result_json:
+                return None
+
+    if "id" not in result_json:
+        result_json["id"] = entity_id
+
+    if simplify:
+        result_json = simplify_entity(result_json)
+
+    return result_json
