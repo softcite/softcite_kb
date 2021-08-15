@@ -61,7 +61,7 @@ def convert_to_wikidata(kb, entity):
     '''
     Conversion to Wikidata vanilla format. The actual format used by the KB is a simplified 
     one, covering only English (thus removing all the multilingual additional nested descriptions)
-    and where unused blocks are removed.
+    and where unused blocks are removed. In addition, numerical information need to be removed.
     '''
     jsonEntity = copy.deepcopy(entity)
 
@@ -124,12 +124,12 @@ def convert_to_codemeta(kb, jsonEntity, collection):
 
     Because codemeta describes a resource and not "the resources about a resource" as we are doing, 
     we are losing the contradictory, aggregation and numerical dimensions of our representation 
-    (we need to select the "best" value). Codemeta is similar to cataloguing a work, it's not about 
-    representing usages, connections and these sorts of information.
+    - we need to select the "best" value for a given field. Codemeta is similar to cataloguing a work, 
+    it's not about representing usages, connections and these sorts of information.
 
     A few things are not very clear, for instance nothing to specify user manual and documentation 
     of a software, but we have unclear overlapping things like buildInstructions, readme or requirement 
-    properties and softwareHelp in schema.org
+    properties and softwareHelp in schema.org -> addressed in new version of codemeta
 
     Unclear: do we describe a software, a software version? a code source release?  
 
@@ -292,9 +292,11 @@ def convert_to_codemeta(kb, jsonEntity, collection):
                             codemeta_json["contributor"].append(_person_to_codemeta(record, kb))
 
 
-                #elif wikidata_property == "P275":
+            elif wikidata_property == "P275":
                 # license (i.e. copyright license)   
-
+                best_license = _select_best_value(jsonEntity["claims"][wikidata_property], kb)
+                if best_license != None:
+                    codemeta_json['license'] = best_license
 
             elif wikidata_property == "P2078":
                 # this is not in codemeta (nothing on documentation and user manual), but jsonld has property 
