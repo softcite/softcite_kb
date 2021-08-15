@@ -21,7 +21,7 @@ A processing instance is prepared as an Ubuntu instance containing the following
 - Install of [biblio-glutton-harvester](https://github.com/kermitt2/biblio-glutton-harvester)
 - Install of the python client for the Softcite software mention recognizer: https://github.com/softcite/software_mentions_client
 
-More than 20 instances based on this Ubuntu settings can be started at the same time on Jetstream. Deploying one image appears relatively time consuming, around ten minutes each. ssh keys are set at the Jetstream web interface and it will ensure that every instance is available over ssh without copying the public key on the instance. 
+Around 40 instances based on this Ubuntu settings can be started at the same time on Jetstream. Deploying one image appears relatively time consuming, around ten minutes each. ssh keys are set at the Jetstream web interface and it will ensure that every instance is available over ssh without copying the public key on the instance. 
 
 The process for each instance is then as follow:
 
@@ -66,4 +66,6 @@ From the MongoDB data, we can then populate the Knowledge Base, see [Import soft
 
 As a complementary resource, we also use one existing home server with GPU (nvidia 1080Ti), processing PDF 10-12 times faster than one Jetstream CPU-only instance. This home instance works with 10 partitions on one time, having more storage space. This server alone has thus the capacity of around 12 Jetstream instances. 
 
-The overall resource is thus equivalent to 30 Jetstream instances, processing around 1.3 PDF per second with the SciBERT-CRF model. We are still at a total of around 4 months of processing for the whole Unpaywall collection, taking into account harvesting rate and PDF filtering. It is a slow process, but we are entirely in a zero cost mode, using only free available computing resources, while still processing a huge amount of PDF as compared to any similar academic projects involving mining of scholar documents. 
+Using SciBERT-CRF model, we can process in average 0.04 PDF per second on one mediuem Jetstream instance (6 cores, CPU), in comparison to 0.53 PDF per second on a workstation with GPU (nvidia 1080Ti, 8 cores CPU). In this setting, only the software mention recognition relies on GPU if available, all the other processing (like GROBID) use CPU.
+
+The overall maximum resource is thus equivalent to 50 Jetstream instances, processing around 2.2 PDF per second with the SciBERT-CRF model. We are still at a total of around 2-3 months of processing for the whole Unpaywall collection, taking into account harvesting rate and PDF filtering. It is a slow process, but we are entirely at a zero cost mode, using only free available computing resources, while still processing a huge amount of PDF as compared to any similar academic projects involving mining of scholar documents. 
