@@ -291,4 +291,4 @@ The documentation of the project is distributed under [CC-0](https://creativecom
 
 If you contribute to Softcite Knowledge Base project, you agree to share your contribution following these licenses. 
 
-Main author and contact: Patrice Lopez (<patrice.lopez@science-miner.com>)
+Contact: Patrice Lopez (<patrice.lopez@science-miner.com>)
