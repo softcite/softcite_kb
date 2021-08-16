@@ -278,3 +278,17 @@ INFO:     Uvicorn running on http://localhost:8050 (Press CTRL+C to quit)
 ```
 
 The documentation of the service is available at `http(s)://*host*:*port*/docs`, e.g. `http://localhost:8050/docs` (based on Swagger), for ReDoc documentation style, use `http://localhost:8050/redoc`).
+
+## Acknowledgements
+
+We would like to acknowledge the support of the Alfred P. Sloan Foundation, Grant/Award Number: 2016-7209, and of the Gordon and Betty Moore Foundation, Grant/Award Number 8622.
+
+## License
+
+The Softcite Knowledge Base implementation is distributed under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0). 
+
+The documentation of the project is distributed under [CC-0](https://creativecommons.org/publicdomain/zero/1.0/) license and the possible annotated data under [CC-BY](https://creativecommons.org/licenses/by/4.0/) license.
+
+If you contribute to Softcite Knowledge Base project, you agree to share your contribution following these licenses. 
+
+Main author and contact: Patrice Lopez (<patrice.lopez@science-miner.com>)
