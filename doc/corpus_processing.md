@@ -1,6 +1,6 @@
-# Processing scholar literature
+# Processing scholarly literature
 
-Here is some documentation on the large scale processing of Open Access scholar articles by the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions), used as one channel to populate the Knowledge Base. We use Jetstream cloud environment part of XSEDE:
+Here is some documentation on the large scale processing of Open Access scholarly articles by the [Softcite software mention recognizer](https://github.com/ourresearch/software-mentions), used as one channel to populate the Knowledge Base. We use Jetstream cloud environment part of XSEDE:
 
 ```
 Stewart, C.A., Cockerill, T.M., Foster, I., Hancock, D., Merchant, N., Skidmore, E., Stanzione, D., Taylor, J., 
@@ -21,7 +21,7 @@ A processing instance is prepared as an Ubuntu instance containing the following
 - Install of [biblio-glutton-harvester](https://github.com/kermitt2/biblio-glutton-harvester)
 - Install of the python client for the Softcite software mention recognizer: https://github.com/softcite/software_mentions_client
 
-Around 40 instances based on this Ubuntu settings can be started at the same time on Jetstream. Deploying one image appears relatively time consuming, around ten minutes each. ssh keys are set at the Jetstream web interface and it will ensure that every instance is available over ssh without copying the public key on the instance. 
+Around 40 instances based on this Ubuntu settings can be started at the same time on Jetstream. We can deploy half of the instance at TACC and the other half at Indiana University. It turned out that TACC instance were much more unreliable than Indiana University's ones, due to connectivity issues (connection dropped repeatedly for uploading data), strong variation of CPU performance over time (difference factor for runtime up to 15 times), apparent memory ballooning. The feeling is that the sharing of TACC VM is significantly more visible and impactful. Overall, deploying one image appears relatively time consuming, in particular for TACC instances - around ten minutes each. Very handy, ssh keys are set at the Jetstream web interface and it will ensure that every instance is available over ssh without havinf to copy the public key on the instance. 
 
 The process for each instance is then as follow:
 
@@ -52,8 +52,10 @@ After removing the PDF files to keep only the software extractions (and optional
 
 ```bash
 find biblio-glutton-harvester/data -name *.pdf -delete
-rsync -avh --progress biblio-glutton-harvester/data patricelopez@XXX.XXX.XX.XXX:/home/patricelopez/softcite_run/data
+rsync -avh --progress --partial biblio-glutton-harvester/data patricelopez@XXX.XXX.XX.XXX:/home/patricelopez/softcite_run/data
 ```
+
+In practice, due to connectivity issue, we rather create archive of the data and download the data. 
 
 The centralized results can then be loaded in one step in MongoDB:
 
@@ -62,7 +64,7 @@ cd software_mentions_client
 python3 software_mention_client.py --load --data_path /home/patricelopez/softcite_run/data
 ```
 
-From the MongoDB data, we can then populate the Knowledge Base, see [Import software mentions](https://github.com/softcite/softcite_kb#import-software-mentions). 
+From the MongoDB data, we then populate the Knowledge Base, see [Import software mentions](https://github.com/softcite/softcite_kb#import-software-mentions). 
 
 As a complementary resource, we also use one existing home server with GPU (nvidia 1080Ti), processing PDF 10-12 times faster than one Jetstream CPU-only instance. This home instance works with 10 partitions on one time, having more storage space. This server alone has thus the capacity of around 12 Jetstream instances. 
 

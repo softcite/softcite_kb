@@ -291,6 +291,54 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
     If the role is "copyright holder" (cph), the relation is the edge "copyrights". In this case, and 
     also observed for authorship, we could habe an organization and not always a person. 
     '''
+
+    # check role case funder
+    if "roles" in author:
+        if isinstance(author["roles"], str):
+            author["roles"] = [ author["roles"] ]
+
+    if "fnd" in author["roles"]:
+        # this is an organization
+        org_name = None
+        if 'given' in author:
+            org_name = author['given']
+        elif 'full_name' in author:
+            org_name = author['full_name']
+
+        if org_name == None:
+            return False
+
+        organization = stagingArea.init_entity_from_template("organization", source=source_ref)
+        if organization is None:
+            raise("cannot init organization entity from default template")
+        
+        organization["labels"] = org_name
+        local_org_id = stagingArea.get_uid()
+        organization["_key"] = local_org_id
+        organization["_id"] = "organizations/" + organization["_key"]
+        stagingArea.staging_graph.insert_vertex("organizations", organization)
+
+        # funding relation
+        relation = {}
+        relation["claims"] = {}
+        relation["claims"]['P8324'] = [ {"references": [ source_ref ] } ]
+        relation["_from"] = organization["_id"]
+        relation["_to"] = "software/" + software_key
+        relation["_id"] = "funding/" + organization["_key"] + "_" + software_key
+        stagingArea.staging_graph.insert_edge("funding", edge=relation)
+
+        if "cph" in author["roles"]:
+            # the organization is also a copyright holder, so we had a copyrights relation too
+            relation = {}
+            relation["claims"] = {}
+            relation["claims"]['P8324'] = [ {"references": [ source_ref ] } ]
+            relation["_from"] = organization["_id"]
+            relation["_to"] = "software/" + software_key
+            relation["_id"] = "copyrights/" + organization["_key"] + "_" + software_key
+            stagingArea.staging_graph.insert_edge("copyright", edge=relation)
+
+        return False
+
     person = stagingArea.init_entity_from_template("person", source=source_ref)
     if person is None:
         raise("cannot init person entity from default template")
@@ -371,11 +419,8 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
         person["_id"] = "persons/" + person["_key"]
         stagingArea.staging_graph.insert_vertex("persons", person)
 
-    if "role" in author and isinstance(author["role"], str):
-        author["role"] = [ author["role"] ]
-
-    if 'role' in author:
-        for role in author["role"]:
+    if 'roles' in author:
+        for role in author["roles"]:
             # relation based on role, via the actor edge collection
             if not role in relator_code_cran:
                 # try some cleaning
@@ -437,3 +482,4 @@ def set_role(stagingArea, wikidata_property, person, software_key, role_term, so
     relation["_to"] = "software/" + software_key
     relation["_id"] = "actors/" + person["_key"] + "_" + software_key + "_" + role_term
     stagingArea.staging_graph.insert_edge("actors", edge=relation)
+
