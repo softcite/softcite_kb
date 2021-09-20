@@ -281,7 +281,7 @@ The documentation of the service is available at `http(s)://*host*:*port*/docs`,
 
 ## Acknowledgements
 
-We would like to acknowledge the support of the Alfred P. Sloan Foundation, Grant/Award Number: 2016-7209, and of the Gordon and Betty Moore Foundation, Grant/Award Number 8622.
+We would like to acknowledge the support of the Alfred P. Sloan Foundation, Grant/Award Number: 2016-7209, and of the Gordon and Betty Moore Foundation, Grant/Award Number 8622. We acknowledge the Jetstream cloud environment part of XSEDE and the Texas Advanced Computing Center (TACC) at The University of Texas at Austin for providing computing resources that have contributed to the creation of the knowledge base.
 
 ## License
 
