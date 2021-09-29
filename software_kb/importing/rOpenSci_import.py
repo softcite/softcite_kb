@@ -126,7 +126,7 @@ class rOpenSci_harvester(Harvester):
             print("Fail to retrieve the list of maintainers", base_url + maintainer_path, "status", response.status_code)
 
         for maintainer in jsonResult:
-            print(json.dumps(maintainer))
+            #print(json.dumps(maintainer))
             maintainer_json = self.convert_maintainer_json(package_json)
             # insert json document
             self.maintainers.insert_document(maintainer_json)

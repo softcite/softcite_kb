@@ -10,10 +10,10 @@ import requests
 import argparse
 import json
 import re
-from .harvester import Harvester
+from harvester import Harvester
 from arango import ArangoClient
 from bs4 import BeautifulSoup
-from .import_common import process_author_field, clean_field, process_url_field, process_maintainer_field, process_boolean_field, process_dependency_field, is_git_repo
+from import_common import process_author_field, clean_field, process_url_field, process_maintainer_field, process_boolean_field, process_dependency_field, is_git_repo
 
 base_url = 'http://crandb.r-pkg.org/'
 # example package metadata: http://crandb.r-pkg.org/knitr

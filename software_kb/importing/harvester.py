@@ -80,7 +80,7 @@ class Harvester(CommonArangoDB):
             print("Connection fails:", url)
         if success:
             content_type = response.headers.get('content-type')
-            print(content_type)
+            #print(content_type)
             extension = "bin"
             if content_type == None:
                 content_type = "text"
