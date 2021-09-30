@@ -1,5 +1,8 @@
 {
   "properties": {
+    "tenants": {
+      "type": "keyword"
+    },
     "id": {
       "type": "keyword"
     },
