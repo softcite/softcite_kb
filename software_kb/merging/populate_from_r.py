@@ -7,9 +7,9 @@ import json
 import pybtex
 from arango import ArangoClient
 from populate_staging_area import StagingArea
-
-# default logging settings
-logging.basicConfig(filename='populate.log', filemode='w', level=logging.DEBUG)
+import logging
+import logging.handlers
+from tqdm import tqdm
 
 def populate(stagingArea):
 
@@ -49,16 +49,22 @@ def populate(stagingArea):
 def populate_r(stagingArea, collection, source_ref):
     relator_file = os.path.join("data", "resources", "relator_code_cran.json")
     if not os.path.isfile(relator_file): 
-        print("Error when loading relator code:", relator_file)
+        logging.error("Error when loading relator code: " + relator_file)
         return None
 
     with open(relator_file) as relator_f:
         relator_code_cran = json.load(relator_f)
 
     cursor = stagingArea.db.aql.execute(
-      'FOR doc IN packages RETURN doc', ttl=3600
+      'FOR doc IN packages RETURN doc', ttl=3600, full_count=True
     )
 
+    stats = cursor.statistics()
+    total_packages = 0
+    if 'fullCount' in stats:
+        total_packages = stats['fullCount']
+
+    pbar = tqdm(total=total_packages)
     for package in cursor:
         #print(package['Package'], "...")
 
@@ -202,6 +208,8 @@ def populate_r(stagingArea, collection, source_ref):
                 stagingArea.process_reference_block(package["References"], software, source_ref)
                 # this will add "references" relation between the software and the referenced documents
 
+        pbar.update(1)
+    pbar.close()
         
 def set_dependencies(stagingArea, collection, source_ref):
     # we use an AQL query to avoid limited life of cursor that cannot be changed otherwise
@@ -430,7 +438,7 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
                 role = role.replace(")", "")
                 role = role.strip("\"")
                 if not role in relator_code_cran:
-                    print("Error unknown role", role, "defaulting to Contributor")
+                    logging.warning("Error unknown role " + role + " defaulting to Contributor")
                     role = "ctb"
 
             wikidata_property = relator_code_cran[role]["wikidata"]

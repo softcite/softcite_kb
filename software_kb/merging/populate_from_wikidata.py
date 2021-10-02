@@ -6,6 +6,9 @@ import os
 import json
 from arango import ArangoClient
 from populate_staging_area import StagingArea
+import logging
+import logging.handlers
+from tqdm import tqdm
 
 def populate(stagingArea):
 
@@ -13,7 +16,7 @@ def populate(stagingArea):
 
     print("Populate staging area from Wikidata import")
     if not stagingArea.sys_db.has_database(database_name_wikidata):
-        print("wikidata import database does not exist: you need to first import Wikidata resources")
+        logging.error("wikidata import database does not exist: you need to first import Wikidata resources")
 
     stagingArea.db = stagingArea.client.db(database_name_wikidata, username=stagingArea.config['arangodb']['arango_user'], password=stagingArea.config['arangodb']['arango_pwd'])
 

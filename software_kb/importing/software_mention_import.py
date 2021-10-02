@@ -60,9 +60,11 @@ class Software_mention_import(Harvester):
 
     def import_mentions(self, mongoExportPath, reset=False, tags=None):
         '''
-        we use the result of mongoexport, one JSON per line, with one file per collection
+        We use the result of mongoexport, one JSON per line, with one file per collection.
+        This can be incremental, loading different set of mentions extraction dumps from different sources/set of PDF. 
         ''' 
         if reset:
+            # TBD: we might want to prompt a confirmation, because it might be very destructive!
             self.db.delete_collection('annotations')
             self.annotations = self.db.create_collection('annotations')
             self.index_document = self.annotations.add_hash_index(fields=['document.$oid'], unique=False, sparse=False)

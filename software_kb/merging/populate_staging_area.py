@@ -42,6 +42,10 @@ from pybtex import format_from_string
 import pybtex.errors
 pybtex.errors.set_strict_mode(False)
 from lxml import etree 
+import logging
+import logging.handlers
+
+logging.getLogger("pybtex").propagate = False
 
 class StagingArea(CommonArangoDB):
 
@@ -312,7 +316,7 @@ class StagingArea(CommonArangoDB):
         json_template = None
         template_file = os.path.join("data", "resources", template+"_template.json")
         if not os.path.isfile(template_file): 
-            print("Error: template file does not exist for entity:", template)
+            logging.error("Error: template file does not exist for entity: " + template)
             return None
 
         with open(template_file) as template_f:
@@ -454,7 +458,7 @@ class StagingArea(CommonArangoDB):
                 try:
                     biblio = parse_string(bibtex_str, "bibtex")
                 except:
-                    print("Failed to parse the bibtext string:", bibtex_str)
+                    logging.warning("Failed to parse the bibtext string: " + bibtex_str)
 
                 if biblio != None:
                     for key in biblio.entries:
@@ -471,7 +475,7 @@ class StagingArea(CommonArangoDB):
                         try:
                             text_format_ref = format_from_string(bibtex_str, style="plain")
                         except:
-                            print("Failed to serialize the bibtext entry:", bibtex_str)
+                            logging.warning("Failed to serialize the bibtext entry: " + bibtex_str)
 
                         if text_format_ref == None:
                             continue

@@ -4,6 +4,9 @@ import argparse
 from populate_staging_area import StagingArea
 from tqdm import tqdm
 
+# default logging settings
+logging.basicConfig(filename='merge.log', filemode='w', level=logging.DEBUG)
+
 def merge(stagingArea, reset=False):
 
     # document collection 
