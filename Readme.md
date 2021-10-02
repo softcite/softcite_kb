@@ -130,7 +130,7 @@ The MongoDB JSON export can be compressed with gzip or not.
 It is possible to add some labels to a particular software mention extraction imports. For instance, when importing the extraction for the CORD-19 collection, labels `cord-19` and `biomedical` can be added as follow:
 
 ```
-python3 software_kb/importing/software_mention_import.py --config my_config.yaml data/mentions/ --tag cord-19 biomedical
+python3 software_kb/importing/software_mention_import.py --config my_config.yaml data/mentions/ --tag cord-19 biomedical all
 ```
 
 These labels can then be used to select sub-collections when querying the Knowledge base, creating multi-tenant knowledge bases where a tenant is a subcollection or a combination of subcollections/fields. 
