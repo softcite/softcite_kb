@@ -8,6 +8,9 @@ import pybtex
 from arango import ArangoClient
 from populate_staging_area import StagingArea
 
+# default logging settings
+logging.basicConfig(filename='populate.log', filemode='w', level=logging.DEBUG)
+
 def populate(stagingArea):
 
     database_name_rOpenSci = "rOpenSci"
@@ -297,47 +300,47 @@ def process_author(stagingArea, author, software_key, relator_code_cran, source_
         if isinstance(author["roles"], str):
             author["roles"] = [ author["roles"] ]
 
-    if "fnd" in author["roles"]:
-        # this is an organization
-        org_name = None
-        if 'given' in author:
-            org_name = author['given']
-        elif 'full_name' in author:
-            org_name = author['full_name']
+        if "fnd" in author["roles"]:
+            # this is an organization
+            org_name = None
+            if 'given' in author:
+                org_name = author['given']
+            elif 'full_name' in author:
+                org_name = author['full_name']
 
-        if org_name == None:
-            return False
+            if org_name == None:
+                return False
 
-        organization = stagingArea.init_entity_from_template("organization", source=source_ref)
-        if organization is None:
-            raise("cannot init organization entity from default template")
-        
-        organization["labels"] = org_name
-        local_org_id = stagingArea.get_uid()
-        organization["_key"] = local_org_id
-        organization["_id"] = "organizations/" + organization["_key"]
-        stagingArea.staging_graph.insert_vertex("organizations", organization)
+            organization = stagingArea.init_entity_from_template("organization", source=source_ref)
+            if organization is None:
+                raise("cannot init organization entity from default template")
+            
+            organization["labels"] = org_name
+            local_org_id = stagingArea.get_uid()
+            organization["_key"] = local_org_id
+            organization["_id"] = "organizations/" + organization["_key"]
+            stagingArea.staging_graph.insert_vertex("organizations", organization)
 
-        # funding relation
-        relation = {}
-        relation["claims"] = {}
-        relation["claims"]['P8324'] = [ {"references": [ source_ref ] } ]
-        relation["_from"] = organization["_id"]
-        relation["_to"] = "software/" + software_key
-        relation["_id"] = "funding/" + organization["_key"] + "_" + software_key
-        stagingArea.staging_graph.insert_edge("funding", edge=relation)
-
-        if "cph" in author["roles"]:
-            # the organization is also a copyright holder, so we had a copyrights relation too
+            # funding relation
             relation = {}
             relation["claims"] = {}
             relation["claims"]['P8324'] = [ {"references": [ source_ref ] } ]
             relation["_from"] = organization["_id"]
             relation["_to"] = "software/" + software_key
-            relation["_id"] = "copyrights/" + organization["_key"] + "_" + software_key
-            stagingArea.staging_graph.insert_edge("copyright", edge=relation)
+            relation["_id"] = "funding/" + organization["_key"] + "_" + software_key
+            stagingArea.staging_graph.insert_edge("funding", edge=relation)
 
-        return False
+            if "cph" in author["roles"]:
+                # the organization is also a copyright holder, so we had a copyrights relation too
+                relation = {}
+                relation["claims"] = {}
+                relation["claims"]['P8324'] = [ {"references": [ source_ref ] } ]
+                relation["_from"] = organization["_id"]
+                relation["_to"] = "software/" + software_key
+                relation["_id"] = "copyrights/" + organization["_key"] + "_" + software_key
+                stagingArea.staging_graph.insert_edge("copyrights", edge=relation)
+
+            return False
 
     person = stagingArea.init_entity_from_template("person", source=source_ref)
     if person is None:
@@ -481,5 +484,7 @@ def set_role(stagingArea, wikidata_property, person, software_key, role_term, so
     relation["_from"] = person["_id"]
     relation["_to"] = "software/" + software_key
     relation["_id"] = "actors/" + person["_key"] + "_" + software_key + "_" + role_term
-    stagingArea.staging_graph.insert_edge("actors", edge=relation)
+    # check if not already there (conservative check ;)
+    if not stagingArea.staging_graph.has_edge(relation["_id"]):
+        stagingArea.staging_graph.insert_edge("actors", edge=relation)
 
