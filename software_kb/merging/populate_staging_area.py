@@ -283,7 +283,6 @@ class StagingArea(CommonArangoDB):
         '''
         Create collections to keep track of merging decisions for the different entities (vertex only). 
         '''
-
         # keep track of list of entities to be merged (first entity of the list will be the host of the merging)
         if not self.staging_graph.has_vertex_collection('merging_lists'):
             self.merging_lists = self.staging_graph.create_vertex_collection('merging_lists')
@@ -905,6 +904,7 @@ class StagingArea(CommonArangoDB):
         '''
 
         # check if merging_entities and merging_lists collections exist, if not create them
+        '''
         if not self.staging_graph.has_vertex_collection('merging_entities'):
             self.merging_entities = self.staging_graph.create_vertex_collection('merging_entities')
         else:
@@ -914,7 +914,8 @@ class StagingArea(CommonArangoDB):
             self.merging_lists = self.staging_graph.create_vertex_collection('merging_lists')
         else:
             self.merging_lists = self.staging_graph.vertex_collection('merging_lists')
-
+        '''
+        
         # do we have a merging list for one of these entities?
         merging_list1_id = None
         if self.staging_graph.has_vertex("merging_entities/" + entity1['_key']):

@@ -3,6 +3,8 @@ import sys
 import argparse
 from populate_staging_area import StagingArea
 from tqdm import tqdm
+import logging
+import logging.handlers
 
 # default logging settings
 logging.basicConfig(filename='merge.log', filemode='w', level=logging.DEBUG)
@@ -168,6 +170,9 @@ def merge(stagingArea, reset=False):
 
             # merge by software matching name
             software_name = software["labels"].replace('"', '')
+            software_name = software_name.replace("'", "")
+            software_name = software_name.replace("'", "")
+            #software_name = software_name.replace("\\", "")
 
             # note: if the length of the the string is too short, it can easily lead to non-meaningful deduplication,
             # but many common framework has such short names (R, Go, C#, etc.). This is depending a lot on the false 
@@ -181,7 +186,7 @@ def merge(stagingArea, reset=False):
                 aql_query += 'OR doc.labels == "' + software_name_variant + '" OR "' + software_name_variant + '" IN doc.aliases '
             aql_query += ' RETURN doc'
 
-            match_cursor = stagingArea.db.aql.execute(aql_query, ttl=600)
+            match_cursor = stagingArea.db.aql.execute(aql_query, ttl=3600)
 
             for software_match in match_cursor:
                 if software_match['_key'] == software['_key']:
@@ -207,7 +212,7 @@ def merge(stagingArea, reset=False):
                     aql_query = 'FOR doc IN software FILTER doc["index_entity"] == "' + local_entity + '"'
                     aql_query += ' RETURN doc'
 
-                    match_cursor = stagingArea.db.aql.execute(aql_query, ttl=600)
+                    match_cursor = stagingArea.db.aql.execute(aql_query, ttl=3600)
 
                     for software_match in match_cursor:
                         if software_match['_key'] == software['_key']:
