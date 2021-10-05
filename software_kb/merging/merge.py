@@ -144,7 +144,6 @@ def merge(stagingArea, reset=False):
             # look-up based on 'index_key_name' with a stronger post-validation
             #if not merging:
 
-
     # software collection
     print("\nsoftware merging")
     total_results = stagingArea.software.count()
@@ -186,47 +185,49 @@ def merge(stagingArea, reset=False):
                 aql_query += 'OR doc.labels == "' + software_name_variant + '" OR "' + software_name_variant + '" IN doc.aliases '
             aql_query += ' RETURN doc'
 
-            match_cursor = stagingArea.db.aql.execute(aql_query, ttl=3600)
+            try: 
+                match_cursor = stagingArea.db.aql.execute(aql_query, ttl=3600)
 
-            for software_match in match_cursor:
-                if software_match['_key'] == software['_key']:
-                    continue
+                for software_match in match_cursor:
+                    if software_match['_key'] == software['_key']:
+                        continue
 
-                # TBD: a post validation here
+                    # TBD: a post validation here
 
-                # update/store merging decision list 
-                #print("register...", software_name, software_match['labels'])
-                success = stagingArea.register_merging(software_match, software)
-                if success:
-                    merging = True
-                    break
+                    # update/store merging decision list 
+                    #print("register...", software_name, software_match['labels'])
+                    success = stagingArea.register_merging(software_match, software)
+                    if success:
+                        merging = True
+                        break
 
-            # merge by same disambiguated entity
-            if not merging:
-                # do we have a disambiguated entity?
-                local_entity = None
-                if "index_entity" in software:
-                    local_entity = software['index_entity']
+                # merge by same disambiguated entity
+                if not merging:
+                    # do we have a disambiguated entity?
+                    local_entity = None
+                    if "index_entity" in software:
+                        local_entity = software['index_entity']
 
-                if local_entity != None and local_entity.startswith("Q"): 
-                    aql_query = 'FOR doc IN software FILTER doc["index_entity"] == "' + local_entity + '"'
-                    aql_query += ' RETURN doc'
+                    if local_entity != None and local_entity.startswith("Q"): 
+                        aql_query = 'FOR doc IN software FILTER doc["index_entity"] == "' + local_entity + '"'
+                        aql_query += ' RETURN doc'
 
-                    match_cursor = stagingArea.db.aql.execute(aql_query, ttl=3600)
+                        match_cursor = stagingArea.db.aql.execute(aql_query, ttl=3600)
 
-                    for software_match in match_cursor:
-                        if software_match['_key'] == software['_key']:
-                            continue
+                        for software_match in match_cursor:
+                            if software_match['_key'] == software['_key']:
+                                continue
 
-                        # TBD: a post validation here
+                            # TBD: a post validation here
 
-                        # update/store merging decision list 
-                        #print("register...", software_name, software_match['labels'])
-                        success = stagingArea.register_merging(software_match, software)
-                        if success:
-                            merging = True
-                            break
-
+                            # update/store merging decision list 
+                            #print("register...", software_name, software_match['labels'])
+                            success = stagingArea.register_merging(software_match, software)
+                            if success:
+                                merging = True
+                                break
+            except:
+                logging.exception("Failed merging for software document")
 
 def _capitalized_variant(term):
     '''
