@@ -19,9 +19,7 @@ def is_alive_status():
 
 @router.get("/version", response_class=PlainTextResponse, tags=["generic"])
 def get_version():
-    print(kb.config)
     api_settings = kb.config['api']
-    print(api_settings)
     return api_settings['version']
 
 # to redirect the static /api/frontend/ to  /api/frontend/index.html
