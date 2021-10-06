@@ -1,0 +1,14 @@
+{
+  "name": "protovis",
+  "homepage": "https://github.com/mbostock/protovis",
+  "version": "3.2.0",
+  "_release": "3.2.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v3.2.0",
+    "commit": "f5309ac761b597bdf4669ff1e12107c065e75364"
+  },
+  "_source": "https://github.com/mbostock/protovis.git",
+  "_target": "~3.2.0",
+  "_originalSource": "protovis"
+}

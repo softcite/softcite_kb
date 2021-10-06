@@ -1,0 +1,1523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH
+ xmlns="http://www.openarchives.org/OAI/2.0/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+ <responseDate>2012-08-10T18:33:41Z</responseDate>
+ <request verb="ListSets">http://hal.inria.fr/oai/oai.php</request>
+ <ListSets>
+
+<set>
+ <setSpec>CHIM</setSpec>
+ <setName>Chemical Sciences</setName>
+</set>
+<set>
+ <setSpec>CHIM:ANAL</setSpec>
+ <setName>Analytical chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:CATA</setSpec>
+ <setName>Catalysis</setName>
+</set>
+<set>
+ <setSpec>CHIM:CHEM</setSpec>
+ <setName>Cheminformatics</setName>
+</set>
+<set>
+ <setSpec>CHIM:GENI</setSpec>
+ <setName>Chimical engineering</setName>
+</set>
+<set>
+ <setSpec>CHIM:COOR</setSpec>
+ <setName>Coordination chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:CRIS</setSpec>
+ <setName>Cristallography</setName>
+</set>
+<set>
+ <setSpec>CHIM:INOR</setSpec>
+ <setName>Inorganic chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:MATE</setSpec>
+ <setName>Material chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:THER</setSpec>
+ <setName>Medicinal Chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:ORGA</setSpec>
+ <setName>Organic chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:POLY</setSpec>
+ <setName>Polymers</setName>
+</set>
+<set>
+ <setSpec>CHIM:RADIO</setSpec>
+ <setName>Radiochemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:THEO</setSpec>
+ <setName>Theoretical and/or physical chemistry</setName>
+</set>
+<set>
+ <setSpec>CHIM:OTHE</setSpec>
+ <setName>Other</setName>
+</set>
+<set>
+ <setSpec>SCCO</setSpec>
+ <setName>Cognitive science</setName>
+</set>
+<set>
+ <setSpec>SCCO:COMP</setSpec>
+ <setName>Computer science</setName>
+</set>
+<set>
+ <setSpec>SCCO:LING</setSpec>
+ <setName>Linguistics</setName>
+</set>
+<set>
+ <setSpec>SCCO:NEUR</setSpec>
+ <setName>Neuroscience</setName>
+</set>
+<set>
+ <setSpec>SCCO:PSYC</setSpec>
+ <setName>Psychology</setName>
+</set>
+<set>
+ <setSpec>INFO</setSpec>
+ <setName>Computer Science</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_AR</setSpec>
+ <setName>Architecture</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_AI</setSpec>
+ <setName>Artificial Intelligence</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_AU</setSpec>
+ <setName>Automatic Control Engineering</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_BI</setSpec>
+ <setName>Bioinformatics</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_BT</setSpec>
+ <setName>Biotechnology</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CL</setSpec>
+ <setName>Computation and Language</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CC</setSpec>
+ <setName>Computational Complexity</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CE</setSpec>
+ <setName>Computational Engineering, Finance, and Science</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CG</setSpec>
+ <setName>Computational Geometry</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_IA</setSpec>
+ <setName>Computer Aided Engineering</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_AO</setSpec>
+ <setName>Computer Arithmetic</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_GR</setSpec>
+ <setName>Computer Graphics and Virtual Reality</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_GT</setSpec>
+ <setName>Computer Science and Game Theory</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CV</setSpec>
+ <setName>Computer Vision and Pattern Recognition</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CY</setSpec>
+ <setName>Computers and Society</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_CR</setSpec>
+ <setName>Cryptography and Security</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_DS</setSpec>
+ <setName>Data Structures and Algorithms</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_DB</setSpec>
+ <setName>Databases</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_DL</setSpec>
+ <setName>Digital Libraries</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_DM</setSpec>
+ <setName>Discrete Mathematics</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_DC</setSpec>
+ <setName>Distributed, Parallel, and Cluster Computing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_TT</setSpec>
+ <setName>Document and Text Processing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_ES</setSpec>
+ <setName>Embedded Systems</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_FL</setSpec>
+ <setName>Formal Languages and Automata Theory</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_GL</setSpec>
+ <setName>General Literature</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_HC</setSpec>
+ <setName>Human-Computer Interaction</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_TI</setSpec>
+ <setName>Image Processing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_IR</setSpec>
+ <setName>Information Retrieval</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_IT</setSpec>
+ <setName>Information Theory and Coding</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_LG</setSpec>
+ <setName>Learning</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_LO</setSpec>
+ <setName>Logic in Computer Science</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_MS</setSpec>
+ <setName>Mathematical Software</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_IM</setSpec>
+ <setName>Medical Imaging</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_MC</setSpec>
+ <setName>Mobile Computing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_MO</setSpec>
+ <setName>Modeling and Simulation</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_MA</setSpec>
+ <setName>Multiagent Systems</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_MM</setSpec>
+ <setName>Multimedia</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_NI</setSpec>
+ <setName>Networking and Telecommunication</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_NE</setSpec>
+ <setName>Neural and Evolutionary Computing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_NA</setSpec>
+ <setName>Numerical Analysis</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_OS</setSpec>
+ <setName>Operating Systems</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_RO</setSpec>
+ <setName>Operations Research</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_PF</setSpec>
+ <setName>Performance and Reliability</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_PL</setSpec>
+ <setName>Programming Languages</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_RB</setSpec>
+ <setName>Robotics</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_TS</setSpec>
+ <setName>Signal and Image Processing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_SE</setSpec>
+ <setName>Software Engineering</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_SD</setSpec>
+ <setName>Sound</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_SC</setSpec>
+ <setName>Symbolic Computation</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_IU</setSpec>
+ <setName>Ubiquitous Computing</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_WB</setSpec>
+ <setName>Web</setName>
+</set>
+<set>
+ <setSpec>INFO:EIAH</setSpec>
+ <setName>Technology for Human Learning</setName>
+</set>
+<set>
+ <setSpec>INFO:INFO_OH</setSpec>
+ <setName>Other</setName>
+</set>
+<set>
+ <setSpec>SPI</setSpec>
+ <setName>Engineering Sciences</setName>
+</set>
+<set>
+ <setSpec>SPI:ACOU</setSpec>
+ <setName>Acoustics</setName>
+</set>
+<set>
+ <setSpec>SPI:AUTO</setSpec>
+ <setName>Automatic</setName>
+</set>
+<set>
+ <setSpec>SPI:NRJ</setSpec>
+ <setName>Electric power</setName>
+</set>
+<set>
+ <setSpec>SPI:ELEC</setSpec>
+ <setName>Electromagnetism</setName>
+</set>
+<set>
+ <setSpec>SPI:TRON</setSpec>
+ <setName>Electronics</setName>
+</set>
+<set>
+ <setSpec>SPI:MAT</setSpec>
+ <setName>Materials</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA</setSpec>
+ <setName>Mechanics</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:BIOM</setSpec>
+ <setName>Biomechanics</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:MEFL</setSpec>
+ <setName>Fluids mechanics</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:MSMECA</setSpec>
+ <setName>Materials and structures in mechanics</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:GEME</setSpec>
+ <setName>Mechanical engineering</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:MEMA</setSpec>
+ <setName>Mechanics of materials</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:SOLID</setSpec>
+ <setName>Mechanics of the solides</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:STRU</setSpec>
+ <setName>Mechanics of the structures</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:THER</setSpec>
+ <setName>Thermics</setName>
+</set>
+<set>
+ <setSpec>SPI:MECA:VIBR</setSpec>
+ <setName>Vibrations</setName>
+</set>
+<set>
+ <setSpec>SPI:NANO</setSpec>
+ <setName>Micro and nanotechnologies/Microelectronics</setName>
+</set>
+<set>
+ <setSpec>SPI:OPTI</setSpec>
+ <setName>Optics / Photonic</setName>
+</set>
+<set>
+ <setSpec>SPI:PLASMA</setSpec>
+ <setName>Plasmas</setName>
+</set>
+<set>
+ <setSpec>SPI:GPROC</setSpec>
+ <setName>Process Engineering</setName>
+</set>
+<set>
+ <setSpec>SPI:FLUID</setSpec>
+ <setName>Reactive fluid environment</setName>
+</set>
+<set>
+ <setSpec>SPI:SIGNAL</setSpec>
+ <setName>Signal and Image processing</setName>
+</set>
+<set>
+ <setSpec>SPI:OTHER</setSpec>
+ <setName>Other</setName>
+</set>
+<set>
+ <setSpec>SDE</setSpec>
+ <setName>Environmental Sciences</setName>
+</set>
+<set>
+ <setSpec>SDE:BE</setSpec>
+ <setName>Biodiversity and Ecology</setName>
+</set>
+<set>
+ <setSpec>SDE:ES</setSpec>
+ <setName>Environmental and Society</setName>
+</set>
+<set>
+ <setSpec>SDE:IE</setSpec>
+ <setName>Environmental Engineering</setName>
+</set>
+<set>
+ <setSpec>SDE:MCG</setSpec>
+ <setName>Global Changes</setName>
+</set>
+<set>
+ <setSpec>SHS</setSpec>
+ <setName>Humanities and Social Sciences</setName>
+</set>
+<set>
+ <setSpec>SHS:ARCHEO</setSpec>
+ <setName>Archaeology and Prehistory</setName>
+</set>
+<set>
+ <setSpec>SHS:ARCHI</setSpec>
+ <setName>Architecture, space management</setName>
+</set>
+<set>
+ <setSpec>SHS:ART</setSpec>
+ <setName>Art and art history</setName>
+</set>
+<set>
+ <setSpec>SHS:ANTHRO_BIO</setSpec>
+ <setName>Biological anthropology</setName>
+</set>
+<set>
+ <setSpec>SHS:GESTION</setSpec>
+ <setName>Business administration</setName>
+</set>
+<set>
+ <setSpec>SHS:CLASS</setSpec>
+ <setName>Classical studies</setName>
+</set>
+<set>
+ <setSpec>SHS:MUSEO</setSpec>
+ <setName>Cultural heritage and museology</setName>
+</set>
+<set>
+ <setSpec>SHS:DEMO</setSpec>
+ <setName>Demography</setName>
+</set>
+<set>
+ <setSpec>SHS:ECO</setSpec>
+ <setName>Economies and finances</setName>
+</set>
+<set>
+ <setSpec>SHS:EDU</setSpec>
+ <setName>Education</setName>
+</set>
+<set>
+ <setSpec>SHS:ENVIR</setSpec>
+ <setName>Environmental studies</setName>
+</set>
+<set>
+ <setSpec>SHS:GENRE</setSpec>
+ <setName>Gender studies</setName>
+</set>
+<set>
+ <setSpec>SHS:GEO</setSpec>
+ <setName>Geography</setName>
+</set>
+<set>
+ <setSpec>SHS:HIST</setSpec>
+ <setName>History</setName>
+</set>
+<set>
+ <setSpec>SHS:HISPHILSO</setSpec>
+ <setName>History, Philosophy and Sociology of Sciences</setName>
+</set>
+<set>
+ <setSpec>SHS:DROIT</setSpec>
+ <setName>Law</setName>
+</set>
+<set>
+ <setSpec>SHS:INFO</setSpec>
+ <setName>Library and information sciences</setName>
+</set>
+<set>
+ <setSpec>SHS:LANGUE</setSpec>
+ <setName>Linguistics</setName>
+</set>
+<set>
+ <setSpec>SHS:LITT</setSpec>
+ <setName>Literature</setName>
+</set>
+<set>
+ <setSpec>SHS:STAT</setSpec>
+ <setName>Methods and statistics</setName>
+</set>
+<set>
+ <setSpec>SHS:MUSIQ</setSpec>
+ <setName>Musicology and performing arts</setName>
+</set>
+<set>
+ <setSpec>SHS:PHIL</setSpec>
+ <setName>Philosophy</setName>
+</set>
+<set>
+ <setSpec>SHS:SCIPO</setSpec>
+ <setName>Political science</setName>
+</set>
+<set>
+ <setSpec>SHS:PSY</setSpec>
+ <setName>Psychology</setName>
+</set>
+<set>
+ <setSpec>SHS:RELIG</setSpec>
+ <setName>Religions</setName>
+</set>
+<set>
+ <setSpec>SHS:ANTHRO_SE</setSpec>
+ <setName>Social Anthropology and ethnology</setName>
+</set>
+<set>
+ <setSpec>SHS:SOCIO</setSpec>
+ <setName>Sociology</setName>
+</set>
+<set>
+ <setSpec>SDV</setSpec>
+ <setName>Life Sciences</setName>
+</set>
+<set>
+ <setSpec>SDV:SA</setSpec>
+ <setName>Agricultural sciences</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:AEP</setSpec>
+ <setName>Agriculture, economy and politics</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:AGRO</setSpec>
+ <setName>Agronomy</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:SPA</setSpec>
+ <setName>Animal production studies</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:HORT</setSpec>
+ <setName>Horticulture</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:STA</setSpec>
+ <setName>Sciences and technics of agriculture</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:STP</setSpec>
+ <setName>Sciences and technics of fishery</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:SF</setSpec>
+ <setName>Silviculture, forestry</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:SDS</setSpec>
+ <setName>Soil study</setName>
+</set>
+<set>
+ <setSpec>SDV:SA:ZOO</setSpec>
+ <setName>Zootechny</setName>
+</set>
+<set>
+ <setSpec>SDV:BA</setSpec>
+ <setName>Animal biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BA:ZI</setSpec>
+ <setName>Invertebrate Zoology</setName>
+</set>
+<set>
+ <setSpec>SDV:BA:ZV</setSpec>
+ <setName>Vertebrate Zoology</setName>
+</set>
+<set>
+ <setSpec>SDV:BA:MVSA</setSpec>
+ <setName>Veterinary medicine and animal Health</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM</setSpec>
+ <setName>Biochemistry, Molecular Biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM:BC</setSpec>
+ <setName>Biomolecules</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM:BS</setSpec>
+ <setName>Biomolecules</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM:BP</setSpec>
+ <setName>Biophysics</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM:GTP</setSpec>
+ <setName>Genomics</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM:BM</setSpec>
+ <setName>Molecular biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BBM:MN</setSpec>
+ <setName>Molecular Networks</setName>
+</set>
+<set>
+ <setSpec>SDV:BID</setSpec>
+ <setName>Biodiversity</setName>
+</set>
+<set>
+ <setSpec>SDV:BID:EVO</setSpec>
+ <setName>Populations and Evolution</setName>
+</set>
+<set>
+ <setSpec>SDV:BID:SPT</setSpec>
+ <setName>Systematics, Phylogenetics and taxonomy</setName>
+</set>
+<set>
+ <setSpec>SDV:IB</setSpec>
+ <setName>Bioengineering</setName>
+</set>
+<set>
+ <setSpec>SDV:IB:BIO</setSpec>
+ <setName>Biomaterials</setName>
+</set>
+<set>
+ <setSpec>SDV:IB:IMA</setSpec>
+ <setName>Imaging</setName>
+</set>
+<set>
+ <setSpec>SDV:IB:MN</setSpec>
+ <setName>Nuclear medicine</setName>
+</set>
+<set>
+ <setSpec>SDV:BIO</setSpec>
+ <setName>Biotechnology</setName>
+</set>
+<set>
+ <setSpec>SDV:CAN</setSpec>
+ <setName>Cancer</setName>
+</set>
+<set>
+ <setSpec>SDV:BC</setSpec>
+ <setName>Cellular Biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BC:IC</setSpec>
+ <setName>Cell Behavior</setName>
+</set>
+<set>
+ <setSpec>SDV:BC:BC</setSpec>
+ <setName>Subcellular Processes</setName>
+</set>
+<set>
+ <setSpec>SDV:BDD</setSpec>
+ <setName>Development Biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BDD:EO</setSpec>
+ <setName>Embryology and Organogenesis</setName>
+</set>
+<set>
+ <setSpec>SDV:BDD:GAM</setSpec>
+ <setName>Gametogenesis</setName>
+</set>
+<set>
+ <setSpec>SDV:BDD:MOR</setSpec>
+ <setName>Morphogenesis</setName>
+</set>
+<set>
+ <setSpec>SDV:EE</setSpec>
+ <setName>Ecology, environment</setName>
+</set>
+<set>
+ <setSpec>SDV:EE:BIO</setSpec>
+ <setName>Bioclimatology</setName>
+</set>
+<set>
+ <setSpec>SDV:EE:ECO</setSpec>
+ <setName>Ecosystems</setName>
+</set>
+<set>
+ <setSpec>SDV:EE:SANT</setSpec>
+ <setName>Health</setName>
+</set>
+<set>
+ <setSpec>SDV:EE:IEO</setSpec>
+ <setName>Symbiosis</setName>
+</set>
+<set>
+ <setSpec>SDV:ETH</setSpec>
+ <setName>Ethics</setName>
+</set>
+<set>
+ <setSpec>SDV:AEN</setSpec>
+ <setName>Food and Nutrition</setName>
+</set>
+<set>
+ <setSpec>SDV:IDA</setSpec>
+ <setName>Food engineering</setName>
+</set>
+<set>
+ <setSpec>SDV:GEN</setSpec>
+ <setName>Genetics</setName>
+</set>
+<set>
+ <setSpec>SDV:GEN:GA</setSpec>
+ <setName>Animal genetics</setName>
+</set>
+<set>
+ <setSpec>SDV:GEN:GH</setSpec>
+ <setName>Human genetics</setName>
+</set>
+<set>
+ <setSpec>SDV:GEN:GPL</setSpec>
+ <setName>Plants genetics</setName>
+</set>
+<set>
+ <setSpec>SDV:GEN:GPO</setSpec>
+ <setName>Populations and Evolution</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP</setSpec>
+ <setName>Human health and pathology</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:CSC</setSpec>
+ <setName>Cardiology and cardiovascular system</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:DERM</setSpec>
+ <setName>Dermatology</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:ME</setSpec>
+ <setName>Emerging diseases</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:EM</setSpec>
+ <setName>Endocrinology and metabolism</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:GEG</setSpec>
+ <setName>Geriatry and gerontology</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:GEO</setSpec>
+ <setName>Gynecology and obstetrics</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:HEM</setSpec>
+ <setName>Hematology</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:HEG</setSpec>
+ <setName>Hépatology and Gastroenterology</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:MI</setSpec>
+ <setName>Infectious diseases</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:PED</setSpec>
+ <setName>Pediatrics</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:PSM</setSpec>
+ <setName>Psychiatrics and mental health</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:PSR</setSpec>
+ <setName>Pulmonology and respiratory tract</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:RSOA</setSpec>
+ <setName>Rhumatology and musculoskeletal system</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:OS</setSpec>
+ <setName>Sensory Organs</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:CHI</setSpec>
+ <setName>Surgery</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:AHA</setSpec>
+ <setName>Tissues and Organs</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:PHY</setSpec>
+ <setName>Tissues and Organs</setName>
+</set>
+<set>
+ <setSpec>SDV:MHEP:UN</setSpec>
+ <setName>Urology and Nephrology</setName>
+</set>
+<set>
+ <setSpec>SDV:IMM</setSpec>
+ <setName>Immunology</setName>
+</set>
+<set>
+ <setSpec>SDV:IMM:IA</setSpec>
+ <setName>Adaptive immunology</setName>
+</set>
+<set>
+ <setSpec>SDV:IMM:ALL</setSpec>
+ <setName>Allergology</setName>
+</set>
+<set>
+ <setSpec>SDV:IMM:IMM</setSpec>
+ <setName>Immunotherapy</setName>
+</set>
+<set>
+ <setSpec>SDV:IMM:II</setSpec>
+ <setName>Innate immunity</setName>
+</set>
+<set>
+ <setSpec>SDV:IMM:VAC</setSpec>
+ <setName>Vaccinology</setName>
+</set>
+<set>
+ <setSpec>SDV:MP</setSpec>
+ <setName>Microbiology and Parasitology</setName>
+</set>
+<set>
+ <setSpec>SDV:MP:BAC</setSpec>
+ <setName>Bacteriology</setName>
+</set>
+<set>
+ <setSpec>SDV:MP:MYC</setSpec>
+ <setName>Mycology</setName>
+</set>
+<set>
+ <setSpec>SDV:MP:PAR</setSpec>
+ <setName>Parasitology</setName>
+</set>
+<set>
+ <setSpec>SDV:MP:PRO</setSpec>
+ <setName>Protistology</setName>
+</set>
+<set>
+ <setSpec>SDV:MP:VIR</setSpec>
+ <setName>Virology</setName>
+</set>
+<set>
+ <setSpec>SDV:NEU</setSpec>
+ <setName>Neurons and Cognition</setName>
+</set>
+<set>
+ <setSpec>SDV:NEU:SC</setSpec>
+ <setName>Cognitive Sciences</setName>
+</set>
+<set>
+ <setSpec>SDV:NEU:NB</setSpec>
+ <setName>Neurobiology</setName>
+</set>
+<set>
+ <setSpec>SDV:NEU:PC</setSpec>
+ <setName>Psychology and behavior</setName>
+</set>
+<set>
+ <setSpec>SDV:SP</setSpec>
+ <setName>Pharmaceutical sciences</setName>
+</set>
+<set>
+ <setSpec>SDV:SP:PG</setSpec>
+ <setName>Galenic pharmacology</setName>
+</set>
+<set>
+ <setSpec>SDV:SP:MED</setSpec>
+ <setName>Medication</setName>
+</set>
+<set>
+ <setSpec>SDV:SP:PHARMA</setSpec>
+ <setName>Pharmacology</setName>
+</set>
+<set>
+ <setSpec>SDV:BIBS</setSpec>
+ <setName>Quantitative Methods</setName>
+</set>
+<set>
+ <setSpec>SDV:BDLR</setSpec>
+ <setName>Reproductive Biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BDLR:RA</setSpec>
+ <setName>Asexual reproduction</setName>
+</set>
+<set>
+ <setSpec>SDV:BDLR:RS</setSpec>
+ <setName>Sexual reproduction</setName>
+</set>
+<set>
+ <setSpec>SDV:SPEE</setSpec>
+ <setName>Santé publique et épidémiologie</setName>
+</set>
+<set>
+ <setSpec>SDV:TOX</setSpec>
+ <setName>Toxicology</setName>
+</set>
+<set>
+ <setSpec>SDV:TOX:ECO</setSpec>
+ <setName>Ecotoxicology</setName>
+</set>
+<set>
+ <setSpec>SDV:TOX:TCA</setSpec>
+ <setName>Toxicology and food chain</setName>
+</set>
+<set>
+ <setSpec>SDV:TOX:TVM</setSpec>
+ <setName>Vegetal toxicology and mycotoxicology</setName>
+</set>
+<set>
+ <setSpec>SDV:BV</setSpec>
+ <setName>Vegetal Biology</setName>
+</set>
+<set>
+ <setSpec>SDV:BV:BOT</setSpec>
+ <setName>Botanics</setName>
+</set>
+<set>
+ <setSpec>SDV:BV:PEP</setSpec>
+ <setName>Phytopathology and phytopharmacy</setName>
+</set>
+<set>
+ <setSpec>SDV:BV:AP</setSpec>
+ <setName>Plant breeding</setName>
+</set>
+<set>
+ <setSpec>SDV:OT</setSpec>
+ <setName>Other</setName>
+</set>
+<set>
+ <setSpec>MATH</setSpec>
+ <setName>Mathematics</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_AG</setSpec>
+ <setName>Algebraic Geometry</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_AT</setSpec>
+ <setName>Algebraic Topology</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_AP</setSpec>
+ <setName>Analysis of PDEs</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_CT</setSpec>
+ <setName>Category Theory</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_CA</setSpec>
+ <setName>Classical Analysis and ODEs</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_CO</setSpec>
+ <setName>Combinatorics</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_AC</setSpec>
+ <setName>Commutative Algebra</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_CV</setSpec>
+ <setName>Complex Variables</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_DG</setSpec>
+ <setName>Differential Geometry</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_DS</setSpec>
+ <setName>Dynamical Systems</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_FA</setSpec>
+ <setName>Functional Analysis</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_GM</setSpec>
+ <setName>General Mathematics</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_GN</setSpec>
+ <setName>General Topology</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_GT</setSpec>
+ <setName>Geometric Topology</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_GR</setSpec>
+ <setName>Group Theory</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_HO</setSpec>
+ <setName>History and Overview</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_IT</setSpec>
+ <setName>Information Theory</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_KT</setSpec>
+ <setName>K-Theory and Homology</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_LO</setSpec>
+ <setName>Logic</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_MP</setSpec>
+ <setName>Mathematical Physics</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_MG</setSpec>
+ <setName>Metric Geometry</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_NT</setSpec>
+ <setName>Number Theory</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_NA</setSpec>
+ <setName>Numerical Analysis</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_OA</setSpec>
+ <setName>Operator Algebras</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_OC</setSpec>
+ <setName>Optimization and Control</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_PR</setSpec>
+ <setName>Probability</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_QA</setSpec>
+ <setName>Quantum Algebra</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_RT</setSpec>
+ <setName>Representation Theory</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_RA</setSpec>
+ <setName>Rings and Algebras</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_SP</setSpec>
+ <setName>Spectral Theory</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_ST</setSpec>
+ <setName>Statistics</setName>
+</set>
+<set>
+ <setSpec>MATH:MATH_SG</setSpec>
+ <setName>Symplectic Geometry</setName>
+</set>
+<set>
+ <setSpec>NLIN</setSpec>
+ <setName>Nonlinear Sciences</setName>
+</set>
+<set>
+ <setSpec>NLIN:NLIN_AO</setSpec>
+ <setName>Adaptation and Self-Organizing Systems</setName>
+</set>
+<set>
+ <setSpec>NLIN:NLIN_CG</setSpec>
+ <setName>Cellular Automata and Lattice Gases</setName>
+</set>
+<set>
+ <setSpec>NLIN:NLIN_CD</setSpec>
+ <setName>Chaotic Dynamics</setName>
+</set>
+<set>
+ <setSpec>NLIN:NLIN_SI</setSpec>
+ <setName>Exactly Solvable and Integrable Systems</setName>
+</set>
+<set>
+ <setSpec>NLIN:NLIN_PS</setSpec>
+ <setName>Pattern Formation and Solitons</setName>
+</set>
+<set>
+ <setSpec>PHYS</setSpec>
+ <setName>Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND</setSpec>
+ <setName>Condensed Matter</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_DS_NN</setSpec>
+ <setName>Disordered Systems and Neural Networks</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_MS</setSpec>
+ <setName>Materials Science</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_MSQHE</setSpec>
+ <setName>Mesoscopic Systems and Quantum Hall Effect</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:GAS</setSpec>
+ <setName>Quantum Gases</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_SCM</setSpec>
+ <setName>Soft Condensed Matter</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_SM</setSpec>
+ <setName>Statistical Mechanics</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_SCE</setSpec>
+ <setName>Strongly Correlated Electrons</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_S</setSpec>
+ <setName>Superconductivity</setName>
+</set>
+<set>
+ <setSpec>PHYS:COND:CM_GEN</setSpec>
+ <setName>Other</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA</setSpec>
+ <setName>Mechanics</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:ACOU</setSpec>
+ <setName>Acoustics</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:BIOM</setSpec>
+ <setName>Biomechanics</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:MSMECA</setSpec>
+ <setName>Materials and structures in mechanics</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:GEME</setSpec>
+ <setName>Mechanical engineering</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:MEMA</setSpec>
+ <setName>Mechanics of materials</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:MEFL</setSpec>
+ <setName>Mechanics of the fluids</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:SOLID</setSpec>
+ <setName>Mechanics of the solides</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:STRU</setSpec>
+ <setName>Mechanics of the structures</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:THER</setSpec>
+ <setName>Thermics</setName>
+</set>
+<set>
+ <setSpec>PHYS:MECA:VIBR</setSpec>
+ <setName>Vibrations</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS</setSpec>
+ <setName>Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_ACC_PH</setSpec>
+ <setName>Accelerator Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_AO-PH</setSpec>
+ <setName>Atmospheric and Oceanic Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_ATM-PH</setSpec>
+ <setName>Atomic and Molecular Clusters</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_ATOM-PH</setSpec>
+ <setName>Atomic Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_BIO-PH</setSpec>
+ <setName>Biological Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_CHEM-PH</setSpec>
+ <setName>Chemical Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_CLASS-PH</setSpec>
+ <setName>Classical Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_COMP-PH</setSpec>
+ <setName>Computational Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_DATA-AN</setSpec>
+ <setName>Data Analysis, Statistics and Probability</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_FLU-DYN</setSpec>
+ <setName>Fluid Dynamics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_GEN-PH</setSpec>
+ <setName>General Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_GEO-PH</setSpec>
+ <setName>Geophysics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_HIST-PH</setSpec>
+ <setName>History of Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_INS-DET</setSpec>
+ <setName>Instrumentation and Detectors</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_MED-PH</setSpec>
+ <setName>Medical Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_OPTICS</setSpec>
+ <setName>Optics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_SOC-PH</setSpec>
+ <setName>Physics and Society</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_ED-PH</setSpec>
+ <setName>Physics Education</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_PLASM-PH</setSpec>
+ <setName>Plasma Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_POP-PH</setSpec>
+ <setName>Popular Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:PHYS:PHYS_SPACE-PH</setSpec>
+ <setName>Space Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR</setSpec>
+ <setName>Astrophysics</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR:CO</setSpec>
+ <setName>Cosmology and Extra-Galactic Astrophysics</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR:EP</setSpec>
+ <setName>Earth and Planetary Astrophysics</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR:GA</setSpec>
+ <setName>Galactic Astrophysics</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR:HE</setSpec>
+ <setName>High Energy Astrophysical Phenomena</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR:IM</setSpec>
+ <setName>Instrumentation and Methods for Astrophysic</setName>
+</set>
+<set>
+ <setSpec>PHYS:ASTR:SR</setSpec>
+ <setName>Solar and Stellar Astrophysics</setName>
+</set>
+<set>
+ <setSpec>PHYS:GRQC</setSpec>
+ <setName>General Relativity and Quantum Cosmology</setName>
+</set>
+<set>
+ <setSpec>PHYS:HEXP</setSpec>
+ <setName>High Energy Physics - Experiment</setName>
+</set>
+<set>
+ <setSpec>PHYS:HLAT</setSpec>
+ <setName>High Energy Physics - Lattice</setName>
+</set>
+<set>
+ <setSpec>PHYS:HPHE</setSpec>
+ <setName>High Energy Physics - Phenomenology</setName>
+</set>
+<set>
+ <setSpec>PHYS:HTHE</setSpec>
+ <setName>High Energy Physics - Theory</setName>
+</set>
+<set>
+ <setSpec>PHYS:MPHY</setSpec>
+ <setName>Mathematical Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:NEXP</setSpec>
+ <setName>Nuclear Experiment</setName>
+</set>
+<set>
+ <setSpec>PHYS:NUCL</setSpec>
+ <setName>Nuclear Theory</setName>
+</set>
+<set>
+ <setSpec>PHYS:QPHY</setSpec>
+ <setName>Quantum Physics</setName>
+</set>
+<set>
+ <setSpec>PHYS:HIST</setSpec>
+ <setName>Physics archives</setName>
+</set>
+<set>
+ <setSpec>QFIN</setSpec>
+ <setName>Quantitative Finance</setName>
+</set>
+<set>
+ <setSpec>QFIN:CP</setSpec>
+ <setName>Computational Finance</setName>
+</set>
+<set>
+ <setSpec>QFIN:GN</setSpec>
+ <setName>General Finance</setName>
+</set>
+<set>
+ <setSpec>QFIN:PM</setSpec>
+ <setName>Portfolio Management</setName>
+</set>
+<set>
+ <setSpec>QFIN:PR</setSpec>
+ <setName>Pricing of Securities</setName>
+</set>
+<set>
+ <setSpec>QFIN:RM</setSpec>
+ <setName>Risk Management</setName>
+</set>
+<set>
+ <setSpec>QFIN:ST</setSpec>
+ <setName>Statistical Finance</setName>
+</set>
+<set>
+ <setSpec>QFIN:TR</setSpec>
+ <setName>Trading and Market Microstructure</setName>
+</set>
+<set>
+ <setSpec>SDU</setSpec>
+ <setName>Sciences of the Universe</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR</setSpec>
+ <setName>Astrophysics</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR:CO</setSpec>
+ <setName>Cosmology and Extra-Galactic Astrophysics</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR:EP</setSpec>
+ <setName>Earth and Planetary Astrophysics</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR:GA</setSpec>
+ <setName>Galactic Astrophysics</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR:HE</setSpec>
+ <setName>High Energy Astrophysical Phenomena</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR:IM</setSpec>
+ <setName>Instrumentation and Methods for Astrophysic</setName>
+</set>
+<set>
+ <setSpec>SDU:ASTR:SR</setSpec>
+ <setName>Solar and Stellar Astrophysics</setName>
+</set>
+<set>
+ <setSpec>SDU:ENVI</setSpec>
+ <setName>Continental interfaces, environment</setName>
+</set>
+<set>
+ <setSpec>SDU:STU</setSpec>
+ <setName>Earth Sciences</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:AG</setSpec>
+ <setName>Applied geology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:CL</setSpec>
+ <setName>Climatology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:GC</setSpec>
+ <setName>Geochemistry</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:GM</setSpec>
+ <setName>Geomorphology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:GP</setSpec>
+ <setName>Geophysics</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:GL</setSpec>
+ <setName>Glaciology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:HY</setSpec>
+ <setName>Hydrology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:ME</setSpec>
+ <setName>Meteorology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:MI</setSpec>
+ <setName>Mineralogy</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:OC</setSpec>
+ <setName>Oceanography</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:PG</setSpec>
+ <setName>Paleontology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:PE</setSpec>
+ <setName>Petrography</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:PL</setSpec>
+ <setName>Planetology</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:ST</setSpec>
+ <setName>Stratigraphy</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:TE</setSpec>
+ <setName>Tectonics</setName>
+</set>
+<set>
+ <setSpec>SDU:STU:VO</setSpec>
+ <setName>Volcanology</setName>
+</set>
+<set>
+ <setSpec>SDU:OCEAN</setSpec>
+ <setName>Ocean, Atmosphere</setName>
+</set>
+<set>
+ <setSpec>SDU:OTHER</setSpec>
+ <setName>Other</setName>
+</set>
+<set>
+ <setSpec>STAT</setSpec>
+ <setName>Statistics</setName>
+</set>
+<set>
+ <setSpec>STAT:AP</setSpec>
+ <setName>Applications</setName>
+</set>
+<set>
+ <setSpec>STAT:CO</setSpec>
+ <setName>Computation</setName>
+</set>
+<set>
+ <setSpec>STAT:ML</setSpec>
+ <setName>Machine Learning</setName>
+</set>
+<set>
+ <setSpec>STAT:ME</setSpec>
+ <setName>Methodology</setName>
+</set>
+<set>
+ <setSpec>STAT:OT</setSpec>
+ <setName>Other Statistics</setName>
+</set>
+<set>
+ <setSpec>STAT:TH</setSpec>
+ <setName>Statistics Theory</setName>
+</set>
+ </ListSets>
+</OAI-PMH>

@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Demo Software KB</title>
+        <link rel="icon" type="image/x-icon" href="data/images/favicon.ico"/> 
+        <link rel="shortcut icon" type="image/x-icon" href="data/images/favicon.ico"/>
+        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
+        <!--
+                <link rel="stylesheet" href="bower_components/bootstrap-multiselect/dist/css/bootstrap-multiselect.css" type="text/css"/>-->
+        <link rel="stylesheet" href="bower_components/components-font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="bower_components/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css"/>
+        <link rel="stylesheet" href="bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css">
+
+        <link rel="stylesheet" href="css/anhalytics.css"/>
+        <link rel="stylesheet" href="css/annotations.css"/>
+
+        <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+
+        <script type="text/javascript" src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>  
+
+        <!--        <script type="text/javascript" src="bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect.js"></script>-->
+        <script type="text/javascript" src="lib/linkify/1.0/jquery.linkify-1.0-min.js"></script>
+        <script type="text/javascript" src="bower_components/d3/d3.min.js "></script>
+        <script type="text/javascript" src="bower_components/d3-cloud/build/d3.layout.cloud.js "></script>
+        <script type="text/javascript" src="bower_components/protovis/protovis-r3.2.js"></script>
+        <script type="text/javascript" src="lib/Porter-Stemmer/stemmer.js"></script>
+
+        <!-- for nicer rendering of wikipedia abstracts -->
+        <script type="text/javascript" src="lib/wiki/wiki2html.js"></script>
+        <link href="lib/wiki/wiky.css" rel="stylesheet" type="text/css">
+
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: {
+              extensions: ["mediawiki-texvc.js"]
+            }
+            });
+        </script>
+        <script type="text/javascript" src="bower_components/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <script src="js/resource/config.js"></script>
+        <script type="text/javascript" src="js/utilities.js"></script>
+        <script type="text/javascript" src="js/elasticsearchquery.js"></script>
+        <script type="text/javascript" src="js/parsers.js"></script>
+        <script type="text/javascript" src="js/annotations.js"></script>
+        <script type="text/javascript" src="js/recordBuild.js"></script>
+        <script type="text/javascript" src="js/extension.js"></script>
+        <script type="text/javascript" src="js/modals.js"></script>
+        <!--script type="text/javascript" src="js/disambiguation.js"></script-->
+
+        <!-- here are the default defined facets -->
+        <script type="text/javascript">
+            var options = $.extend(defaults, {
+                aggs: [
+                    {'field': 'authors_full', 'display': 'Author', 'size': 10, 'type': 'entity', 'view': 'textual'},
+                    {'field': 'collection', 'display': 'Entity', 'size': 10, 'type': 'country', 'view': 'textual'},
+                    {'field': 'programming_language_class', 'display': 'Languages', 'size': 10, 'type': 'country', 'view': 'textual'}
+                ]
+            });
+
+        </script>
+
+        <script type="text/javascript" src="search/s4.facetview.js"></script>
+
+        <script type="text/javascript">
+
+            $(function () {
+                $('#facet-view-simple').facetview(options, record_metadata);
+                // set up form
+                $('.demo-form').submit(function (e) {
+                    e.preventDefault();
+                    var $form = $(e.target);
+                    var _data = {};
+                    $.each($form.serializeArray(), function (idx, item) {
+                        _data[item.name] = item.value;
+                    });
+                    $('.facet-view-here').facetview(_data);
+                });
+            });
+
+        </script>
+    </head>
+
+    <body>
+
+        <!--header>
+            <div class="header-container">
+                <div class="col-md-2 col-sm-3 col-xs-3 no-padding"><a href="index.html?mode_query=simple"><img src="data/images/LogoAnhalitycs.png" style="padding-left:5px;padding-top:17px;width:1000px;"></a></div>
+                <div class="col-md-2 col-sm-3 col-xs-3 no-padding"><a href="https://www.inria.fr" target="_blank"><img src="data/images/logo_INRIA_fr.png"  style="padding-left:40px;padding-top:10px;width:190px;"></a></div>
+                <div class="col-md-2 col-sm-3 col-xs-3 no-padding"><a href="https://hal.archives-ouvertes.fr/" target="_blank"><img src="data/images/hal.logo.png"  style="padding-left:40px;padding-top:12px;width:135px;"></a></div>
+                <div class="col-lg-4 col-md-5 col-sm-5 col-xs-4 no-padding"></div>
+                <div class="col-lg-4 col-md-4 col-sm-3 col-xs-4 pull-right no-padding">
+                    <small><span style="padding-left:40px;color:#AE0C0C;position:relative; float:right;">
+                            <a href="">Documentation</a>
+                            <a href="index.html?mode_query=simple">simple</a> 
+                            <a href="dashboard.html">dashboard</a>
+                        </span></small>
+                </div>
+            </div>
+        </header-->
+
+        <div class="content-container container">
+            <div id="facet-view-simple">
+                <div id="facetview">
+                    <div class="row">
+                        <div class="col-md-3 ">
+                            <div id="facetview_filters"></div>
+                        </div>
+                        <div class="col-md-9" id="facetview_rightcol" style="position:relative;" >                            
+                            <div id="facetview_searchbars"></div>
+
+                            <div style="clear:both;margin-left:-20px;" id="facetview_selectedfilters"></div>
+                            <div class="row" id="results_summary"></div>
+                            <div class="row" id="disambiguation_panel"></div>
+                            <table class="row table" style="margin-bottom:0px; border-radius:25px;-moz-border-radius:25px;" id="facetview_results"></table>
+                            <div class="row table" id="facetview_metadata"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <p class="small text-muted">&copy; The contributors - 2021 </p>
+        </footer>
+    </body>
+</html>
