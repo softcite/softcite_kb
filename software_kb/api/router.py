@@ -113,7 +113,6 @@ async def get_entity(collection: Collection, identifier: str, format: str = 'int
     return result
 
 # the value for "relations" are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
-'''
 @router.get("/relations/{relations}/{identifier}", tags=["relations"])
 async def get_relation(relations: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
@@ -124,7 +123,7 @@ async def get_relation(relations: str, identifier: str, format: str = 'internal'
     result['record'] = _convert_target_format(kb.kb_graph.edge(relations + '/' + identifier), relations, format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
-'''
+
 
 '''
 for returning list of entities or relations, the following parameters are used in every endpoints:  
@@ -191,9 +190,11 @@ return all mentions for a software, mentions are ranked following the parameter
 async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
+    '''
     cursor = kb.db.aql.execute(
         'FOR doc IN software LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + " RETURN doc['_key']"
     )
+    '''
 
     if ranker == 'count':
         cursor = kb.db.aql.execute(
@@ -447,6 +448,36 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
     result['runtime'] = round(time.time() - start_time, 3)
     
     return result
+
+'''
+Return all the mentions of the software entities a person has contributed to.
+default ranking: return the mentions for the software containing most mentions first
+'''
+@router.get("/entities/person/{identifier}/mentions", tags=["relations"])
+async def get_person_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
+    start_time = time.time()
+
+    cursor = kb.db.aql.execute(
+        'FOR actor IN actors '
+                    + ' FILTER actor._from == "' + entity["_id"] + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
+                    + ' FOR mention IN citations '
+                    + '    FILTER mention._to == actor._to '
+                    + '    LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+                    + '    RETURN DISTINCT mention._id ', full_count=True)
+
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+    return result
+
 
 '''
 return all the software entities an organization has been involved with via its members 

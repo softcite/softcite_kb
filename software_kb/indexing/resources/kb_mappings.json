@@ -36,26 +36,38 @@
     "authors_full": {
       "type": "keyword"
     },
+    "authors_id": {
+      "type": "keyword"
+    },
     "organizations": {
       "type": "text",
       "analyzer": "case_insensitive_folding_text"
     },
+    "organizations_id": {
+      "type": "keyword"
+    },
     "licenses": {
       "type": "text",
       "analyzer": "case_insensitive_folding_text"
+    },
+    "licenses_id": {
+      "type": "keyword"
     },
     "collection": {
       "type": "keyword"
     },
     "date": {
       "type": "date",
-      "format": "yyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
     },
     "programming_language": {
       "type": "text",
       "analyzer": "case_insensitive_keyword"
     },
     "programming_language_class": {
+      "type": "keyword"
+    },
+    "location": {
       "type": "keyword"
     },
     "number_mentions": {

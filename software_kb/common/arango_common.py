@@ -324,9 +324,10 @@ class CommonArangoDB(object):
 
                                     if not "references" in the_value:
                                         the_value["references"] = []
-                                    sources_to_add = the_value2["references"]
-                                    for source_to_add in sources_to_add:
-                                        add_ref_if_not_present(the_value["references"], source_to_add)
+                                    if "references" in the_value2:
+                                        sources_to_add = the_value2["references"]
+                                        for source_to_add in sources_to_add:
+                                            add_ref_if_not_present(the_value["references"], source_to_add)
                                     local_merge = True
                                     break
 
