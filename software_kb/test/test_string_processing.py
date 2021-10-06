@@ -1,7 +1,7 @@
 import sys
 import json
 
-#from software_kb.merge.merge import _capitalized_variant
+#from software_kb.merging.merge import _capitalized_variant
 
 string_input_test = ['knitr', 'STATA', 'Stata', "MICROSOFT WORD"]
 string_output_expected = [None, 'Stata', None, "Microsoft Word"] 

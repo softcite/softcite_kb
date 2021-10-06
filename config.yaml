@@ -1,6 +1,6 @@
 ## This is the unique configuration file for the software Knowledge Base framework
 
-version: "0.1.0"
+version: "0.2"
 
 ## configuration related to ArangoDB
 arangodb:
@@ -97,7 +97,7 @@ web_api:
   log_level: "debug"
   reload: false
   # the following is used in the generated API documentation
-  version: "0.1.0"
+  version: "0.2"
   name: "Software KB web API"
   description: "Web API for the Software Knowledge Base"
   api_route: ""

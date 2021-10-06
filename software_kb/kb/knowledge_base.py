@@ -9,13 +9,15 @@ import os
 import sys
 import json
 from arango import ArangoClient
-from software_kb.common.arango_common import CommonArangoDB
-from software_kb.merge.populate_staging_area import StagingArea, _project_entity_id_collection
+from software_kb.common.arango_common import CommonArangoDB, _get_entity_from_wikidata
+from software_kb.merging.populate_staging_area import StagingArea, _project_entity_id_collection
 from software_kb.common.arango_common import simplify_entity
 import argparse
 from tqdm import tqdm
 import requests
 from requests.exceptions import HTTPError
+import logging
+import logging.handlers
 
 class knowledgeBase(CommonArangoDB):
 
@@ -537,27 +539,6 @@ class knowledgeBase(CommonArangoDB):
         else:
             # by default we return "P767" - contributor
             return self.relator_map["P767"]
-            
-
-def _get_entity_from_wikidata(entity_id):
-    wikidata_url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' + entity_id + '&format=json'
-
-    result_json = None
-    try:
-        response = requests.get(wikidata_url)
-        response.raise_for_status()
-        result_json = response.json()
-    except HTTPError as http_err:
-        print('HTTP error occurred:', http_err)
-    except Exception as err:
-        print('Error occurred:', err)
-
-    if result_json == None:
-        return None
-
-    result_json = simplify_entity(result_json)
-
-    return result_json
 
 def _index(the_list, the_value):
     try:

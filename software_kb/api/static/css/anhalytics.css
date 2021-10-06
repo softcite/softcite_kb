@@ -1,0 +1,470 @@
+
+body {
+    padding-top: 0px;
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #A4A4A4;
+    background-color: #2E2E2E;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* PL: correct sizing of input box for Firefox and Safari */
+.input-date {
+    /*box-sizing: border-box;*/
+    height: 24px; 
+    line-height: 24px;
+    border-radius: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 1px solid gray;
+}
+
+/* avoid ugly blue focus on search bar */
+.form-control:focus{
+    border-color: #D42C2C;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+a{color:#D42C2C;text-decoration:none;}   
+
+#facetview_presentation h1 {
+    color: #696565;
+    font-size: 22.4px;
+    font-weight: 200;
+    text-align: center;
+    width: 620px;
+    padding-bottom: 50px;
+    padding-top: 10px;
+}
+
+.note {
+    background: rgba(74,109,129,.3);
+    bottom: 0;
+    left: 0;
+    color: #1E303C;
+    padding: 0 20px;
+    position: absolute;
+    width: 100%;
+    font-weight: bold;
+    text-align: center;
+    z-index: 10;
+}
+
+
+.input-group {
+    padding-right: 100px;
+    width: 800px;
+}
+
+.no-padding {
+    padding: 0!important;
+}
+
+.header-container {
+    background-color:#585858;
+    height: 75px;
+    width: 1200px;
+    margin-right: auto;
+    margin-left: auto;
+
+}
+
+.container {
+     background-color: #f2f2f2; 
+    color: #222;
+    padding: 20px;
+    word-break: normal;
+    width: 1200px;
+    position: relative;
+    min-height: 520px;
+}
+
+footer p {
+    text-align: center;
+}
+
+ul, menu, dir {
+    display: block;
+    list-style-type: disc;
+    -webkit-margin-before: 1em;
+    -webkit-margin-after: 1em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    -webkit-padding-start: 40px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.row {
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+.row.result {
+    margin-right: -8px;
+    margin-left: -8px;
+}
+
+div {
+    display: block;
+}
+
+img {
+    max-width: 100%;
+    width: auto \9;
+    height: auto;
+    vertical-align: middle;
+    border: 0;
+    -ms-interpolation-mode: bicubic;
+}
+
+blockquote, h1, h2, h3, h4, h5, h6, q {
+    font-family: Roboto,Helvetica,Arial,sans-serif;
+    margin-bottom: 15px;
+    font-size: 24px;
+    color: #000000;
+    font-weight: 400;
+}
+
+h1 {
+    font-size: 30px;
+}
+
+h3 {
+    font-size: 14px;
+    line-height: 1.43;
+}
+
+/*a:focus, a:hover, a:active {
+    color: #3367d6;
+    text-decoration: underline;
+}*/
+
+#facetview_rightcol a:focus{outline:thin dotted #BC0E0E;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px;}
+#facetview_rightcol a:hover,a:active{outline:0;color:#BC0E0E;}
+#facetview_rightcol a{color:#D42C2C;text-decoration:none;}                
+#facetview_rightcol a:hover{text-decoration:underline;}
+
+/* PL: tables */ 
+
+/* .table th{background-color:#FCF8E3;} 
+.table tr{background-color:#FCF8E3;}       */
+.table { 
+    border-radius:25px; 
+    -moz-border-radius: 25px;
+    -webkit-border-radius: 25px;
+}
+.table th{background-color:#FFFFFF;} 
+.table tr{background-color:#FFFFFF; border-collapse: separate; }
+.table tbody tr.highlight td { background-color: #F2DEDE; word-break:normal; }
+
+p {word-break:normal;font-size: 13px;}
+span {word-break:normal;}
+
+
+/* PUBLICATION  */
+
+.pdf-icon {
+    background: url('../data/images/pdf.png') no-repeat 0 0;
+    background-size: 34px 34px;
+    background-color: #4285f4;
+    border-radius: 50%;
+    height: 34px;
+    margin: .7em 0 .4em .4em;
+    text-indent: -5000px;
+    width: 34px;
+    margin-right: 10px;
+}
+
+.publication-sidebar-link {
+    border-bottom: 1px solid #ddd;
+    border-top: 1px solid #ddd;
+}
+
+.publication-content{
+    margin-bottom: 30px;
+    clear: both;
+    margin-top: 30px;
+    margin: auto;
+    max-width: 1000px;
+    font-family: Roboto,Helvetica,Arial,sans-serif;
+    background-color: white;
+
+}
+
+.publication-meta-block{
+    margin: 0 -1.53374233129%;
+    width: 103.067484663%;
+    border-top: 1px solid #ddd;
+    padding: 1.5em 0 0 0;
+}
+
+
+.my-col-4, .my-col-8 {
+    float: left;
+    margin: 0 1.4880952381% 20px;
+}
+
+.my-col-4{
+    width: 30.3571428571%;
+}
+
+.my-col-8 {
+    width: 63.6904761905%;
+}
+
+.publication-meta-block p {
+    color: #445a64;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.publication-title{
+    margin-bottom: 35px;
+}
+.publication-abstract{
+
+    border-top: 1px solid #ddd;
+    padding: 1.5em 0 0 0;
+}
+
+.publication-abstract h2:first-child, .publication-abstract h3:first-child {
+    margin-left: 1rem;
+    margin-top: 0;
+}
+
+.publication-abstract-text{
+    border-top: 1px solid #ddd;
+    padding: 1.5em 0 0 0;
+    margin-bottom: 20px;
+}
+
+.abstract {
+    padding: 0 1em;
+    font-weight: 400;
+    font-size: 14px;
+    color: #445a64;
+}
+
+.keywords {
+    padding: 0 1em;
+    font-weight: 400;
+    font-size: 14px;
+    color: #445a64;
+}
+
+
+/* PROFILE  */
+
+
+.profile-content{
+    margin-bottom: 30px;
+    clear: both;
+    margin-top: 30px;
+    margin: auto;
+    width: 1170px;
+    color: #2e414f;
+    font-family: helvetica neue,helvetica,arial,sans-serif;
+    background-color: white;
+}
+
+.profile-content a {
+    font-family: 'Open Sans', Helvetica, Arial, Lucida, sans-serif;
+    color: #000000;
+}
+
+.sidebar{
+    border-top: 1px solid #ddd;
+    padding: 1.5em 0 0 0;
+    
+}
+
+.profile-unit{
+    margin: 0 0 3em;
+}
+
+.profile-unit img {
+    border-radius: 3px;
+    box-shadow: 0 0 3px 0 rgba(0,0,0,0.33);
+    width: 124px;
+    height: 155px;
+    float: left;
+    margin: 0 0 .5em;
+}
+
+.profile-unit ul {
+    margin-left: 135px;
+}
+
+.no-marker {
+    list-style-type: none;
+    margin: 0;
+}
+
+.sidebar li {
+    font-size: 14px;
+    font-weight: 400;
+}
+.ra-list li {
+    line-height: 1.2;
+    padding: .25em 0;
+}
+
+.mainbar{
+    border-top: 1px solid #ddd;
+    padding: 1.5em 0 0 0;
+}
+/*
+.profile-research-interests{
+    border-top: 1px solid #ddd;
+}*/
+
+.co-author {
+    float: left;
+    height: 4em;
+    margin: 0 1% 2% 0;
+    width: 40%;
+}
+
+.co-author>a {
+    clear: left;
+    display: block;
+}
+
+.pub-list {
+        margin: 0;
+        
+}
+
+.pub-list li {
+    padding: 1.5em 1em;
+    border-top: 1px solid #ddd;
+    list-style-type: none;
+    margin: 0;
+    padding: 1em;
+}
+
+.pub-list .pub-title {
+    font-size: 15px;
+    color: #757575;
+}
+.pub-list p {
+    color: #445a64;
+}
+.pub-list p {
+    color: #666;
+    margin: .4em 0;
+    padding: 0;
+}
+
+
+/* INSTITUTION  */
+.institution-content{
+    margin-bottom: 30px;
+    clear: both;
+    margin-top: 30px;
+    margin: auto;
+    width: 1170px;
+    font-family: Roboto,Helvetica,Arial,sans-serif;
+    background-color: white;
+}
+.member{
+    float: left;
+    height: 4em;
+    margin: 0 1% 2% 0;
+    width: 20%;
+}
+
+
+/* PL: bellow, all the CSS for facet viewing */
+
+#facetview_freetext{
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+}
+#facetview_freeclass{
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+}
+#facetview_filters2 h3{
+    margin:40px 0 20px 0;
+}
+#facetview_filters h3{
+    margin:0px 0 0px 0;
+}
+#facetview_advanced{ 
+    float:left;
+    clear:left;
+    margin:10px;
+    padding:3px 5px 5px 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    border:1px solid #a1a1a1;
+    color:#a1a1a1;
+    overflow:hidden;
+    width:165px;
+}
+#facetview_advanced select{
+    width:160px;
+    background:#fff;
+    border:1px solid #a1a1a1;
+    color:#a1a1a1;
+    font-size:11px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+}
+#facetview_visualisation{
+    border:1px solid #ccc;
+    margin:10px 0 10px 0;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
+.node{
+    cursor:pointer;
+}
+.facetview_filterchoice{
+    text-decoration:none;
+    color:#373737;
+}
+.facetview_filterselected {
+    margin:5px;
+    border-color: firebrick;
+}
+.facetview_freetext_filterdiv{
+    float:left;
+    clear:both;
+    background:#eee;
+    padding:0;
+    color:green;
+    width:100%;
+}
+.facetview_advancedshow{
+    text-decoration:none;
+    color:#a1a1a1;
+}
+
+.facetview_resultactions a{
+    color:#353535;
+    font-weight:bold;
+    text-decoration:none;
+    margin:0 5px 0 5px;
+}
+
+
+/* for decent positioning of multiple glyphicons*/
+.btn .glyphicon {
+    margin-right: 4px;
+    vertical-align: middle;
+    text-align: center;
+} 
+
+.btn.btn-icon .glyphicon {
+    margin-right: 0;
+}

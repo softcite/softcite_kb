@@ -122,6 +122,7 @@ class Indexer(CommonArangoDB):
         if collection_name == 'software':
             authors = []
             authors_full = []
+            authors_id = []
             cursor = self.kb.db.aql.execute(
                 'FOR actor IN actors \
                     FILTER actor._to == "' + entity["_id"] + '" \
@@ -133,9 +134,12 @@ class Indexer(CommonArangoDB):
                 if not person_json['labels'] in authors:
                     authors.append(person_json['labels'])
                     authors_full.append(person_json['labels'])
+                    if "id" in person_json:
+                        authors_id.append(person_json['id'])
 
             doc['authors'] = authors
             doc['authors_full'] = authors_full
+            doc['authors_id'] = authors_id
 
             # get contexts
             contexts = []
@@ -171,23 +175,95 @@ class Indexer(CommonArangoDB):
             if len(contexts) > 0:
                 doc['contexts'] = contexts
 
+            # number of mentions for software 
             doc['number_mentions'] = len(contexts)
 
-        if "claims" in entity:
-            if "P275" in entity["claims"]:
-                doc["licenses"] = []
-                for the_value in entity["claims"]["P275"]:
-                    doc["licenses"].append(the_value["value"]) 
+            if "claims" in entity:
+                if "P275" in entity["claims"]:
+                    doc["licenses"] = []
+                    for the_value in entity["claims"]["P275"]:
+                        doc["licenses"].append(the_value["value"]) 
 
-            if "P277" in entity["claims"]:
-                doc["programming_language"] = []
-                doc["programming_language_class"] = []
-                for the_value in entity["claims"]["P277"]:
-                    converted_string = self.kb.naming_wikidata_string(the_value["value"])
-                    doc["programming_language"].append(converted_string) 
-                    doc["programming_language_class"].append(converted_string)
+                if "P277" in entity["claims"]:
+                    doc["programming_language"] = []
+                    doc["programming_language_class"] = []
+                    for the_value in entity["claims"]["P277"]:
+                        converted_string = self.kb.naming_wikidata_string(the_value["value"])
+                        doc["programming_language"].append(converted_string) 
+                        doc["programming_language_class"].append(converted_string)
 
-            # date should be added here
+                # date added here, for software we use inception date P571
+                if "P571" in entity["claims"]:
+                    for the_value in entity["claims"]["P571"]:
+                        if "time" in the_value:
+                            time_expression = the_value["time"]
+                            # format "+2011-00-00T00:00:00Z" into yyyy-MM-dd 
+                            time_expression = time_expression.replace('+', '')
+                            ind = time_expression.find("T")
+                            if ind != -1:
+                                time_expression = time_expression[:ind]
+                            doc["date"] = time_expression
+
+        if collection_name == 'organizations':
+            # add location information - at this point it's simply country ISO 3166 code (2 characters) 
+            # country property is P17
+            if "claims" in entity:
+                if "P17" in entity["claims"]:
+                    for the_value in entity["claims"]["P17"]:
+                        converted_string = self.kb.naming_wikidata_string(the_value["value"])
+                        doc["country"] = converted_string
+                        break
+
+            # add corresponding number mentions: mentions of a software the organization has indirect authorship or funding
+
+
+        if collection_name == 'persons':
+            # add corresponding number mentions: mentions of a software the person has authorship) 
+            # get contexts of software co-authored by the person
+            contexts = []
+            
+            cursor = self.kb.db.aql.execute(
+                'FOR actor IN actors '
+                    + ' FILTER actor._from == "' + entity["_id"] + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
+                    + ' FOR mention IN citations '
+                    + '    FILTER mention._to == actor._to '
+                    + '    LIMIT 0, 10'
+                    + '    RETURN DISTINCT mention._id ', full_count=True)
+
+            total_results = 0
+            stats = cursor.statistics()
+            if 'fullCount' in stats:
+                total_results = stats['fullCount']
+
+            page_size = 1000
+            nb_pages = (total_results // page_size)+1
+
+            for page_rank in range(0, nb_pages):
+
+                cursor = self.kb.db.aql.execute(
+                    'FOR actor IN actors '
+                    + ' FILTER actor._from == "' + entity["_id"] + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
+                    + ' FOR mention IN citations '
+                    + '    FILTER mention._to == actor._to '
+                    + '    LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+                    + '    RETURN DISTINCT mention ')
+
+                for mention in cursor:
+                    if "claims" in mention and "P7081" in mention["claims"]:
+                        for the_context in mention["claims"]["P7081"]:
+                            if "value" in the_context:
+                                mention_context = the_context["value"]
+                                if len(mention_context)>0:
+                                    contexts.append(mention_context)
+
+            if len(contexts) > 0:
+                doc['contexts'] = contexts
+
+            # number of mentions for software 
+            doc['number_mentions'] = len(contexts)
+
+        #if collection_name == 'licenses':
+        # add corresponding software usage number: number of software using this license
 
         if isinstance(entity["labels"], str):
             doc["all"] = entity["labels"]

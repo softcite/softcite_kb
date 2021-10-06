@@ -7,6 +7,12 @@ import json
 import yaml
 from arango import ArangoClient
 import copy
+import requests
+from requests.exceptions import HTTPError
+import logging
+import logging.handlers
+
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 class CommonArangoDB(object):
 
@@ -46,7 +52,7 @@ class CommonArangoDB(object):
 
         # check ArangoDB availability
         if not self.validate_arangodb_conn_params(): 
-            print('Connection to ArangoDb not possible, please review the information in the config file', path)
+            logging.error('Connection to ArangoDb not possible, please review the information in the config file: ' + path)
             return
 
         # Connect to "_system" database as user indicated in the config
@@ -55,14 +61,34 @@ class CommonArangoDB(object):
             self.client = ArangoClient(hosts=self.config['arangodb']['arango_protocol']+"://"+self.config['arangodb']['arango_host']+':'+str(self.config['arangodb']['arango_port']))
             self.sys_db = self.client.db('_system', username=self.config['arangodb']['arango_user'], password=self.config['arangodb']['arango_pwd'])
         except:
-            print('Connection to ArangoDb failed')
+            logging.error('Connection to ArangoDb failed')
 
         source_path = os.path.join("data", "resources", "sources.json")
         if os.path.isfile(source_path):
             with open(source_path) as f_source:
                 self.sources = json.load(f_source)
         else:
-            print('Source description json file not found:', source_path)
+            logging.error('Source description json file not found: ' + source_path)
+
+        logs_filename = "client.log"
+        if "log_file" in self.config: 
+            logs_filename = self.config['log_file']
+
+        logs_level = logging.DEBUG
+        if "log_level" in self.config:
+            if self.config["log_level"] == 'INFO':
+                logs_level = logging.INFO
+            elif self.config["log_level"] == 'ERROR':
+                logs_level = logging.ERROR
+            elif self.config["log_level"] == 'WARNING':
+                logs_level = logging.WARNING
+            elif self.config["log_level"] == 'CRITICAL':
+                logs_level = logging.CRITICAL
+            else:
+                logs_level = logging.NOTSET
+
+        logging.basicConfig(filename=logs_filename, filemode='w', level=logs_level)
+        print("logs are written in " + logs_filename)
         
     def validate_arangodb_conn_params(self):
         valid_conn_params = True
@@ -72,23 +98,23 @@ class CommonArangoDB(object):
             return False
 
         if not 'arango_host' in self.config['arangodb']:
-            print("ArangoDB host information not provided in config file")
+            logging.error("ArangoDB host information not provided in config file")
             valid_conn_params = False
         
         if not 'arango_port' in self.config['arangodb']:
-            print("ArangoDB port information not provided in config file")
+            logging.error("ArangoDB port information not provided in config file")
             valid_conn_params = False
         
         if not 'arango_protocol' in self.config['arangodb']:
-            print("ArangoDB connection protocol not provided in config file")
+            logging.error("ArangoDB connection protocol not provided in config file")
             valid_conn_params = False
         
         if not 'arango_user' in self.config['arangodb']:
-            print("User name for ArangoDb not provided in config file")
+            logging.error("User name for ArangoDb not provided in config file")
             valid_conn_params = False
         
         if not 'arango_pwd' in self.config['arangodb']:
-            print("Password for ArangoDb user not provided in config file")
+            logging.error("Password for ArangoDb user not provided in config file")
             valid_conn_params = False
         
         return valid_conn_params
@@ -118,13 +144,23 @@ class CommonArangoDB(object):
         if not wikidata_id.startswith("P") and not wikidata_id.startswith("Q"):
             return None
 
+        name = None
         try:
             if wikidata_id in self.naming_wikidata:
                 return self.naming_wikidata[wikidata_id]["value"]
         except:
-            return None
+            name = None
 
-        return None
+        if name == None:
+            # we have no corresponding stored name yet, we need to request Wikidata API to access and cache the name
+            entity_json = _get_entity_from_wikidata(wikidata_id, simplify=False)
+            if entity_json != None:
+                # get the canonical name
+                local_labels = entity_json["labels"]
+                if "en" in local_labels:
+                    name = local_labels["en"]["value"]
+                    self.add_naming_wikidata(wikidata_id, name)
+        return name
 
     def naming_wikidata_id(self, string):
         # canonical string -> wikidata id
@@ -147,7 +183,7 @@ class CommonArangoDB(object):
             if cursor.has_more():
                 raise Exception("error adding Wikidata ID mapping: the target string is not unique")
         except:
-            print("Invalid target string key:", string)
+            logging.warning("Invalid target string key: " + string)
 
         if wikidata_id in self.naming_wikidata:
             self.naming_wikidata[wikidata_id] = { "_key": wikidata_id, "value": string }
@@ -155,7 +191,7 @@ class CommonArangoDB(object):
             try:
                 self.naming_wikidata.insert({ "_key": wikidata_id, "value": string })
             except:
-                print("Invalid key:", string)    
+                logging.warning("Invalid key:", string)    
   
     def remove_naming_wikidata(self, wikidata_id):
         if not wikidata_id in self.naming_wikidata:
@@ -288,9 +324,10 @@ class CommonArangoDB(object):
 
                                     if not "references" in the_value:
                                         the_value["references"] = []
-                                    sources_to_add = the_value2["references"]
-                                    for source_to_add in sources_to_add:
-                                        add_ref_if_not_present(the_value["references"], source_to_add)
+                                    if "references" in the_value2:
+                                        sources_to_add = the_value2["references"]
+                                        for source_to_add in sources_to_add:
+                                            add_ref_if_not_present(the_value["references"], source_to_add)
                                     local_merge = True
                                     break
 
@@ -440,3 +477,34 @@ def _replace_element(jsonEntity, element, lang):
             en_lab[lang] = en_lab_val
             jsonEntity[element] = en_lab
     return jsonEntity
+
+def _get_entity_from_wikidata(entity_id, simplify=True):
+    wikidata_url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' + entity_id + '&format=json'
+
+    result_json = None
+    try:
+        response = requests.get(wikidata_url)
+        response.raise_for_status()
+        result_json = response.json()
+    except HTTPError as http_err:
+        logging.error('HTTP error occurred:', http_err)
+    except Exception as err:
+        logging.error('Error occurred:', err)
+
+    if result_json == None or not "entities" in result_json:
+        return None
+
+    if "labels" not in result_json:
+        result_json = result_json["entities"]
+        if "labels" not in result_json:
+            result_json = result_json[entity_id]
+            if "labels" not in result_json:
+                return None
+
+    if "id" not in result_json:
+        result_json["id"] = entity_id
+
+    if simplify:
+        result_json = simplify_entity(result_json)
+
+    return result_json

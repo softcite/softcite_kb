@@ -12,6 +12,8 @@ from arango import ArangoClient
 import re
 from import_common import process_r_author_field, clean_field, process_author_field, process_url_field, is_git_repo, process_boolean_field, process_maintainer_field
 from collections import OrderedDict
+import logging
+import logging.handlers
 
 base_url = "https://ropensci.r-universe.dev/"
 packages_path = "packages/"
@@ -126,7 +128,7 @@ class rOpenSci_harvester(Harvester):
             print("Fail to retrieve the list of maintainers", base_url + maintainer_path, "status", response.status_code)
 
         for maintainer in jsonResult:
-            print(json.dumps(maintainer))
+            #print(json.dumps(maintainer))
             maintainer_json = self.convert_maintainer_json(package_json)
             # insert json document
             self.maintainers.insert_document(maintainer_json)

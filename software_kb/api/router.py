@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import PlainTextResponse, RedirectResponse
 import time 
 from software_kb.kb.converter import convert_to_simple_format, convert_to_wikidata, convert_to_codemeta
+from enum import Enum
+import httpx
 
 router = APIRouter()
 
@@ -17,26 +19,48 @@ def is_alive_status():
 
 @router.get("/version", response_class=PlainTextResponse, tags=["generic"])
 def get_version():
-    api_settings = get_api_settings()
-    return api_settings.version
+    api_settings = kb.config['api']
+    return api_settings['version']
 
+# to redirect the static /api/frontend/ to  /api/frontend/index.html
+@router.get("/frontend", response_class=RedirectResponse, include_in_schema=False)
+def static_root():
+    return RedirectResponse(url="/frontend/index.html")
+
+# to redirect the static /api/frontend/ to  /api/frontend/index.html
+@router.get("/frontend/", response_class=RedirectResponse, include_in_schema=False)
+def static_root_():
+    return RedirectResponse(url="/frontend/index.html")
+
+# to redirect root favicon
+@router.get("/favicon.ico", response_class=RedirectResponse, include_in_schema=False)
+def static_root_():
+    return RedirectResponse(url="/frontend/data/images/favicon.ico")
 
 # generic access
+class Collection(str, Enum):
+    software = "software"
+    documents = "documents"
+    persons = "persons"
+    organizations = "organizations"
+    licenses = "licenses"
+
 
 # the value for "collection" of entitites are "software", "documents", "persons", "organizations" and "licenses"
 @router.get("/entities/{collection}/{identifier}", tags=["entities"])
-async def get_entity(collection: str, identifier: str, format: str = 'internal'):
+async def get_entity(collection: Collection, identifier: str, format: str = 'internal'):
+    the_collection = collection.value
     start_time = time.time()
-    if not kb.kb_graph.has_vertex(collection + '/' + identifier):
-        raise HTTPException(status_code=404, detail="Entity not found in collection "+collection)
+    if not kb.kb_graph.has_vertex(the_collection + '/' + identifier):
+        raise HTTPException(status_code=404, detail="Entity not found in collection "+the_collection)
     result = {}
     result['full_count'] = 1
 
-    record = kb.kb_graph.vertex(collection + '/' + identifier)
+    record = kb.kb_graph.vertex(the_collection + '/' + identifier)
 
     # we inject the information stored in relations actors, copyrights, funding (other relation-based information 
     # have their dedicated routes - for instance for software sub-routes citations and dependencies)
-    if collection == 'software' or collection == 'documents':
+    if the_collection == 'software' or the_collection == 'documents':
 
         # actors
         cursor = kb.db.aql.execute(
@@ -74,7 +98,7 @@ async def get_entity(collection: str, identifier: str, format: str = 'internal')
             'FOR fund IN funding \
                 FILTER fund._to == "software/' + identifier + '" \
                 RETURN fund')
-        '''
+        '''        
 
     # removing all the local index field
     key_to_remove = []
@@ -84,23 +108,22 @@ async def get_entity(collection: str, identifier: str, format: str = 'internal')
     for key in key_to_remove:
         del record[key]
 
-    result['record'] = _convert_target_format(record, format)
+    result['record'] = _convert_target_format(record, collection, format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 
-# the value for "collection" of relations are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
-'''
-@router.get("/relations/{collection}/{identifier}", tags=["relations"])
-async def get_relation(collection: str, identifier: str, format: str = 'internal'):
+# the value for "relations" are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
+@router.get("/relations/{relations}/{identifier}", tags=["relations"])
+async def get_relation(relations: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
-    if not kb.kb_graph.has_edge(collection + '/' + identifier):
-        raise HTTPException(status_code=404, detail="Relation not found in collection "+collection)
+    if not kb.kb_graph.has_edge(relations + '/' + identifier):
+        raise HTTPException(status_code=404, detail="Relation not found in "+relations)
     result = {}
     result['full_count'] = 1
-    result['record'] = _convert_target_format(kb.kb_graph.edge(collection + '/' + identifier), format)
+    result['record'] = _convert_target_format(kb.kb_graph.edge(relations + '/' + identifier), relations, format)
     result['runtime'] = round(time.time() - start_time, 3)
     return result
-'''
+
 
 '''
 for returning list of entities or relations, the following parameters are used in every endpoints:  
@@ -167,9 +190,11 @@ return all mentions for a software, mentions are ranked following the parameter
 async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
+    '''
     cursor = kb.db.aql.execute(
         'FOR doc IN software LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + " RETURN doc['_key']"
     )
+    '''
 
     if ranker == 'count':
         cursor = kb.db.aql.execute(
@@ -304,7 +329,7 @@ async def get_software_documents(identifier: str, page_rank: int = 0, page_size:
 return all the software entities, mentioned in a particular paper, ranked following the parameter 
 @ranker, default value count (return first the software with most mentions in the document)
 '''
-@router.get("/entities/document/{identifier}/software", tags=["relations"])
+@router.get("/entities/documents/{identifier}/software", tags=["relations"])
 async def get_document_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -356,10 +381,36 @@ async def get_documents(page_rank: int = 0, page_size: int = 10):
 
 
 '''
+return all persons ranked by their number of contributions to software
+'''
+@router.get("/entities/persons", tags=["entities"])
+async def get_persons(page_rank: int = 0, page_size: int = 10):
+    start_time = time.time()
+    cursor = kb.db.aql.execute(
+        'FOR actor IN actors \
+            COLLECT person_id = actor._from WITH COUNT INTO counter \
+            SORT counter DESC ' 
+            + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+            + ' RETURN {_id: person_id, contributions: counter}', full_count=True)
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+    return result
+
+
+'''
 Return all the software entities a person has contributed to.
 For each software, we indicate the person role. 
 '''
-@router.get("/entities/person/{identifier}/software", tags=["relations"])
+@router.get("/entities/persons/{identifier}/software", tags=["relations"])
 async def get_person_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -399,10 +450,40 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
     return result
 
 '''
+Return all the mentions of the software entities a person has contributed to.
+default ranking: return the mentions for the software containing most mentions first
+'''
+@router.get("/entities/persons/{identifier}/mentions", tags=["relations"])
+async def get_person_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
+    start_time = time.time()
+
+    cursor = kb.db.aql.execute(
+        'FOR actor IN actors '
+                    + ' FILTER actor._from == "persons/' + identifier + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
+                    + ' FOR mention IN citations '
+                    + '    FILTER mention._to == actor._to '
+                    + '    LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
+                    + '    RETURN DISTINCT mention._id ', full_count=True)
+
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+    return result
+
+
+'''
 return all the software entities an organization has been involved with via its members 
 @ranker, default value count (return first the software with most members of the organization have contributed to)
 '''
-@router.get("/entities/organization/{identifier}/software", tags=["relations"])
+@router.get("/entities/organizations/{identifier}/software", tags=["relations"])
 async def get_organization_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -489,15 +570,50 @@ async def get_software_citeas(identifier: str, n_best: int = 10):
     result['runtime'] = round(time.time() - start_time, 3)
     return result
 
-def _convert_target_format(result, format="simple"):
+
+'''
+Mapper to elasticsearch service 
+'''
+@router.post("/search/{path:path}", tags=["search"])
+async def search_request(path: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        es_host = kb.config["elasticsearch"]["host"]
+        if es_host == None or len(es_host.strip()) == 0:
+            es_host = "localhost"
+        es_port = kb.config["elasticsearch"]["port"]
+        if es_port != None:
+            es_port = ":" + str(es_port)
+        else:
+            es_port = ""
+        headers = { "content-type": "application/json" }
+        proxy = await client.post("http://"+es_host+es_port+"/"+path, headers=headers, json=await request.json())
+    response = Response(proxy.content, status_code=proxy.status_code, media_type="application/json; charset=UTF-8")
+    return response
+
+@router.get("/search/{path:path}", tags=["search"])
+async def search_request(path: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        es_host = kb.config["elasticsearch"]["host"]
+        if es_host == None or len(es_host.strip()) == 0:
+            es_host = "localhost"
+        es_port = kb.config["elasticsearch"]["port"]
+        if es_port != None:
+            es_port = ":" + str(es_port)
+        else:
+            es_port = ""
+        proxy = await client.get("http://"+es_host+es_port+"/"+path, params=request.query_params)
+    response = Response(proxy.content, status_code=proxy.status_code, media_type="application/json; charset=UTF-8")
+    return response
+
+def _convert_target_format(kb_object, collection, format="simple"):
     if format == 'internal':
-        return result
+        return kb_object
     else:
         if format == 'simple':
-            return convert_to_simple_format(kb, result)
+            return convert_to_simple_format(kb, kb_object)
         elif format == 'wikidata':
-            return convert_to_wikidata(kb, result)
+            return convert_to_wikidata(kb, kb_object)
         elif format == 'codemeta':
-            return convert_to_codemeta(kb, result)
+            return convert_to_codemeta(kb, kb_object, collection)
 
     

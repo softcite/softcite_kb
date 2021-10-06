@@ -116,7 +116,7 @@ To force the import to recreate the CRAN metadata database from scratch, use `--
 To import software mentions automatically extracted from scientific literature with https://github.com/ourresearch/software-mentions:
 
 ```
-python3 software_kb/importing/software_mention_import.py --config my_config.yaml data/mentions/
+python3 software_kb/importing/software_mention_import.py --config my_config.yaml data/mentions/ 
 ```
 
 The script expects as parameter the path to the repository where the software mention JSON objects are available (for example `data/mentions/`), obtained with `mongoexport`. `mongoexport` produces 3 JSON file (one JSON object per line) corresponding to 3 collections: `annotations`, `documents` and `references`. Usage of `mongoexport`is as follow:
@@ -126,6 +126,14 @@ The script expects as parameter the path to the repository where the software me
 ``` 
 
 The MongoDB JSON export can be compressed with gzip or not. 
+
+It is possible to add some labels to a particular software mention extraction imports. For instance, when importing the extraction for the CORD-19 collection, labels `cord-19` and `biomedical` can be added as follow:
+
+```
+python3 software_kb/importing/software_mention_import.py --config my_config.yaml data/mentions/ --tag cord-19 biomedical all
+```
+
+These labels can then be used to select sub-collections when querying the Knowledge base, creating multi-tenant knowledge bases where a tenant is a subcollection or a combination of subcollections/fields. 
 
 ### GitHub public data
 
@@ -138,7 +146,7 @@ GitHub public data come as an enrichment of a populated knowledge base. The foll
 Once imported, the following command will load the different imported data source into one common space called the "staging area". This area is based on a graph model and a common schema for all sources. Attributes corresponding to strong unambiguous identifiers are also merged in the process, which gives aggregated representations for the software and related entities (persons, license, institutions, ...). 
 
 ```bash
-python3 software_kb/merge/populate.py --config my_config.yaml
+python3 software_kb/merging/populate.py --config my_config.yaml
 ```
 
 The option `--reset` will re-init entirely the staging area. 
@@ -146,7 +154,7 @@ The option `--reset` will re-init entirely the staging area.
 Once the staging area has been populated, we can merge/conflate entities based on a matching and disambiguation process:
 
 ```bash
-python3 software_kb/merge/merge.py --config my_config.yaml
+python3 software_kb/merging/merge.py --config my_config.yaml
 ```
 
 The entities are actually not effectively merged at this step, we keep track of merging decisions in some additional dedicated collections. The process can be time-consuming as it involves soft matching and deduplication decisions for all the entities:
@@ -278,3 +286,17 @@ INFO:     Uvicorn running on http://localhost:8050 (Press CTRL+C to quit)
 ```
 
 The documentation of the service is available at `http(s)://*host*:*port*/docs`, e.g. `http://localhost:8050/docs` (based on Swagger), for ReDoc documentation style, use `http://localhost:8050/redoc`).
+
+## Acknowledgements
+
+We would like to acknowledge the support of the Alfred P. Sloan Foundation, Grant/Award Number: 2016-7209, and of the Gordon and Betty Moore Foundation, Grant/Award Number 8622. We acknowledge the Jetstream cloud environment part of XSEDE and the Texas Advanced Computing Center (TACC) at The University of Texas at Austin for providing computing resources that have contributed to the creation of the knowledge base.
+
+## License
+
+The Softcite Knowledge Base implementation is distributed under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0). 
+
+The documentation of the project is distributed under [CC-0](https://creativecommons.org/publicdomain/zero/1.0/) license and the possible annotated data under [CC-BY](https://creativecommons.org/licenses/by/4.0/) license.
+
+If you contribute to Softcite Knowledge Base project, you agree to share your contribution following these licenses. 
+
+Contact: Patrice Lopez (<patrice.lopez@science-miner.com>)
