@@ -22,7 +22,7 @@
 
         var showSoftwareMetadata = function(id) {
             // get json object for software
-            getJsonFile(options.kb_service_host + ":" + options.kb_service_port + "/entities/software/"+id).then(softwareJson => {
+            getJsonFile(options.kb_service_host + "/entities/software/"+id).then(softwareJson => {
                 record = softwareJson["record"];
 
                 metadata = '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
@@ -33,7 +33,7 @@
                 }
 
                 metadata += ' <a target="_blank" style="color:#999999;" href="' + 
-                            options.kb_service_host + ":" + options.kb_service_port + "/entities/software/" + id +'"><i class="fa fa-file"></i></a>'
+                            options.kb_service_host + "/entities/software/" + id +'"><i class="fa fa-file"></i></a>'
 
                 metadata += "</p>"
                 if (record["summary"]) {
@@ -57,7 +57,7 @@
               ';
 
         var displayDocument = function(rank, document_id) {
-            getJsonFile(options.kb_service_host + ":" + options.kb_service_port + "/entities/" + document_id).then(documentJson => {
+            getJsonFile(options.kb_service_host + "/entities/" + document_id).then(documentJson => {
                 var publication = documentJson["record"]
 
                 var localPublicationData = '<div class="row" style="margin-left: 20px; margin-right:20px; padding:10px;">' 
@@ -84,7 +84,7 @@
                     publication["metadata"]["pmcid"] + '">' + publication["metadata"]["pmcid"] + '</a>';
 
                 localPublicationData += ' <a target="_blank" style="color:#999999;" href="' + 
-                    options.kb_service_host + ":" + options.kb_service_port + "/entities/" + document_id +'"><i class="fa fa-file"></i></a>';
+                    options.kb_service_host + "/entities/" + document_id +'"><i class="fa fa-file"></i></a>';
 
                 localPublicationData += "</div>";
 
@@ -94,7 +94,7 @@
         }
 
         var displayResult = function(rank, mention_id) {
-            getJsonFile(options.kb_service_host + ":" + options.kb_service_port + "/relations/" + mention_id).then(mentionJson => {
+            getJsonFile(options.kb_service_host + "/relations/" + mention_id).then(mentionJson => {
                 var mention = mentionJson["record"]
 
                 var localMentionData = '<div class="row" id="document-' + rank + '"></div>';
@@ -166,7 +166,7 @@
 
                     localMentionData += '<p>' + snippet + 
                         ' <a target="_blank" style="color:#999999;" href="' + 
-                            options.kb_service_host + ":" + options.kb_service_port + "/relations/" + mention_id +'"><i class="fa fa-file"></i></a>'
+                            options.kb_service_host + "/relations/" + mention_id +'"><i class="fa fa-file"></i></a>'
                         + '</p>';
                 }
 
@@ -183,10 +183,10 @@
         var showSoftwareMentions = function(id) {
             // get json object for software
 
-            console.log(options.kb_service_host + ":" + options.kb_service_port + "/entities/software/"+id+
+            console.log(options.kb_service_host + "/entities/software/"+id+
                 "/mentions?page_rank=" + options.paging.rank + "&page_size=" + options.paging.size);
 
-            getJsonFile(options.kb_service_host + ":" + options.kb_service_port + "/entities/software/"+id+
+            getJsonFile(options.kb_service_host + "/entities/software/"+id+
                 "/mentions?page_rank=" + options.paging.rank + "&page_size=" + options.paging.size).then(mentionsJson => {
                 records = mentionsJson["records"];
 

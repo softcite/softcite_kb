@@ -146,8 +146,8 @@ var buildrecord = function (index, node) {
      */
     if (label && (label.length > 0)) {
         kb_url = options.kb_service_host
-        if (options.kb_service_port && options.kb_service_port > 0) 
-            kb_url += ':' + options.kb_service_port
+        //if (options.kb_service_port && options.kb_service_port > 0) 
+        //    kb_url += ':' + options.kb_service_port
 
         result += '<table style="width:100%;"><tr><td style="width:80%;">'
 
