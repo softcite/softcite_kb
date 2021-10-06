@@ -16,6 +16,8 @@ import argparse
 from tqdm import tqdm
 import requests
 from requests.exceptions import HTTPError
+import logging
+import logging.handlers
 
 class knowledgeBase(CommonArangoDB):
 

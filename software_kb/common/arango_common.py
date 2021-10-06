@@ -491,7 +491,7 @@ def _get_entity_from_wikidata(entity_id, simplify=True):
     except Exception as err:
         logging.error('Error occurred:', err)
 
-    if result_json == None:
+    if result_json == None or not "entities" in result_json:
         return None
 
     if "labels" not in result_json:

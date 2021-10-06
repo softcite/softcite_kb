@@ -8,10 +8,15 @@ import json
 import os
 from software_kb.kb.knowledge_base import knowledgeBase
 import copy
+import logging
+import logging.handlers
+
+# default logging settings
+logging.basicConfig(filename='client.log', filemode='w', level=logging.DEBUG)
 
 # manual ranking of source reliability - in the future it should be more case-specific with dedicated ML model(s)
 # exploiting the graph
-source_prioritization = ["Q2013", "rOpenSci", "CRAN", "Q364", "software-mentions", "grobid"]
+source_prioritization = ["Q2013", "Wikidata", "rOpenSci", "Q2086703", "CRAN", "Q364", "software-mentions", "Q62830627", "grobid"]
 
 def convert_to_simple_format(kb, entity):
     '''
@@ -273,8 +278,12 @@ def convert_to_codemeta(kb, jsonEntity, collection):
                     codemeta_json["author"] = []
                     for author in authors:
                         # get the person entry, normally available in the local KB
-                        record = kb.kb_graph.vertex('persons/' + author)
-                        if record:
+                        record = None
+                        try:
+                            record = kb.kb_graph.vertex(author)
+                        except:
+                            logging.warning('persons/' + author + " referenced in entity but not found in local KB")
+                        if record != None:
                             codemeta_json["author"].append(_person_to_codemeta(record, kb))
 
             elif wikidata_property == 'P767':
@@ -287,10 +296,13 @@ def convert_to_codemeta(kb, jsonEntity, collection):
                     codemeta_json["contributor"] = []
                     for contributor in contributors:
                         # get the person entry, normally available in the local KB
-                        record = kb.kb_graph.vertex('persons/' + contributor)
-                        if record:
+                        record = None
+                        try:
+                            record = kb.kb_graph.vertex(contributor)
+                        except:
+                            logging.warning('persons/' + contributor + " referenced in entity but not found in local KB")
+                        if record != None:
                             codemeta_json["contributor"].append(_person_to_codemeta(record, kb))
-
 
             elif wikidata_property == "P275":
                 # license (i.e. copyright license)   
@@ -409,7 +421,7 @@ def _person_to_codemeta(person, kb, full=False):
     if "P968" in person["claims"]:
         best_email = _select_best_value(person["claims"]["P968"], kb)
         ranking = _rank_values(person["claims"]["P968"], kb)
-        print(ranking)
+        #print(ranking)
         emails = []
         if best_email != None:
             emails.append(best_email)
