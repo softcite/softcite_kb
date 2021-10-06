@@ -329,7 +329,7 @@ async def get_software_documents(identifier: str, page_rank: int = 0, page_size:
 return all the software entities, mentioned in a particular paper, ranked following the parameter 
 @ranker, default value count (return first the software with most mentions in the document)
 '''
-@router.get("/entities/document/{identifier}/software", tags=["relations"])
+@router.get("/entities/documents/{identifier}/software", tags=["relations"])
 async def get_document_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -410,7 +410,7 @@ async def get_persons(page_rank: int = 0, page_size: int = 10):
 Return all the software entities a person has contributed to.
 For each software, we indicate the person role. 
 '''
-@router.get("/entities/person/{identifier}/software", tags=["relations"])
+@router.get("/entities/persons/{identifier}/software", tags=["relations"])
 async def get_person_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -453,13 +453,13 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
 Return all the mentions of the software entities a person has contributed to.
 default ranking: return the mentions for the software containing most mentions first
 '''
-@router.get("/entities/person/{identifier}/mentions", tags=["relations"])
+@router.get("/entities/persons/{identifier}/mentions", tags=["relations"])
 async def get_person_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
     cursor = kb.db.aql.execute(
         'FOR actor IN actors '
-                    + ' FILTER actor._from == "' + entity["_id"] + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
+                    + ' FILTER actor._from == "persons/' + identifier + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
                     + ' FOR mention IN citations '
                     + '    FILTER mention._to == actor._to '
                     + '    LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
@@ -483,7 +483,7 @@ async def get_person_mentions(identifier: str, page_rank: int = 0, page_size: in
 return all the software entities an organization has been involved with via its members 
 @ranker, default value count (return first the software with most members of the organization have contributed to)
 '''
-@router.get("/entities/organization/{identifier}/software", tags=["relations"])
+@router.get("/entities/organizations/{identifier}/software", tags=["relations"])
 async def get_organization_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 

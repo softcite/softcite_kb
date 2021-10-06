@@ -3,7 +3,10 @@
 
         var url_options = $.getUrlVars();
         var entity_id = url_options.id;
-        
+        var entity_type = url_options.type;
+        if (!entity_type)
+            entity_type = 'software'
+
         // async function
         async function fetchAsync(url) {
             // await response of fetch call
@@ -20,9 +23,9 @@
             return jsonData;
         };
 
-        var showSoftwareMetadata = function(id) {
+        var showEntityMetadata = function(id) {
             // get json object for software
-            getJsonFile(options.kb_service_host + "/entities/software/"+id).then(softwareJson => {
+            getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id).then(softwareJson => {
                 record = softwareJson["record"];
 
                 metadata = '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
@@ -33,7 +36,7 @@
                 }
 
                 metadata += ' <a target="_blank" style="color:#999999;" href="' + 
-                            options.kb_service_host + "/entities/software/" + id +'"><i class="fa fa-file"></i></a>'
+                            options.kb_service_host + "/entities/"+entity_type+"/" + id +'"><i class="fa fa-file"></i></a>'
 
                 metadata += "</p>"
                 if (record["summary"]) {
@@ -180,13 +183,13 @@
         }
 
         // get json object for software
-        var showSoftwareMentions = function(id) {
+        var showEntityMentions = function(id) {
             // get json object for software
 
-            console.log(options.kb_service_host + "/entities/software/"+id+
+            console.log(options.kb_service_host + "/entities/"+entity_type+"/"+id+
                 "/mentions?page_rank=" + options.paging.rank + "&page_size=" + options.paging.size);
 
-            getJsonFile(options.kb_service_host + "/entities/software/"+id+
+            getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id+
                 "/mentions?page_rank=" + options.paging.rank + "&page_size=" + options.paging.size).then(mentionsJson => {
                 records = mentionsJson["records"];
 
@@ -242,7 +245,7 @@
             if ($(this).html() != '..') {
                 options.paging.rank = options.paging.rank - 1;
                 options.paging.rank < 0 ? options.paging.rank = 0 : "";
-                showSoftwareMentions(entity_id);
+                showEntityMentions(entity_id);
             }
         };
 
@@ -251,15 +254,15 @@
             event.preventDefault();
             if ($(this).html() != '..') {
                 options.paging.rank = options.paging.rank + 1;
-                showSoftwareMentions(entity_id);
+                showEntityMentions(entity_id);
             }
         };
 
         options.paging.rank = 0;
         options.paging.size = 10;
 
-        showSoftwareMetadata(entity_id);
-        showSoftwareMentions(entity_id);
+        showEntityMetadata(entity_id);
+        showEntityMentions(entity_id);
     }
 
 })(jQuery);

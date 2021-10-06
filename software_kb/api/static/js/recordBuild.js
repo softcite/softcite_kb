@@ -159,7 +159,17 @@ var buildrecord = function (index, node) {
         result += '</a>'
     
         //result += '</td><td style="width:20%;"><a target="_blank" href="' + kb_url  + '/entities/' + type +'/' + id + '/mentions">'
-        result += '</td><td style="width:20%;"><a target="_blank" href="mentions.html?id=' + id + '">'
+        result += '</td><td style="width:20%;"><a target="_blank" href="mentions.html?id=' + id;
+
+        if ( $('.facetview_filterselected').attr('href') == 'persons') {
+            result += '&type=' + 'persons' + '">'
+        } else if ( $('.facetview_filterselected').attr('href') == 'organizations') {
+            result += '&type=' + 'organizations' + '">'
+        }  else if ( $('.facetview_filterselected').attr('href') == 'licenses') {
+            result += '&type=' + 'licenses' + '">'
+        } else{
+            result += '&type=' + 'software' + '">'
+        }
         result += jsonObject[record_metadata.number_mentions] + ' mentions';
         result += '</td></tr></table>';
     }
