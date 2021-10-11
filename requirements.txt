@@ -10,3 +10,4 @@ pyfiglet
 elasticsearch>=7.0.0,<8.0.0
 aiofiles
 httpx
+urllib3<1.25,>=1.21.1

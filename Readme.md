@@ -27,7 +27,7 @@ cd softcite_kb
 It is strongly advised to setup first a virtual environment to avoid falling into one of these gloomy python dependency marshlands - you can adjust the version of Python to be used, but be sure to be 3.6 or higher:
 
 ```sh
-virtualenv --system-site-packages -p python3.6 env
+virtualenv --system-site-packages -p python3.8 env
 source env/bin/activate
 ```
 

@@ -60,7 +60,8 @@ def get_app(server_config) -> FastAPI:
         version=server_config['version'],
         openapi_tags=tags_metadata)
     set_kb(kb)
-    server.include_router(router, prefix=server_config['api_route'])
+    #server.include_router(router, prefix=server_config['api_route'])
+    server.include_router(router)
 
     origins = ["*"]
 
