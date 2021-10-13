@@ -10,8 +10,13 @@ import logging.handlers
 logging.basicConfig(filename='merge.log', filemode='w', level=logging.DEBUG)
 
 def merge(stagingArea, reset=False):
+    merge_documents(stagingArea, reset)
+    merge_organizations(stagingArea, reset)
+    merge_licenses(stagingArea, reset)
+    merge_persons(stagingArea, reset)
+    merge_software(stagingArea, reset)
 
-    # document collection 
+def merge_documents(stagingArea, reset=False):
     print("\ndocument merging")
     total_results = stagingArea.documents.count()
     page_size = 1000
@@ -65,10 +70,11 @@ def merge(stagingArea, reset=False):
                             if success:
                                 merging = True
                                 break
-    
-    # organization collection 
+
+def merge_organizations(stagingArea, reset=False):
     print("\norganization merging")
     total_results = stagingArea.organizations.count()
+    page_size = 1000
     nb_pages = (total_results // page_size)+1
 
     print("entries:", total_results, ", mb. steps:", nb_pages)
@@ -87,9 +93,10 @@ def merge(stagingArea, reset=False):
             merging = False
 
 
-    # license collection
+def merge_licenses(stagingArea, reset=False):
     print("\nlicense merging")
     total_results = stagingArea.licenses.count()
+    page_size = 1000
     nb_pages = (total_results // page_size)+1
 
     print("entries:", total_results, ", nb. steps:", nb_pages)
@@ -105,11 +112,12 @@ def merge(stagingArea, reset=False):
             # should be matched to entity values
 
             merging = False
-        
 
-    # person collection
+        
+def merge_persons(stagingArea, reset=False):
     print("\nperson merging")
     total_results = stagingArea.persons.count()
+    page_size = 1000
     nb_pages = (total_results // page_size)+1
 
     print("entries:", total_results, ", nb. steps:", nb_pages)
@@ -144,9 +152,10 @@ def merge(stagingArea, reset=False):
             # look-up based on 'index_key_name' with a stronger post-validation
             #if not merging:
 
-    # software collection
+def merge_software(stagingArea, reset=False):
     print("\nsoftware merging")
     total_results = stagingArea.software.count()
+    page_size = 1000
     nb_pages = (total_results // page_size)+1
 
     print("entries:", total_results, ", nb. steps:", nb_pages)
@@ -179,10 +188,25 @@ def merge(stagingArea, reset=False):
 
             software_name_variant = _capitalized_variant(software_name)
 
-            aql_query = 'FOR doc IN software FILTER doc.labels == "' + software_name + '" OR "' + software_name + '" IN doc.aliases '
-            if software_name_variant != None:
-                software_name_variant = software_name_variant.replace('"', '')
-                aql_query += 'OR doc.labels == "' + software_name_variant + '" OR "' + software_name_variant + '" IN doc.aliases '
+            # check if software is a R package, programming language (P277) is then R (Q206904) 
+            is_R = False
+            if "claims" in software and "P277" in software["claims"]:
+                for valueBlock in software["claims"]["P277"]:
+                    if "value" in valueBlock and valueBlock["value"] == "Q206904":
+                        is_R = True
+                        break
+
+            if is_R:
+                # avoid using aliases because of the frequent port
+                aql_query = 'FOR doc IN software FILTER doc.labels == "' + software_name + ' '
+                if software_name_variant != None:
+                    software_name_variant = software_name_variant.replace('"', '')
+                    aql_query += 'OR doc.labels == "' + software_name_variant + ' '
+            else:    
+                aql_query = 'FOR doc IN software FILTER doc.labels == "' + software_name + '" OR "' + software_name + '" IN doc.aliases '
+                if software_name_variant != None:
+                    software_name_variant = software_name_variant.replace('"', '')
+                    aql_query += 'OR doc.labels == "' + software_name_variant + '" OR "' + software_name_variant + '" IN doc.aliases '
             aql_query += ' RETURN doc'
 
             try: 
@@ -192,7 +216,9 @@ def merge(stagingArea, reset=False):
                     if software_match['_key'] == software['_key']:
                         continue
 
-                    # TBD: a post validation here
+                    if not post_validate_merging_software(software, software_match):
+                        # post-validation failed
+                        continue                    
 
                     # update/store merging decision list 
                     #print("register...", software_name, software_match['labels'])
@@ -228,6 +254,37 @@ def merge(stagingArea, reset=False):
                                 break
             except:
                 logging.exception("Failed merging for software document")
+
+def post_validate_merging_software(software, candidate):
+    result = False
+    target_languages = []
+    candidate_languages = []
+    '''
+    print("--------------------------------------------")
+    print(software)
+    print(candidate)
+    print("--------------------------------------------")
+    '''
+    # if programming languages are defined, they have to match
+    if "P277" in software["claims"]:
+        for the_language in software["claims"]["P277"]:
+            if "value" in the_language and not the_language["value"] in target_languages:
+                target_languages.append(the_language["value"])
+
+    if "P277" in candidate["claims"]:
+        for the_language in candidate["claims"]["P277"]:
+            if "value" in the_language and not the_language["value"] in candidate_languages:
+                candidate_languages.append(the_language["value"])
+
+    if len(target_languages) > 0 and len(candidate_languages) > 0:
+        for language in target_languages:
+            if language in candidate_languages:
+                result = store_true
+    
+    if len(target_languages) == 0 or len(candidate_languages) == 0:
+        result = True
+    # note: otherwise we could also check local context for language indication, e.g. "R package" (Q206904)
+    return result
 
 def _capitalized_variant(term):
     '''
