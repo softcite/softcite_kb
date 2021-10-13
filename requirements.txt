@@ -2,7 +2,7 @@ python-arango==7.1.0
 requests
 beautifulsoup4
 pybtex
-fastapi==0.68.0
+fastapi==0.68.2
 uvicorn
 tqdm
 lxml
@@ -10,4 +10,4 @@ pyfiglet
 elasticsearch>=7.0.0,<8.0.0
 aiofiles
 httpx
-urllib3<1.25,>=1.21.1
+urllib3>=1.21.1
