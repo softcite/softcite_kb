@@ -53,8 +53,8 @@ var defaults = {
     predefined_filters: {}, // predefined filters to apply to all searches
     
     paging: {
-        from: 0,    // where to start the results from
-        size: 12    // how many results to get
+        from: 0,    // where to start the results from (default)
+        size: 12    // how many results to get (default)
     },
     
     mode_query: "simple", // query input, possible values: simple, complex, nl, semantic, analytics

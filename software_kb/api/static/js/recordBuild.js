@@ -15,12 +15,9 @@ var buildrecord = function (index, node) {
     var id = options.data['ids'][index];
 
     result += '<div class="col-md-1" style="padding-right:5px;">';
-    // add image where available
-    //var repositoryDocId = jsonObject[record_metadata.repositoryDocId];
-    //var imgToDisplay = []
 
     if (options.display_images) {
-            
+        // add image where available
         if (type === "persons") {
             result += '<img class="img-thumbnail img-responsive" style="float:left; height:50px; max-width:50px;" src="' +
                     'data/images/person.png' + '" />';
@@ -34,7 +31,7 @@ var buildrecord = function (index, node) {
             }
 
             if (language) {
-                language = language.toLowerCase()
+                language = language.toLowerCase();
                 if (language === "c#") 
                     language = "c-shift";
                 else if (language === "c++" || language.indexOf("c++") != -1) 
@@ -44,17 +41,17 @@ var buildrecord = function (index, node) {
             } else {
                 language = "software";
             }
-            // try to avoid resizing when possible - useless in this case, and fix height 
+            // try to avoid resizing when possible, and to fix height 
             // to avoid all records moving while images are downloaded
             result += '<img class="img-thumbnail img-responsive" style="float:left; height:50px; max-width:50px;" src="' +
                     'data/images/' + language + '.png' + '" />';
-        }
-        
+        } else if (type === "licenses") {
+            result += '<img class="img-thumbnail img-responsive" style="float:left; height:50px; max-width:50px;" src="' +
+                    'data/images/licenses.png' + '" />';
+        } 
     }
     result += '</div>';
-
     result += '<div class="col-md-10" class="height:100%;" id="myCollapsible_' + index + '" style="white-space:normal;left:-10px;">';
-
 
     // date
     var date;

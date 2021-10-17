@@ -13,8 +13,22 @@
         // facetview options are declared as a function so they are available externally
         // (see bottom of this file)
         var url_options = $.getUrlVars();
-        $.fn.facetview.options = $.extend(options, url_options);
-        var options = $.fn.facetview.options;
+
+        if (!$.isEmptyObject(url_options)) {
+            //$.fn.facetview.options = $.extend(options, url_options);
+            options['url_options'] = url_options;
+            options['use_url_parameters'] = true;
+        } else {
+            options['use_url_parameters'] = false;
+        }
+
+        // how the above options are passed via url: 
+        // - filters: direct filter name as parameter and filter values separated by a comma, e.g.:
+        //   bla-bla:8080/index.html?Author=Romary&Date=2020
+        // - query: introduced via usual q parameter, value is prefixed by the search field and modality (should, must, must_not), e.g:
+        //   bla-bla:8080/index.html?q=all:must:romar*
+        // - pages: parameters paging.size (default 10) and paging.from (default 0)
+        //   bla-bla:8080/index.html?Author=Romary&Date=2020&paging.size=10&paging.from=30 
 
         var mode = "";
         var fillDefaultColor = '#BC0E0E';
@@ -27,7 +41,7 @@
         // show the filter values
         var showfiltervals = function (event) {
             event.preventDefault();
-            console.log('showfiltervals');
+            //console.log('showfiltervals');
             if ($(this).hasClass('facetview_open')) {
                 $(this).children('i').replaceWith('<i class="pull-right style="top:3px;" glyphicon glyphicon-plus"></i>');
                 $(this).removeClass('facetview_open');
@@ -80,13 +94,11 @@
         // trigger a search when a filter choice is clicked
         var clickfilterchoice = function (event) {
             event.preventDefault();
-            console.log('clickfilterchoice');
+            //console.log('clickfilterchoice');
             if ($(this).html().trim().length === 0) {
-console.log('checkbox');
 
                 if (!$(this).is(':checked')) {
                     // a checkbox is unchecked -> we remove the filter
-console.log('checked');
                     $('.facetview_filterselected[href="' + $(this).attr("href") + '"]').each(function () {
                         $(this).remove();
                     });
@@ -131,7 +143,6 @@ console.log('checked');
         // clear a filter when clear button is pressed, and re-do the search
         var clearfilter = function (event) {
             event.preventDefault();
-//console.log('clearfilter');
             // we need to uncheck a checkbox in case the filter has been triggered by checking a checkbox
             // href attribute is similar and can be used to select the checkbox
             var hrefValue = $(this).attr("href");
@@ -191,7 +202,6 @@ console.log('checked');
         };
 
         // insert a facet range once selected
-        // Work in progress
         var dofacetrange = function (event) {
             event.preventDefault();
             console.log('dofacetrange');
@@ -302,7 +312,6 @@ console.log('checked');
 
             var date_from = new Date(year_from, month_from, day_from, 0, 0, 0, 0);
             var date_to = new Date(year_to, month_to, day_to, 0, 0, 0, 0);
-
 
             var rel = $(this).attr('rel');
             var newobj = '<a class="facetview_filterselected facetview_facetrange facetview_clear ' +
@@ -1571,9 +1580,6 @@ console.log('checked');
                     $('.facetview_filtershow[rel=' + options.aggs[each]['display'] + ']').trigger('click');
                 }
             }
-
-
-
         };
 
         // ===============================================
@@ -1642,7 +1648,6 @@ console.log('checked');
 
         // execute a search
         var dosearch = function () {
-
             // make the search query
             if (options.search_index == "elasticsearch") {
                 $.ajax({
@@ -1676,43 +1681,117 @@ console.log('checked');
             }
         };
 
+        var set_filter_from_value = function(field, key, value) {
+            var newobj = '<a class="facetview_filterselected facetview_clear ' +
+                    'btn btn-warning" rel="' + field +
+                    '" alt="remove" title="remove"' +
+                    ' href="' + value + '">';
+            newobj += key + ":" + value;
+            newobj += ' <i class="glyphicon glyphicon-remove"></i></a>';
+            $('#facetview_selectedfilters').append(newobj);
+            $('.facetview_filterselected').unbind('click', clearfilter);
+            $('.facetview_filterselected').bind('click', clearfilter);
+        }
+
+        var set_search_from_value = function(field, mode, value, rank) {
+            // note: rank starts at 1, it gives the full search field block to be considered
+            if (rank != 1) {
+                // we check if the field block exists
+                if (!$('#facetview_searchbar'+rank)) {
+                    // create it?
+                    // TBD
+                }
+            }
+
+            // the block always exists at this stage
+            if (field != null) {
+                selected_field = field
+                if (field === 'all_text' || field === 'all_texts' || field === 'all' || field === 'all_fields')
+                    selected_field = 'all fields';
+                $("#selected-tei-field"+rank).html(selected_field + ' <span class="caret"></span>');
+                $("#selected-tei-field"+rank).val(selected_field);
+            } else {
+                // set to default
+                $("#selected-tei-field"+rank).html('all fields' + ' <span class="caret"></span>');
+                $("#selected-tei-field"+rank).val('all fields');
+            }
+            if (mode != null) {
+                selected_mode = mode
+                if (mode === 'must not')
+                    selected_mode = 'must_not';
+                $("#selected-bool-field"+rank).html(selected_mode + ' <span class="caret"></span>');
+                $("#selected-bool-field"+rank).val(selected_mode);
+            } else {
+                // set to default
+                $("#selected-bool-field"+rank).html("must" + ' <span class="caret"></span>');
+                $("#selected-bool-field"+rank).val("must");
+            }
+
+            document.getElementById('facetview_freetext'+rank).value = value; 
+        }
+
         // what to do when ready to go
         var whenready = function () {
-            //$("#facetview_presentation").remove();
-            // append the facetview object to this object
-            
-            /*var facetview_howmany = $("#facetview_howmany").text();
-            facetview_howmany = facetview_howmany.replace(/{{HOW_MANY}}/gi, options.paging.size);
-            $("#facetview_howmany").text(facetview_howmany);
-            //$(obj).append(thefacetview);
-            // setup search option triggers
-            $('#facetview_partial_match').bind('click', fixmatch);
-            $('#facetview_exact_match').bind('click', fixmatch);
-            $('#facetview_fuzzy_match').bind('click', fixmatch);
-            $('#facetview_match_any').bind('click', fixmatch);
-            $('#facetview_match_all').bind('click', fixmatch);
-            $('#facetview_howmany').bind('click', howmany);*/
-
 
             // resize the searchbar
             //var thewidth = $('#facetview_searchbar').parent().width();
             //$('#facetview_searchbar').css('width', thewidth / 2 + 70 + 'px'); // -50
             //$('#facetview_freetext').css('width', thewidth / 2 + 32 + 'px'); // -88
 
-
-            //$('#harvest').hide();
-
             // check paging info is available
             !options.paging.size ? options.paging.size = 10 : "";
             !options.paging.from ? options.paging.from = 0 : "";
 
-            // set any default search values into the search bar
-//            $('#facetview_freetext').val() == "" && options.q != "" ? $('#facetview_freetext').val(options.q) : ""
-
             // append the filters to the facetview object
             buildfilters();
 
-            //obj = $(this);
+            // set any filter defined in the url and copied to the options object
+            if (options.use_url_parameters && options.url_options) {
+                for (var key in options.url_options) {
+                    if (key === "paging.size" && !isNaN(parseInt(options.url_options[key]))) {
+                        options.paging.size = parseInt(options.url_options[key]);
+                    } else if (key === "paging.from" && !isNaN(parseInt(options.url_options[key]))) {
+                        options.paging.from = parseInt(options.url_options[key]);
+                    } else if (key === "packageR") {
+                        // this is a parameter for direct access to a R package, the name of the package being
+                        // unambiguous via CRAN
+                        var local_value = options.url_options[key];
+                        set_filter_from_value('programming_language_class', 'Languages', 'R');
+                        set_filter_from_value('collection', 'Entity', 'software');
+                        set_search_from_value(null, null, local_value, 1);
+                    } else if (key !== options['query_parameter']) {
+                        // we have normally a filter facet value, check that it exists
+                        for (var agg_pos in options.aggs) {
+                            agg = options.aggs[agg_pos]
+                            if (agg['display'] === key) {
+                                // we have a matching filter facet
+                                const local_value = options.url_options[key];
+                                set_filter_from_value(agg['field'], key, local_value);
+                                break;
+                            }
+                        }
+                    } else if (key === options['query_parameter']) {
+                        // this is a search query parameter, the format is: field:mode:terms
+                        // where field is the search field, mode is one of {must, must_not, should}
+                        // and terms is the lucene kind of search query
+                        const local_full_value = options.url_options[key];
+                        if (local_full_value.trim().length > 0) {
+                            var pieces = local_full_value.split(":");
+                            const local_value = pieces[pieces.length-1];
+                            var local_mode = null;
+                            if (pieces.length>1)
+                                local_mode = pieces[pieces.length-2];
+                            var local_field = null;
+                            if (pieces.length>2)
+                                local_field = pieces[pieces.length-3];
+                            set_search_from_value(local_field, local_mode, local_value, 1);
+                        }
+                    } else {
+                        console.log("url query parameter unknown: " + key);
+                    }
+                }
+            }
+
             if (options.use_delay) {
                 $('#facetview_freetext1').bindWithDelay('keyup', dosearch, options.freetext_submit_delay);
                 $('#facetview_freetext1').bind('keyup', checkDisambButton);
@@ -1720,12 +1799,13 @@ console.log('checked');
 
             // trigger the search once on load, to get all results
             //if (options.use_delay)
-                dosearch();
+            dosearch();
         };
 
         $('#disambiguation_panel').hide();
 
-        var searchbar = '<div id="facetview_searchbar{{NUMBER}}" style="width:100%;padding-right:0px;" class="row input-group clonedDiv">\
+        var generateSearchbar = function(withDisambiguation) {
+            var searchbar = '<div id="facetview_searchbar{{NUMBER}}" style="width:100%;padding-right:0px;" class="row input-group clonedDiv">\
 <div class="btn-group">\
 <button id="selected-tei-field{{NUMBER}}" class=" btn btn-default dropdown-toggle" style="width:200px" data-toggle="dropdown" >\
 all fields <span class="caret"></span>\
@@ -1767,17 +1847,20 @@ must <span class="caret"></span>\
 <li><a target="_blank" href="http://lucene.apache.org/java/2_9_1/queryparsersyntax.html">query syntax doc.</a></li>\
 <li class="divider"></li>\
 <li><a id="facetview_howmany" href="#">results per page ({{HOW_MANY}})</a></li>\
-</ul>\
-<button type="button" id="disambiguate{{NUMBER}}" class="btn btn-default" disabled="true">Disambiguate</button>\
-</div>\
-<div class="btn-group" style="margin-left:20px;">\
+</ul>';
+
+            if (withDisambiguation) {
+                searchbar += '<button type="button" id="disambiguate{{NUMBER}}" class="btn btn-default" disabled="true">Disambiguate</button></div>';
+            }
+            searchbar += '<div class="btn-group" style="margin-left:20px;">\
 <button class="btn btn-default" id="facetview_fieldbuttons{{NUMBER}}" href="" type="button"><i class="glyphicon glyphicon-plus" style="vertical-align:middle;margin-right:0px;margin-bottom:2px;"></i></button>\
 </div>\
-<div class="btn-group">\
+<div class="btn-group" style="margin-left:20px;">\
 <button class="btn btn-default" id="close-searchbar{{NUMBER}}" href="" type="button"><i class="glyphicon glyphicon-minus" style="vertical-align:middle;margin-right:0px;margin-bottom:4px;"></i></button>\
 </div>\
 </div>';
-
+            return searchbar;
+        }
 
         var keyPress = function (e) {
 
@@ -1790,8 +1873,7 @@ must <span class="caret"></span>\
             else
                 deactivateDisambButton(thenum);
             //if (e.keyCode == 13 && (options.q || $("#facetview_selectedfilters").children().length > 0)) {
-            if (e.keyCode == 13) 
-            {
+            if (e.keyCode == 13)  {
 //                    if (url_options.mode)
 //                        window.location.href = window.location.href.replace(/[\&#].*|$/, "&q=" + options.q);
 //                    else
@@ -1826,6 +1908,8 @@ must <span class="caret"></span>\
                     });
                 } else {*/
                     //whenready();
+
+                // normally the filters on the left are aleady built, but to be sure to cover startup we add a check here
                 if ($('#facetview_filters').children().length == 0)
                     whenready();
                 else
@@ -1838,7 +1922,7 @@ must <span class="caret"></span>\
         // ===============================================
         // now create the plugin on the page
         return $(document).ready(function (e) {
-
+            searchbar = generateSearchbar(false);
             $("#facetview_searchbars").append(searchbar.replace(/{{NUMBER}}/gi, "1"));
             $('#close-searchbar1').hide();
             if (!options.use_delay)
@@ -1880,26 +1964,27 @@ must <span class="caret"></span>\
                 });
                 cloneIndex++;
             });
-            
 
-            $(".tei-fields li a").click(function () {
+            $(".tei-fields li a").click(function (event) {
+                event.preventDefault();
                 var selText = $(this).text();
                 $(this).parents('.btn-group').find('.dropdown-toggle').html(selText + ' <span class="caret"></span>');
             });
-            $(".lang-fields li a").click(function () {
+            $(".lang-fields li a").click(function (event) {
+                event.preventDefault();
                 var selText = $(this).text();
                 $(this).parents('.btn-group').find('.dropdown-toggle').html(selText + ' <span class="caret"></span>');
             });
-            $(".bool-fields li a").click(function () {
+            $(".bool-fields li a").click(function (event) {
+                event.preventDefault();
                 var selText = $(this).text();
                 $(this).parents('.btn-group').find('.dropdown-toggle').html(selText + ' <span class="caret"></span>');
             });
-
 
             var facetview_howmany = $("#facetview_howmany").text();
             facetview_howmany = facetview_howmany.replace(/{{HOW_MANY}}/gi, options.paging.size);
             $("#facetview_howmany").text(facetview_howmany);
-            //$(obj).append(thefacetview);
+
             // setup search option triggers
             $('#facetview_partial_match').bind('click', fixmatch);
             $('#facetview_exact_match').bind('click', fixmatch);
@@ -1920,9 +2005,8 @@ must <span class="caret"></span>\
 //                }
 //            });
 
-            if (options.use_delay)
+            if (options.use_delay || options.use_url_parameters)
                 whenready();
-
         });
 
     };
@@ -1932,5 +2016,3 @@ must <span class="caret"></span>\
     $.fn.facetview.options = {};
 
 })(jQuery);
-
-

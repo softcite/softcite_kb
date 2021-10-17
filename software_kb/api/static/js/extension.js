@@ -7,7 +7,7 @@ jQuery.extend({
             hash = hashes[i].split('=');
             if (hash.length > 1) {
                 if (hash[0] == "q")
-                    params[hash[0]] = hash[1];
+                    params[hash[0]] = decodeURI(hash[1]);
                 else {
                     if (hash[1].replace(/%22/gi, "")[0] == "[" || hash[1].replace(/%22/gi, "")[0] == "{") {
                         hash[1] = hash[1].replace(/^%22/, "").replace(/%22$/, "");
@@ -17,7 +17,6 @@ jQuery.extend({
                     }
                     params[hash[0]] = newval;
                 }
-               
             }
         }
         return params;
