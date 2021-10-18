@@ -1,4 +1,6 @@
 // add extension to jQuery with a function to get URL parameters
+// if a URL key parameter is repeated, we introduce an array of values for this parameter, 
+// otherwise the value is an atomic string.
 jQuery.extend({
     getUrlVars: function () {
         var params = new Object;
@@ -6,8 +8,20 @@ jQuery.extend({
         for (var i = 0; i < hashes.length; i++) {
             hash = hashes[i].split('=');
             if (hash.length > 1) {
-                if (hash[0] == "q")
-                    params[hash[0]] = decodeURI(hash[1]);
+                if (hash[0] == "q") {
+                    if (hash[0] in params) {
+                        if (typeof params[hash[0]] === 'string') {
+                            const theValue = params[hash[0]];
+                            params[hash[0]] = new Array(2);
+                            params[hash[0]].push(theValue);
+                            params[hash[0]].push(decodeURI(hash[1]));
+                        } else {
+                            //it's already an array
+                            params[hash[0]].push(decodeURI(hash[1]));
+                        }
+                    } else
+                        params[hash[0]] = decodeURI(hash[1]);
+                }
                 else {
                     if (hash[1].replace(/%22/gi, "")[0] == "[" || hash[1].replace(/%22/gi, "")[0] == "{") {
                         hash[1] = hash[1].replace(/^%22/, "").replace(/%22$/, "");
@@ -15,7 +29,18 @@ jQuery.extend({
                     } else {
                         var newval = unescape(hash[1].replace(/%22/gi, ""));
                     }
-                    params[hash[0]] = newval;
+                    if (hash[0] in params) {
+                        if (typeof params[hash[0]] === 'string') {
+                            const theValue = params[hash[0]];
+                            params[hash[0]] = new Array(2);
+                            params[hash[0]].push(theValue);
+                            params[hash[0]].push(newval);
+                        } else {
+                            //it's already an array
+                            params[hash[0]].push(newval);
+                        }
+                    } else
+                        params[hash[0]] = newval;
                 }
             }
         }
@@ -28,7 +53,6 @@ jQuery.extend({
 
 // first define the bind with delay function from (saves loading it separately) 
 // https://github.com/bgrins/bindWithDelay/blob/master/bindWithDelay.js
-
 (function ($) {
     $.fn.bindWithDelay = function (type, data, fn, timeout, throttle) {
         var wait = null;

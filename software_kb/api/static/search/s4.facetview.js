@@ -593,10 +593,14 @@
                         <button style="text-align:left; min-width:20%;margin-top:10px;" class="btn btn-default" id="new_facet" href="" type="button" >\
                             <i class="glyphicon glyphicon-plus"></i> add new facet \
                         </button>\
+                        <button style="text-align:right; min-width:20%;margin-top:10px;" class="btn btn-default" id="state_url" href="" type="button" >\
+                            <i class="glyphicon glyphicon-copy"></i> copy as url \
+                        </button>\
                         </div>\
 			';
             $('#facetview_filters').append(temp_intro);
             $('#new_facet').bind('click', add_facet);
+            $('#state_url').bind('click', copy_state_url);
         };
 
         // ===============================================
@@ -1681,7 +1685,7 @@
             }
         };
 
-        var set_filter_from_value = function(field, key, value) {
+        var add_filter_from_value = function(field, key, value) {
             var newobj = '<a class="facetview_filterselected facetview_clear ' +
                     'btn btn-warning" rel="' + field +
                     '" alt="remove" title="remove"' +
@@ -1697,9 +1701,11 @@
             // note: rank starts at 1, it gives the full search field block to be considered
             if (rank != 1) {
                 // we check if the field block exists
-                if (!$('#facetview_searchbar'+rank)) {
-                    // create it?
-                    // TBD
+                if ($('#facetview_searchbar'+rank).length == 0) {
+                    // create it
+                    for(var n=2; n<=rank; n++) {
+                        $("#facetview_fieldbuttons1").trigger( "click" );
+                    }
                 }
             }
 
@@ -1728,6 +1734,12 @@
             }
 
             document.getElementById('facetview_freetext'+rank).value = value; 
+        }
+
+        var copy_state_url= function() {
+            var current_state_url = build_url_from_app_state();
+            navigator.clipboard.writeText(current_state_url);
+            alert("Copied to clipboard: \n" + current_state_url);
         }
 
         var build_url_from_app_state = function() {
@@ -1759,27 +1771,30 @@
                 hasFacetComponent = true;
             }
 
-            // get current search query, if any
-            var searchQueryComponent = ""
-            if ($("#selected-tei-field1")) {
-                var fieldContent = $("#selected-tei-field1").val().trim();
-                if (fieldContent.length>0 && fieldContent !== 'all fields')
-                    searchQueryComponent += encodeURIComponent(fieldContent) + ":";
-            }
-            if ($("#selected-bool-field1")) {
-                var modeContent = $("#selected-bool-field1").val().trim();
-                if (modeContent.length>0 && modeContent !== 'must')
-                    searchQueryComponent += encodeURIComponent(modeContent) + ":";
-            }
-            if ($("#facetview_freetext1")) {
-                const searchContent = $("#facetview_freetext1").val().trim();
-                if (searchContent.length>0) {
-                    if (hasFacetComponent)
-                        url += "&";
-                    url += "q=" + searchQueryComponent + encodeURIComponent(searchContent);
+            // get current search query, if any - we check up to 5 search blocks
+            for (var n=1; n<5; n++) {
+                if ($("#selected-tei-field"+n).length == 0) 
+                    break
+                var searchQueryComponent = ""
+                if ($("#selected-tei-field"+n)) {
+                    var fieldContent = $("#selected-tei-field"+n).val().trim();
+                    if (fieldContent.length>0 && fieldContent !== 'all fields')
+                        searchQueryComponent += encodeURIComponent(fieldContent) + ":";
+                }
+                if ($("#selected-bool-field"+n)) {
+                    var modeContent = $("#selected-bool-field"+n).val().trim();
+                    if (modeContent.length>0 && modeContent !== 'must')
+                        searchQueryComponent += encodeURIComponent(modeContent) + ":";
+                }
+                if ($("#facetview_freetext"+n)) {
+                    const searchContent = $("#facetview_freetext"+n).val().trim();
+                    if (searchContent.length>0) {
+                        if (hasFacetComponent)
+                            url += "&";
+                        url += "q=" + searchQueryComponent + encodeURIComponent(searchContent);
+                    }
                 }
             }
-
             return url;
         }
 
@@ -1809,17 +1824,25 @@
                         // this is a parameter for direct access to a R package, the name of the package being
                         // unambiguous via CRAN
                         var local_value = options.url_options[key];
-                        set_filter_from_value('programming_language_class', 'Languages', 'R');
-                        set_filter_from_value('collection', 'Entity', 'software');
+                        add_filter_from_value('programming_language_class', 'Languages', 'R');
+                        add_filter_from_value('collection', 'Entity', 'software');
                         set_search_from_value(null, null, local_value, 1);
                     } else if (key !== options['query_parameter']) {
-                        // we have normally a filter facet value, check that it exists
+                        // we have normally a filter facet value - string or array, check that it exists
                         for (var agg_pos in options.aggs) {
                             agg = options.aggs[agg_pos]
                             if (agg['display'] === key) {
                                 // we have a matching filter facet
                                 const local_value = options.url_options[key];
-                                set_filter_from_value(agg['field'], key, local_value);
+
+                                if (typeof local_value === 'string')
+                                    add_filter_from_value(agg['field'], key, local_value);
+                                else {
+                                    // we have a n array of values
+                                    for(local_val in local_value) {
+                                        add_filter_from_value(agg['field'], key, local_value[local_val]);
+                                    }
+                                }
                                 break;
                             }
                         }
@@ -1827,18 +1850,32 @@
                         // this is a search query parameter, the format is: field:mode:terms
                         // where field is the search field, mode is one of {must, must_not, should}
                         // and terms is the lucene kind of search query
-                        const local_full_value = options.url_options[key];
-                        if (local_full_value.trim().length > 0) {
-                            var pieces = local_full_value.split(":");
-                            const local_value = pieces[pieces.length-1];
-                            var local_mode = null;
-                            if (pieces.length>1)
-                                local_mode = pieces[pieces.length-2];
-                            var local_field = null;
-                            if (pieces.length>2)
-                                local_field = pieces[pieces.length-3];
-                            set_search_from_value(local_field, local_mode, local_value, 1);
+                        const local_full_values = options.url_options[key];
+
+                        var add_query_term_block = function(local_full_value, local_rank) {
+                            if (local_full_value.trim().length > 0) {
+                                var pieces = local_full_value.split(":");
+                                const local_value = pieces[pieces.length-1];
+                                var local_mode = null;
+                                if (pieces.length>1)
+                                    local_mode = pieces[pieces.length-2];
+                                var local_field = null;
+                                if (pieces.length>2)
+                                    local_field = pieces[pieces.length-3];
+                                set_search_from_value(local_field, local_mode, local_value, local_rank);
+                            }
                         }
+
+                        if (typeof local_full_values === 'string') { 
+                            add_query_term_block(local_full_values, 1);
+                        } else {
+                            // we have a n array of values
+                            var n = 1;
+                            for(local_full_val in local_full_values) {
+                                add_query_term_block(local_full_values[local_full_val], n);
+                                n++;
+                            }
+                        }                        
                     } else {
                         console.log("url query parameter unknown: " + key);
                     }
@@ -1853,8 +1890,6 @@
             // trigger the search once on load, to get all results
             //if (options.use_delay)
             dosearch();
-
-            console.log(build_url_from_app_state());
         };
 
         $('#disambiguation_panel').hide();
@@ -1972,7 +2007,6 @@ must <span class="caret"></span>\
                 //}
             }
         }
-
 
         // ===============================================
         // now create the plugin on the page
