@@ -1730,6 +1730,59 @@
             document.getElementById('facetview_freetext'+rank).value = value; 
         }
 
+        var build_url_from_app_state = function() {
+            var url = window.location.href; // full URL
+            // clean possible remaining parameters
+            var ind = url.lastIndexOf("index.html");
+            if (ind == -1) {
+                // this should not happen
+                return null;
+            }
+            url = url.substring(0,ind) + "index.html?"
+
+            // get current filter facet key/values, if any
+            var hasFacetComponent = false;
+            const filterNodes = $(".facetview_filterselected");
+            for(var i=0; i<filterNodes.length; i++){
+                var element = filterNodes.eq(i);
+                var local_text = element.text().trim();
+                ind = local_text.indexOf(":");
+                if (ind == -1) {
+                    // malformed facet, this should not happen
+                    continue;
+                }
+                var key = local_text.substring(0, ind);
+                var value = local_text.substring(ind+1, local_text.length);
+                if (i != 0) 
+                    url += "&";
+                url += key+"="+encodeURIComponent(value);
+                hasFacetComponent = true;
+            }
+
+            // get current search query, if any
+            var searchQueryComponent = ""
+            if ($("#selected-tei-field1")) {
+                var fieldContent = $("#selected-tei-field1").val().trim();
+                if (fieldContent.length>0 && fieldContent !== 'all fields')
+                    searchQueryComponent += encodeURIComponent(fieldContent) + ":";
+            }
+            if ($("#selected-bool-field1")) {
+                var modeContent = $("#selected-bool-field1").val().trim();
+                if (modeContent.length>0 && modeContent !== 'must')
+                    searchQueryComponent += encodeURIComponent(modeContent) + ":";
+            }
+            if ($("#facetview_freetext1")) {
+                const searchContent = $("#facetview_freetext1").val().trim();
+                if (searchContent.length>0) {
+                    if (hasFacetComponent)
+                        url += "&";
+                    url += "q=" + searchQueryComponent + encodeURIComponent(searchContent);
+                }
+            }
+
+            return url;
+        }
+
         // what to do when ready to go
         var whenready = function () {
 
@@ -1800,6 +1853,8 @@
             // trigger the search once on load, to get all results
             //if (options.use_delay)
             dosearch();
+
+            console.log(build_url_from_app_state());
         };
 
         $('#disambiguation_panel').hide();
