@@ -18,6 +18,13 @@ http://localhost:8050/frontend/index.html?Entity=software&Languages=R
 
 The `Entity` facet has 4 possible values (`software`, `persons`, `organizations`, `licenses`), which allows to restrict the results to these 4 main entity types.  
 
+
+Linking to all the software of a particular author: 
+
+```
+http://localhost:8050/frontend/index.html?Author=Jeroen%20Ooms&Entity=software
+```
+
 - **search query**: this parameter applies a search query based on the Lucene search qyery syntax. The query can optionally be prefixed by a search field (`all fields` by default, `software`, `authors`, `mentions`, `licenses`, `programming_language`) and a modality (`must` by default, `should` or `must_not`), separated by a colon `:`:
 
 ```
@@ -43,8 +50,9 @@ For convenience, we provide a custom URL parameter to link to a R Package via it
 localhost:8050/frontend/index.html?packageR=STAR
 ```
 
-<!--- 
 ## Contextual URL
 
-At any points of usage of the frontend, it is possible to copy the corresponding URL into the clipboard. 
---->
+At any points of usage of the frontend, it is possible to copy the corresponding URL into the clipboard by clicking the `copy as url` button. 
+
+![KB frontend](images/frontend03.png)
+
