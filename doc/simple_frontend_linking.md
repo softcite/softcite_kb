@@ -41,6 +41,9 @@ Both types of parameters can be combined, e.g.:
 http://localhost:8050/frontend/index.html?q=software:must:STAR&Languages=R
 ```
 
+```
+https://cloud.science-miner.com/software_kb/frontend/index.html?Entity=software&Languages=R&q=star
+```
 
 ## R Package
 
