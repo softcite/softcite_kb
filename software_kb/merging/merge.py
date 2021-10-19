@@ -5,6 +5,7 @@ from populate_staging_area import StagingArea
 from tqdm import tqdm
 import logging
 import logging.handlers
+import re
 
 # default logging settings
 logging.basicConfig(filename='merge.log', filemode='w', level=logging.DEBUG)
@@ -179,14 +180,23 @@ def merge_software(stagingArea, reset=False):
             # merge by software matching name
             software_name = software["labels"].replace('"', '')
             software_name = software_name.replace("'", "")
-            software_name = software_name.replace("'", "")
+            software_name = software_name.replace("'", "").strip()
             #software_name = software_name.replace("\\", "")
 
             # note: if the length of the the string is too short, it can easily lead to non-meaningful deduplication,
             # but many common framework has such short names (R, Go, C#, etc.). This is depending a lot on the false 
             # positives of software mentions extraction module.
 
-            software_name_variant = _capitalized_variant(software_name)
+            software_name_variants = []
+
+            # we introduce simple variants at this stage, no fuzzy matching for the moment
+            capitalized_variant = _capitalized_variant(software_name)
+            hyphen_variant = _hyphen_variant(software_name)
+
+            if capitalized_variant != None:
+                software_name_variants.append(capitalized_variant)
+            if hyphen_variant != None:
+                software_name_variants.append(hyphen_variant)    
 
             # check if software is a R package, programming language (P277) is then R (Q206904) 
             is_R = False
@@ -199,12 +209,12 @@ def merge_software(stagingArea, reset=False):
             if is_R:
                 # avoid using aliases because of the frequent port
                 aql_query = 'FOR doc IN software FILTER doc.labels == "' + software_name + ' '
-                if software_name_variant != None:
+                for software_name_variant in software_name_variants:
                     software_name_variant = software_name_variant.replace('"', '')
                     aql_query += 'OR doc.labels == "' + software_name_variant + ' '
             else:    
                 aql_query = 'FOR doc IN software FILTER doc.labels == "' + software_name + '" OR "' + software_name + '" IN doc.aliases '
-                if software_name_variant != None:
+                for software_name_variant in software_name_variants:
                     software_name_variant = software_name_variant.replace('"', '')
                     aql_query += 'OR doc.labels == "' + software_name_variant + '" OR "' + software_name_variant + '" IN doc.aliases '
             aql_query += ' RETURN doc'
@@ -306,6 +316,23 @@ def _capitalized_variant(term):
             else:
                 term_variant += c.lower()
     return term_variant
+
+def _hyphen_variant(term):
+    '''
+    in case a term has an hyphen, generate a term variant with a space instead of the hyphen, e.g. 
+    STAR-aligner -> STAR aligner
+    in case a term has no hyphen but a single space, generate a term variant with an hyphen instead of the single space, e.g.
+    STAR aligner -> STAR-aligner
+    '''
+    inds = [m.start() for m in re.finditer('-', term)]
+    if len(inds) == 1:
+        return term.replace('-', ' ')
+
+    inds = [m.start() for m in re.finditer(' ', term)]
+    if len(inds) == 1:
+        return term.replace(' ', '-')
+
+    return None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Disambiguate/conflate entities in the staging area")

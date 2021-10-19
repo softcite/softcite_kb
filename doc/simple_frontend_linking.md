@@ -18,7 +18,6 @@ http://localhost:8050/frontend/index.html?Entity=software&Languages=R
 
 The `Entity` facet has 4 possible values (`software`, `persons`, `organizations`, `licenses`), which allows to restrict the results to these 4 main entity types.  
 
-
 Linking to all the software of a particular author: 
 
 ```
