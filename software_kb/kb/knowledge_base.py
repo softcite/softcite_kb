@@ -295,17 +295,15 @@ class knowledgeBase(CommonArangoDB):
                             to_merge_entity = collection_staging_area.get(local_id)
                             merged_entity = self.aggregate_with_merge(merged_entity, to_merge_entity)
                         if not self.kb_graph.has_vertex(merged_entity['_id']):
+                            self.normalize_entity(merged_entity)
                             self.kb_graph.insert_vertex(collection_name, merged_entity)
                     else:
                         continue
                 else:
                     # no merging involved with this entity, we add it to the KB and continue
                     if not self.kb_graph.has_vertex(entity['_id']):
+                        self.normalize_entity(entity)
                         self.kb_graph.insert_vertex(collection_name, entity)
-
-                # This final step ensure that we don't have exact duplicated statements by merging
-                # redundant ones and summing their counts. 
-                #self.normalize_entities()
 
     def set_up_relations(self):
         '''
@@ -482,13 +480,11 @@ class knowledgeBase(CommonArangoDB):
                     # finally update the software entity in the KB
                     self.kb_graph.update_vertex(soft)
 
-
         # update entity list
         with open("data/resources/software.wikidata.entities2", "wt") as fp:
             for wikipedia_entity_id in software_list:
                 fp.write(wikipedia_entity_id)
                 fp.write("\n")
-
 
     def get_summary(self, wikidata_id):
         nerd_url = self.config["entity-fishing"]["entity_fishing_protocol"] + "://" + self.config["entity-fishing"]["entity_fishing_host"]

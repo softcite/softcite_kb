@@ -364,6 +364,48 @@ class CommonArangoDB(object):
         source["P248"] = local_value
         return source
 
+    def normalize_entity(self, entity):
+        '''
+        Normalization process that ensures that we don't have exact and close duplicated statements by merging
+        relaxed redundant ones and summing their counts
+        '''
+        if "claims" in entity:
+            for propery in entity["claims"]:
+                # keeping track of the index in the preoperty value array to be removed because redundant
+                value_to_remove = []
+                # keeping track of the value strings already seen and the index in the prepoerty value array where it occurs
+                known_values = {}
+                ind = 0
+                for the_value in entity["claims"][propery]:
+                    if "value" in the_value:
+                        local_value = the_value["value"]
+                        if local_value in known_values or dehyphen_test_string(local_value) in known_values:
+                            # we have a redundant value
+                            # add count to the already seen same value
+                            if local_value in known_values:
+                                ref_ind = known_values[local_value]
+                            elif dehyphen_test_string(local_value) in known_values:
+                                ref_ind = known_values[dehyphen_test_string(local_value)]
+
+                            for reference in the_value["references"]:
+                                entity["claims"][propery][ref_ind]["references"] = \
+                                    add_ref_if_not_present(entity["claims"][propery][ref_ind]["references"], reference)
+                            value_to_remove.append(ind)
+                        else:
+                            known_values[local_value] = ind
+                            if local_value != dehyphen_test_string(local_value):
+                                known_values[dehyphen_test_string(local_value)] = ind
+                    ind += 1
+
+                # remove registered values backwards to preserve indices
+                if len(value_to_remove) > 0:
+                    i = len(value_to_remove) - 1 
+                    while i >= 0:
+                        del entity["claims"][propery][value_to_remove[i]]
+                        i -= 1
+        return entity
+
+
 def add_ref_if_not_present(references, ref_to_add):
     '''
     check if a reference entry is not already present in a reference list:
@@ -398,6 +440,12 @@ def add_ref_if_not_present(references, ref_to_add):
         references.append(ref_to_add)        
 
     return references
+
+def dehyphen_test_string(string):
+    if isinstance(string, str):
+        return string.replace("- ", "")
+    else:
+        return string
 
 def simplify_entity(jsonEntity):
     """
