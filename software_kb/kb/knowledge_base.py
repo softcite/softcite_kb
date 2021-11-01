@@ -303,6 +303,10 @@ class knowledgeBase(CommonArangoDB):
                     if not self.kb_graph.has_vertex(entity['_id']):
                         self.kb_graph.insert_vertex(collection_name, entity)
 
+                # This final step ensure that we don't have exact duplicated statements by merging
+                # redundant ones and summing their counts. 
+                #self.normalize_entities()
+
     def set_up_relations(self):
         '''
         Load relations from staging area and update them based on merged vertex.

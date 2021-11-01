@@ -181,7 +181,7 @@ class CommonArangoDB(object):
         try:
             cursor = self.naming_wikidata.find({'value': string}, skip=0, limit=1)
             if cursor.has_more():
-                raise Exception("error adding Wikidata ID mapping: the target string is not unique")
+                logging.warning("warning adding Wikidata ID mapping: the target string is not unique")
         except:
             logging.warning("Invalid target string key: " + string)
 
@@ -191,7 +191,7 @@ class CommonArangoDB(object):
             try:
                 self.naming_wikidata.insert({ "_key": wikidata_id, "value": string })
             except:
-                logging.warning("Invalid key:", string)    
+                logging.warning("Invalid key:", wikidata_id)
   
     def remove_naming_wikidata(self, wikidata_id):
         if not wikidata_id in self.naming_wikidata:
@@ -257,7 +257,7 @@ class CommonArangoDB(object):
         Given two entities to be aggregated, 
 
         1) for statements, add the statements from the second entities as additional statements of the first 
-        entity if the prperty value is not present. If present/redundant attribute/value, simply add the 
+        entity if the property value is not present. If present/redundant attribute/value, simply add the 
         the source information from the second entities in this statement.
         
         2) for non-statement fields, values of the second entities are added to the list in case of list
@@ -372,8 +372,11 @@ def add_ref_if_not_present(references, ref_to_add):
     '''
     found = False
     value_to_add = None
+    count_to_add = 1
     for key, value in ref_to_add.items():
         value_to_add = value["value"]
+        if "count" in value:
+            count_to_add = value["count"]
 
     if value_to_add == None:
         return references
@@ -384,9 +387,9 @@ def add_ref_if_not_present(references, ref_to_add):
                 found = True
                 # increase count attribute (no count attribute means count == 1)
                 if "count" in value:
-                    value["count"] += 1
+                    value["count"] += count_to_add
                 else:
-                    value["count"] = 2
+                    value["count"] = 1 + count_to_add
                 break
         if found:
             break

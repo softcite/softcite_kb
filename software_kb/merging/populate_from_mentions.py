@@ -218,6 +218,7 @@ def populate_mentions(stagingArea, source_ref):
                     # reference URL (P854) 
                     local_value = {}
                     local_value["value"] = annotation["url"]["normalizedForm"]
+                    local_value["value"] = local_value["value"].replace(" ", "")
                     local_value["datatype"] = "url"
                     local_value["references"] = []
                     local_value["references"].append(source_ref)
