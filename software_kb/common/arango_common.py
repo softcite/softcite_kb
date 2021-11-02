@@ -294,27 +294,7 @@ class CommonArangoDB(object):
                             local_value2 = the_value2["value"]
                             local_datatype2 = the_value2["datatype"]
                             local_merge = False
-                            '''
-                            i = 0
-                            for the_value in entity1["claims"][the_property]:
-                                local_value = the_value["value"]
-                                local_datatype = the_value["datatype"]
-
-                                if local_value == local_value2 and local_datatype == local_datatype2:
-                                    # if yes add we simply add the provenance information the property entry
-                                    
-                                    # this is the value in the newly build merge entity
-                                    the_new_value = result["claims"][the_property][i]
-
-                                    if not "references" in the_new_value:
-                                        the_new_value["references"] = []
-                                    sources_to_add = the_value2["references"]
-                                    for source_to_add in sources_to_add:
-                                        add_ref_if_not_present(the_new_value["references"], source_to_add)
-                                    local_merge = True
-                                    break
-                                i += 1
-                            '''
+ 
                             for the_value in result["claims"][the_property]:
                                 local_value = the_value["value"]
                                 local_datatype = the_value["datatype"]
@@ -379,6 +359,8 @@ class CommonArangoDB(object):
                 for the_value in entity["claims"][propery]:
                     if "value" in the_value:
                         local_value = the_value["value"]
+                        if not isinstance(local_value, str):
+                            continue
                         if local_value in known_values or dehyphen_test_string(local_value) in known_values:
                             # we have a redundant value
                             # add count to the already seen same value
