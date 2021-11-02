@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html ng-app="publication">
+    <head>
+        <meta charset="utf-8" />
+        <title>Entity</title>
+        <link rel="icon" type="image/x-icon" href="data/images/favicon.ico"/> 
+        <link rel="shortcut icon" type="image/x-icon" href="data/images/favicon.ico"/>
+        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="bower_components/components-font-awesome/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="css/anhalytics.css"/>
+        <link rel="stylesheet" href="css/annotations.css"/>
+
+        <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+        <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script> 
+        <script src="js/script.js"></script>
+
+        <script src="js/resource/config.js"></script>
+        <script type="text/javascript" src="js/extension.js"></script>
+        <script type="text/javascript" src="js/entity.js"></script> 
+
+        <!-- for nicer rendering of wikipedia abstracts -->
+        <script type="text/javascript" src="lib/wiki/wiki2html.js"></script>
+        <link href="lib/wiki/wiky.css" rel="stylesheet" type="text/css">
+
+        <script type="text/javascript">
+            var options = $.extend(defaults, {});
+
+            $(function () {
+                $('#facet-view-simple').facetview(options);
+            });
+
+        </script>
+    </head>
+
+    <body>
+
+        <div class="container">
+            <div id="facet-view-simple">
+                <div class="publication-content">
+                    <div class="col-md-12">
+
+                        <div id="software-info" class="row" style="margin-right: 0px;margin-left: 0px; ">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <footer>
+            <p class="small text-muted">&copy; The contributors - 2021 </p>
+        </footer>
+    </body>
+</html>
