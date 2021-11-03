@@ -232,7 +232,7 @@ def populate_mentions(stagingArea, source_ref):
                 if "wikipediaExternalRef" in annotation and not check_value_exists(software["claims"], "P460", annotation["wikipediaExternalRef"]):
                     # imported from Wikimedia project (P143) 
                     local_value = {}
-                    local_value["value"] = annotation["wikipediaExternalRef"]
+                    local_value["value"] = "https://en.wikipedia.org/?curid=" + annotation["wikipediaExternalRef"]
                     local_value["datatype"] = "url"
                     local_value["references"] = []
                     local_value["references"].append(source_ref)

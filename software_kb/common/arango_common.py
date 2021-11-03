@@ -181,7 +181,7 @@ class CommonArangoDB(object):
         try:
             cursor = self.naming_wikidata.find({'value': string}, skip=0, limit=1)
             if cursor.has_more():
-                logging.warning("warning adding Wikidata ID mapping: the target string is not unique")
+                logging.warning("warning adding Wikidata ID mapping: the target string is not unique, so the key will remain as it is")
         except:
             logging.warning("Invalid target string key: " + string)
 
@@ -191,7 +191,7 @@ class CommonArangoDB(object):
             try:
                 self.naming_wikidata.insert({ "_key": wikidata_id, "value": string })
             except:
-                logging.warning("Invalid key:", wikidata_id)
+                logging.warning("Invalid key: " + wikidata_id + " with value " + string)
   
     def remove_naming_wikidata(self, wikidata_id):
         if not wikidata_id in self.naming_wikidata:
