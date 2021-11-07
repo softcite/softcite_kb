@@ -184,7 +184,9 @@ async def get_software(page_rank: int = 0, page_size: int = 10, ranker: str = 'c
 
 '''
 return all mentions for a software, mentions are ranked following the parameter 
-@ranker, default value count (return the mentions in the document containing most mentions of this software first)
+@ranker, default value 'count': return the mentions in the document containing most mentions of this software first
+@ranker, value 'group_by_document': return mentions group by document, with document containing most mentions of 
+         this software first
 '''
 @router.get("/entities/software/{identifier}/mentions", tags=["relations"])
 async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
@@ -196,7 +198,7 @@ async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: 
     )
     '''
 
-    if ranker == 'count':
+    if ranker == 'count' or ranker == None:
         cursor = kb.db.aql.execute(
             'FOR mention IN citations '
             + ' FILTER mention._to == "software/' + identifier + '"'
@@ -215,12 +217,15 @@ async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: 
         result['runtime'] = round(time.time() - start_time, 3)
         return result
 
-    elif ranker == None:
+    elif ranker == 'group_by_document':
         cursor = kb.db.aql.execute(
             'FOR mention IN citations '
             + ' FILTER mention._to == "software/' + identifier + '"'
+            + ' COLLECT document_id = mention._from INTO mentionsByDocument'
+            + ' SORT LENGTH(mentionsByDocument) DESC'
             + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
-            + ' RETURN mention._id', full_count=True)
+            + ' RETURN { "document_id" : document_id, "nb_doc_mentions": LENGTH(mentionsByDocument), "mentions": mentionsByDocument[*].mention._id }', full_count=True)
+
         result = {}
         records = []
         stats = cursor.statistics()
@@ -236,7 +241,6 @@ async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: 
 
     else:
         raise HTTPException(status_code=422, detail="Ranker parameter is unknown: "+ranker)
-
 
 
 '''
