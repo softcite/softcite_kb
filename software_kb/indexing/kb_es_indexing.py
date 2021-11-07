@@ -143,6 +143,7 @@ class Indexer(CommonArangoDB):
 
             # get contexts
             contexts = []
+            documents = []
             cursor = self.kb.db.aql.execute(
                     'FOR mention IN citations '
                         + ' FILTER mention._to == "' + entity["_id"] + '"'
@@ -171,12 +172,17 @@ class Indexer(CommonArangoDB):
                                 mention_context = the_context["value"]
                                 if len(mention_context)>0:
                                     contexts.append(mention_context)
+                                    if not mention["_from"] in documents:
+                                        documents.append(mention["_from"])
 
             if len(contexts) > 0:
                 doc['contexts'] = contexts
 
             # number of mentions for software 
             doc['number_mentions'] = len(contexts)
+
+            # number of citing documents for software 
+            doc['number_documents'] = len(documents)
 
             if "claims" in entity:
                 if "P275" in entity["claims"]:

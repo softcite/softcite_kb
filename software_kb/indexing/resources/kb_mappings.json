@@ -72,6 +72,9 @@
     },
     "number_mentions": {
       "type": "integer"  
+    },
+    "number_documents": {
+      "type": "integer"  
     }
   }
 }
