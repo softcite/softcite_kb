@@ -11,6 +11,7 @@ var record_metadata = {
     licenses: "licenses",
     date: "date",
     number_mentions: "number_mentions",
+    number_documents: "number_documents",
     descriptions: "descriptions",
     summary: "summary"
 };

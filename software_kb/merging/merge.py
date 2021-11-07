@@ -156,7 +156,7 @@ def merge_persons(stagingArea, reset=False):
 def merge_software(stagingArea, reset=False):
     print("\nsoftware merging")
     total_results = stagingArea.software.count()
-    page_size = 1000
+    page_size = 100
     nb_pages = (total_results // page_size)+1
 
     print("entries:", total_results, ", nb. steps:", nb_pages)

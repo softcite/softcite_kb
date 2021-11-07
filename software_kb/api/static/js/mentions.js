@@ -96,90 +96,116 @@
             });
         }
 
-        var displayResult = function(rank, mention_id) {
-            getJsonFile(options.kb_service_host + "/relations/" + mention_id).then(mentionJson => {
-                var mention = mentionJson["record"]
+        var displayResult = function(rank, document_record) {
 
-                var localMentionData = '<div class="row" id="document-' + rank + '"></div>';
+            mention_records = document_record["mentions"]
+            var localDocumentData = '<div class="row" id="document-' + rank + '"></div>';
+            $("#mention-"+rank).empty();
+            $("#mention-"+rank).append(localDocumentData);
+            var document_id = document_record["document_id"];
+            var nb_mentions_in_document = document_record["nb_doc_mentions"];
 
-                var document_id = mention['_from'];
+            for(var mention_record in mention_records) {
+                var mention_id = mention_records[mention_record];
 
-                localMentionData += '<div class="row" style="margin-left: 20px; margin-right:20px; background-color: #EEEEEE; border: 1px; padding:10px;">' 
+                getJsonFile(options.kb_service_host + "/relations/" + mention_id).then(mentionJson => {
+                    var mention = mentionJson["record"]
 
-                if (mention["claims"]["P7081"] && mention["claims"]["P7081"].length > 0 && mention["claims"]["P7081"][0]["value"]) {
-                    var snippet = mention["claims"]["P7081"][0]["value"]
+                    localMentionData = '<div class="row" style="margin-left: 20px; margin-right:20px; background-color: #EEEEEE; border: 1px; padding:5px;">' 
 
-                    // annotations
-                    pos = 0;
-                    if (mention["claims"]["P6166"] && mention["claims"]["P6166"].length > 0 && mention["claims"]["P6166"][0]["value"]) {
-                        // software name
-                        var annotation = mention["claims"]["P6166"][0]["value"];
-                        var offset = snippet.indexOf(annotation);
-                        if (offset != -1) {
-                            label = "person"
-                            snippet = snippet.substring(0, offset)
-                            + '<span rel="popover" data-color="' + label + '">'
-                            + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
-                            +  snippet.substring(offset, offset + annotation.length)
-                            + '</span></span>'
-                            + snippet.substring(offset + annotation.length, snippet.length);
-                            pos = offset + annotation.length
+                    if (mention["claims"]["P7081"] && mention["claims"]["P7081"].length > 0 && mention["claims"]["P7081"][0]["value"]) {
+                        var snippet = mention["claims"]["P7081"][0]["value"]
+
+                        // annotations: a qualifier must be present (it means a bounding box exists for 
+                        //the label and the label is indeed in the snippet)
+
+                        pos = 0;
+                        var software_name;
+                        if (mention["claims"]["P6166"] && mention["claims"]["P6166"].length > 0 
+                            && mention["claims"]["P6166"][0]["value"]
+                            && mention["claims"]["P6166"][0]["qualifiers"]) {
+                            // software name
+                            var annotation = mention["claims"]["P6166"][0]["value"];
+                            var offset = snippet.indexOf(annotation);
+                            if (offset != -1) {
+                                const label = "person";
+                                const tag_prefix = '<span rel="popover" data-color="' + label + '">'
+                                                    + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >';
+                                const tag_suffix = '</span></span>';
+                                snippet = snippet.substring(0, offset)
+                                + tag_prefix
+                                + snippet.substring(offset, offset + annotation.length)
+                                + tag_suffix
+                                + snippet.substring(offset + annotation.length, snippet.length);
+                                pos = offset + tag_prefix.length + annotation.length + tag_suffix.length
+                            }
+                            software_name = annotation;
                         }
-                    }
-                    if (mention["claims"]["P348"] && mention["claims"]["P348"].length > 0 && mention["claims"]["P348"][0]["value"]) {
-                        var annotation = mention["claims"]["P348"][0]["value"];
-                        var offset = snippet.indexOf(annotation, pos);
-                        if (offset != -1) {
-                            label = "national"
-                            snippet = snippet.substring(0, offset)
-                            + '<span rel="popover" data-color="' + label + '">'
-                            + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
-                            +  snippet.substring(offset, offset + annotation.length)
-                            + '</span></span>'
-                            + snippet.substring(offset + annotation.length, snippet.length);
+                        if (mention["claims"]["P348"] && mention["claims"]["P348"].length > 0 
+                            && mention["claims"]["P348"][0]["value"]
+                            && mention["claims"]["P348"][0]["qualifiers"]) {
+                            // version
+                            var annotation = mention["claims"]["P348"][0]["value"];
+                            var offset = snippet.indexOf(annotation, pos);
+                            if (offset != -1) {
+                                const label = "national"
+                                snippet = snippet.substring(0, offset)
+                                + '<span rel="popover" data-color="' + label + '">'
+                                + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
+                                +  snippet.substring(offset, offset + annotation.length)
+                                + '</span></span>'
+                                + snippet.substring(offset + annotation.length, snippet.length);
+                            }
                         }
-                    }
-                    if (mention["claims"]["P123"] && mention["claims"]["P123"].length > 0 && mention["claims"]["P123"][0]["value"]) {
-                        var annotation = mention["claims"]["P123"][0]["value"];
-                        var offset = snippet.indexOf(annotation);
-                        if (offset != -1) {
-                            label = "administration"
-                            snippet = snippet.substring(0, offset)
-                            + '<span rel="popover" data-color="' + label + '">'
-                            + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
-                            +  snippet.substring(offset, offset + annotation.length)
-                            + '</span></span>'
-                            + snippet.substring(offset + annotation.length, snippet.length);
+                        if (mention["claims"]["P123"] && mention["claims"]["P123"].length > 0 
+                            && mention["claims"]["P123"][0]["value"]
+                            && mention["claims"]["P123"][0]["qualifiers"]) {
+                            // publisher
+                            var annotation = mention["claims"]["P123"][0]["value"];
+                            var offset = -1;
+                            if (annotation === software_name)
+                                offset = snippet.indexOf(annotation, pos);
+                            else
+                                offset = snippet.indexOf(annotation);
+                            if (offset != -1) {
+                                const label = "administration"
+                                snippet = snippet.substring(0, offset)
+                                + '<span rel="popover" data-color="' + label + '">'
+                                + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
+                                +  snippet.substring(offset, offset + annotation.length)
+                                + '</span></span>'
+                                + snippet.substring(offset + annotation.length, snippet.length);
+                            }
+                        }
+                        if (mention["claims"]["P854"] && mention["claims"]["P6166"].length > 0 
+                            && mention["claims"]["P854"][0]["value"]
+                            && mention["claims"]["P854"][0]["qualifiers"]) {
+                            // url
+                            var annotation = mention["claims"]["P854"][0]["value"];
+                            var offset = snippet.indexOf(annotation);
+                            if (offset != -1) {
+                                const label = "biology"
+                                snippet = snippet.substring(0, offset)
+                                + '<span rel="popover" data-color="' + label + '">'
+                                + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
+                                +  snippet.substring(offset, offset + annotation.length)
+                                + '</span></span>'
+                                + snippet.substring(offset + annotation.length, snippet.length);
+                            }
                         }
 
-                    }
-                    if (mention["claims"]["P854"] && mention["claims"]["P6166"].length > 0 && mention["claims"]["P854"][0]["value"]) {
-                        var annotation = mention["claims"]["P854"][0]["value"];
-                        var offset = snippet.indexOf(annotation);
-                        if (offset != -1) {
-                            label = "biology"
-                            snippet = snippet.substring(0, offset)
-                            + '<span rel="popover" data-color="' + label + '">'
-                            + '<span class="label ' + label + '" style="cursor:hand;cursor:pointer;" >'
-                            +  snippet.substring(offset, offset + annotation.length)
-                            + '</span></span>'
-                            + snippet.substring(offset + annotation.length, snippet.length);
-                        }
+                        localMentionData += '<p>' + snippet + 
+                            ' <a target="_blank" style="color:#999999;" href="' + 
+                                options.kb_service_host + "/relations/" + mention_id +'"><i class="fa fa-file"></i></a>'
+                            + '</p>';
                     }
 
-                    localMentionData += '<p>' + snippet + 
-                        ' <a target="_blank" style="color:#999999;" href="' + 
-                            options.kb_service_host + "/relations/" + mention_id +'"><i class="fa fa-file"></i></a>'
-                        + '</p>';
-                }
-
-                localMentionData += '</div></div>'
-
-                $("#mention-"+rank).empty();
-                $("#mention-"+rank).append(localMentionData);
-
-                displayDocument(rank, document_id);
-            });
+                    localMentionData += '</div><div class="row" style="margin-left: 20px; margin-right:20px; background-color: #FFFFFF; border: 1px; padding:5px;"></div>'
+                    
+                    $("#mention-"+rank).append(localMentionData);
+                });
+            }
+            displayDocument(rank, document_id);
         }
 
         // get json object for software
@@ -187,13 +213,15 @@
             // get json object for software
 
             console.log(options.kb_service_host + "/entities/"+entity_type+"/"+id+
-                "/mentions?page_rank=" + options.paging.rank + "&page_size=" + options.paging.size);
+                "/mentions?page_rank=" + options.paging.rank + "&page_size=" + 
+                options.paging.size + "&ranker=group_by_document");
 
             getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id+
-                "/mentions?page_rank=" + options.paging.rank + "&page_size=" + options.paging.size).then(mentionsJson => {
+                "/mentions?page_rank=" + options.paging.rank + "&page_size=" + 
+                options.paging.size + "&ranker=group_by_document").then(mentionsJson => {
                 records = mentionsJson["records"];
 
-                nbMentions = mentionsJson["full_count"]
+                nbDocuments = mentionsJson["full_count"]
                 from = mentionsJson["page_rank"]*mentionsJson["page_size"]
                 to = from + records.length
 
@@ -201,38 +229,38 @@
                 var size = options.paging.size;
                 !size ? size = 10 : "";
                 var to = from + size;
-                nbMentions< to ? to = nbMentions : "";
+                nbDocuments< to ? to = nbDocuments : "";
 
                 var meta = metaTmpl.replace(/{{from}}/g, from);
                 meta = meta.replace(/{{to}}/g, to);
-                meta = meta.replace(/{{total}}/g, addCommas("" + nbMentions));
+                meta = meta.replace(/{{total}}/g, addCommas("" + nbDocuments));
                 $('#facetview_metadata').html("").append(meta);
                 $('#facetview_decrement').bind('click', decrement);
                 from < size ? $('#facetview_decrement').html('..') : "";
                 $('#facetview_increment').bind('click', increment);
-                nbMentions <= to ? $('#facetview_increment').html('..') : "";
+                nbDocuments <= to ? $('#facetview_increment').html('..') : "";
 
-                mentionData = ""
-                if (nbMentions == 0) {
-                    mentionData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
-                    mentionData += '<div style="padding: 20px;">'
-                    mentionData += '<div class="row" style="text-align: center;">no mention</div>'
-                    mentionData += "</div></div>"
+                documentData = ""
+                if (nbDocuments == 0) {
+                    documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                    documentData += '<div style="padding: 20px;">'
+                    documentData += '<div class="row" style="text-align: center;">no mention</div>'
+                    documentData += "</div></div>"
                 } else {
                     console.log(records)
                     for (var record in records) {
                         console.log(records[record])
-                        mentionData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
-                        mentionData += '<div style="padding: 20px;" id="mention-' + record + '">'
-                        mentionData += "</div></div>";
+                        documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                        documentData += '<div style="padding: 20px;" id="mention-' + record + '">'
+                        documentData += "</div></div>";
                     }
                 }
 
-                mentionData += "</div></div>"
+                documentData += "</div></div>"
                 $("#mentions-content").empty();
-                $("#mentions-content").append(mentionData);
+                $("#mentions-content").append(documentData);
 
-                if (nbMentions > 0) {
+                if (nbDocuments > 0) {
                     for (var record in records) {
                         displayResult(record, records[record]);
                     }
