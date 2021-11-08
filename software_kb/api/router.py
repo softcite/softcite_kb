@@ -13,11 +13,13 @@ def set_kb(global_kb):
     global kb
     kb = global_kb
 
-@router.get("/alive", response_class=PlainTextResponse, tags=["generic"])
+@router.get("/alive", response_class=PlainTextResponse, tags=["generic"], 
+    description="Return true if service is up and running.")
 def is_alive_status():
     return "true"
 
-@router.get("/version", response_class=PlainTextResponse, tags=["generic"])
+@router.get("/version", response_class=PlainTextResponse, tags=["generic"], 
+    description="Return the version tag of the service.")
 def get_version():
     api_settings = kb.config['api']
     return api_settings['version']
@@ -47,7 +49,8 @@ class Collection(str, Enum):
 
 
 # the value for "collection" of entitites are "software", "documents", "persons", "organizations" and "licenses"
-@router.get("/entities/{collection}/{identifier}", tags=["entities"])
+@router.get("/entities/{collection}/{identifier}", tags=["entities"], 
+    description="Return an entity by its identifier in a given collection. Possible values for 'collection' of entitites are 'software', 'documents', 'persons', 'organizations' and 'licenses'.")
 async def get_entity(collection: Collection, identifier: str, format: str = 'internal'):
     the_collection = collection.value
     start_time = time.time()
@@ -113,7 +116,8 @@ async def get_entity(collection: Collection, identifier: str, format: str = 'int
     return result
 
 # the value for "relations" are "references", "citations", "actors", "funding", "dependencies" and "copyrights"
-@router.get("/relations/{relations}/{identifier}", tags=["relations"])
+@router.get("/relations/{relations}/{identifier}", tags=["relations"],
+    description="Return a relation by its identifier in a given collection. Possible values for 'relations' are 'references', 'citations', 'actors', 'funding', 'dependencies' and 'copyrights'.")
 async def get_relation(relations: str, identifier: str, format: str = 'internal'):
     start_time = time.time()
     if not kb.kb_graph.has_edge(relations + '/' + identifier):
@@ -134,7 +138,8 @@ for returning list of entities or relations, the following parameters are used i
 
 # get list of software ranked by their number of mentions
 # default ranker is per count of relations from or to the entity
-@router.get("/entities/software", tags=["entities"])
+@router.get("/entities/software", tags=["entities"],
+    description="Get the list of software entities. By default, the list is ranked by the number of mentions of the software.")
 async def get_software(page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -188,15 +193,12 @@ return all mentions for a software, mentions are ranked following the parameter
 @ranker, value 'group_by_document': return mentions group by document, with document containing most mentions of 
          this software first
 '''
-@router.get("/entities/software/{identifier}/mentions", tags=["relations"])
+@router.get("/entities/software/{identifier}/mentions", tags=["relations"], 
+    description="return all mentions for a given software. The mentions are ranked following the parameter @ranker. "+
+    "default @ranker value 'count': return the mentions in the document containing most mentions of this software first. " +
+    "@ranker value 'group_by_document': return mentions group by document, with document containing most mentions of this software first")
 async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
-
-    '''
-    cursor = kb.db.aql.execute(
-        'FOR doc IN software LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + " RETURN doc['_key']"
-    )
-    '''
 
     if ranker == 'count' or ranker == None:
         cursor = kb.db.aql.execute(
@@ -244,9 +246,10 @@ async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: 
 
 
 '''
-return all depedencies for a given software
+return all dependencies for a given software
 '''
-@router.get("/entities/software/{identifier}/dependencies", tags=["relations"])
+@router.get("/entities/software/{identifier}/dependencies", tags=["relations"],
+    description="Return all the software dependencies for a given software.")
 async def get_dependencies(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -274,7 +277,8 @@ async def get_dependencies(identifier: str, page_rank: int = 0, page_size: int =
 '''
 return all reverse depedencies for a software, so all the software depending on the given software
 '''
-@router.get("/entities/software/{identifier}/reverse_dependencies", tags=["relations"])
+@router.get("/entities/software/{identifier}/reverse_dependencies", tags=["relations"],
+    description="Return all the reverse software dependencies for a given software, so all the software entities depending on the given software.")
 async def get_reverse_dependencies(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -304,7 +308,8 @@ async def get_reverse_dependencies(identifier: str, page_rank: int = 0, page_siz
 return all documents mentioning a software, documents are ranked following the parameter 
 @ranker, default value count (return the document containing most mentions of this software first)
 '''
-@router.get("/entities/software/{identifier}/documents", tags=["relations"])
+@router.get("/entities/software/{identifier}/documents", tags=["relations"],
+    description="Return all the documents mentioning a given software, ranked by the number of mentions of this software in the document.")
 async def get_software_documents(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -333,7 +338,8 @@ async def get_software_documents(identifier: str, page_rank: int = 0, page_size:
 return all the software entities, mentioned in a particular paper, ranked following the parameter 
 @ranker, default value count (return first the software with most mentions in the document)
 '''
-@router.get("/entities/documents/{identifier}/software", tags=["relations"])
+@router.get("/entities/documents/{identifier}/software", tags=["relations"], 
+    description="Return all the software entities mentioned in a given document, ranked by their number of mentions.")
 async def get_document_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -361,7 +367,8 @@ async def get_document_software(identifier: str, page_rank: int = 0, page_size: 
 '''
 return all documents ranked by their number of software mentions
 '''
-@router.get("/entities/documents", tags=["entities"])
+@router.get("/entities/documents", tags=["entities"], 
+    description="Return all documents, ranked by their number of software mentions.")
 async def get_documents(page_rank: int = 0, page_size: int = 10):
     start_time = time.time()
     cursor = kb.db.aql.execute(
@@ -387,7 +394,8 @@ async def get_documents(page_rank: int = 0, page_size: int = 10):
 '''
 return all persons ranked by their number of contributions to software
 '''
-@router.get("/entities/persons", tags=["entities"])
+@router.get("/entities/persons", tags=["entities"], 
+    description="Return all person entities, ranked by their number of general contributions (e.g. authorship) to software.")
 async def get_persons(page_rank: int = 0, page_size: int = 10):
     start_time = time.time()
     cursor = kb.db.aql.execute(
@@ -414,7 +422,8 @@ async def get_persons(page_rank: int = 0, page_size: int = 10):
 Return all the software entities a person has contributed to.
 For each software, we indicate the person role. 
 '''
-@router.get("/entities/persons/{identifier}/software", tags=["relations"])
+@router.get("/entities/persons/{identifier}/software", tags=["relations"], 
+    description="Return all the software entities a person has contributed to. For each software, the role of the person is indicated.")
 async def get_person_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -457,7 +466,8 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
 Return all the mentions of the software entities a person has contributed to.
 default ranking: return the mentions for the software containing most mentions first
 '''
-@router.get("/entities/persons/{identifier}/mentions", tags=["relations"])
+@router.get("/entities/persons/{identifier}/mentions", tags=["relations"],
+    description="Return all the mentions of the software entities a person has contributed to, ranked by number of mentions of the software.")
 async def get_person_mentions(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -487,7 +497,8 @@ async def get_person_mentions(identifier: str, page_rank: int = 0, page_size: in
 return all the software entities an organization has been involved with via its members 
 @ranker, default value count (return first the software with most members of the organization have contributed to)
 '''
-@router.get("/entities/organizations/{identifier}/software", tags=["relations"])
+@router.get("/entities/organizations/{identifier}/software", tags=["relations"],
+    description="Return all the software entities an organization has been involved with via its members, ranked by number of contributors of the organization.")
 async def get_organization_software(identifier: str, page_rank: int = 0, page_size: int = 10, ranker: str = 'count'):
     start_time = time.time()
 
@@ -513,9 +524,38 @@ async def get_organization_software(identifier: str, page_rank: int = 0, page_si
 
 
 '''
+return all the document entities used as references by the (curated) metadata of a given software  
+'''
+@router.get("/entities/software/{identifier}/references", tags=["relations"], 
+    description="Return all the document entities used as references by the (curated) metadata of a given software.")
+async def get_software_references(identifier: str, page_rank: int = 0, page_size: int = 10):
+    start_time = time.time()
+
+    cursor = kb.db.aql.execute(
+        'FOR reference IN references '
+        + ' FILTER reference._from == "software/' + identifier + '"'
+        + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) 
+        + ' RETURN reference._to', full_count=True)
+    result = {}
+    records = []
+    stats = cursor.statistics()
+    if 'fullCount' in stats:
+        result['full_count'] = stats['fullCount']
+    result['page_rank'] = page_rank
+    result['page_size'] = page_size
+    for entity in cursor:
+        records.append(entity)
+    result['records'] = records
+    result['runtime'] = round(time.time() - start_time, 3)
+    
+    return result
+
+
+'''
 return the n-best references to a software, following the criteria of the CiteAs service 
 '''
-@router.get("/entities/software/{identifier}/citeas", tags=["recommenders"])
+@router.get("/entities/software/{identifier}/citeas", tags=["recommenders"],
+    description="Return the n-best references to a software, following the number of occurences of the reference in the software mention contexts.")
 async def get_software_citeas(identifier: str, n_best: int = 10):
     start_time = time.time()
 
@@ -578,7 +618,8 @@ async def get_software_citeas(identifier: str, n_best: int = 10):
 '''
 Mapper to elasticsearch service 
 '''
-@router.post("/search/{path:path}", tags=["search"])
+@router.post("/search/{path:path}", tags=["search"], 
+    description="This is an API bridge to the ElasticSearch service, restricted to POST service.")
 async def search_request(path: str, request: Request):
     async with httpx.AsyncClient() as client:
         es_host = kb.config["elasticsearch"]["host"]
@@ -594,7 +635,8 @@ async def search_request(path: str, request: Request):
     response = Response(proxy.content, status_code=proxy.status_code, media_type="application/json; charset=UTF-8")
     return response
 
-@router.get("/search/{path:path}", tags=["search"])
+@router.get("/search/{path:path}", tags=["search"],
+    description="This is an API bridge to the ElasticSearch service, restricted to GET service.")
 async def search_request(path: str, request: Request):
     async with httpx.AsyncClient() as client:
         es_host = kb.config["elasticsearch"]["host"]
