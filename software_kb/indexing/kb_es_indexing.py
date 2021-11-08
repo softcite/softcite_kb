@@ -227,7 +227,8 @@ class Indexer(CommonArangoDB):
             # add corresponding number mentions: mentions of a software the person has authorship) 
             # get contexts of software co-authored by the person
             contexts = []
-            
+            documents = []
+
             cursor = self.kb.db.aql.execute(
                 'FOR actor IN actors '
                     + ' FILTER actor._from == "' + entity["_id"] + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
@@ -261,12 +262,17 @@ class Indexer(CommonArangoDB):
                                 mention_context = the_context["value"]
                                 if len(mention_context)>0:
                                     contexts.append(mention_context)
+                                    if not mention["_from"] in documents:
+                                        documents.append(mention["_from"])
 
             if len(contexts) > 0:
                 doc['contexts'] = contexts
 
             # number of mentions for software 
             doc['number_mentions'] = len(contexts)
+
+            # number of citing documents for software 
+            doc['number_documents'] = len(documents)
 
         #if collection_name == 'licenses':
         # add corresponding software usage number: number of software using this license
