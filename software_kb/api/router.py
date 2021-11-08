@@ -527,15 +527,16 @@ async def get_organization_software(identifier: str, page_rank: int = 0, page_si
 return all the document entities used as references by the (curated) metadata of a given software  
 '''
 @router.get("/entities/software/{identifier}/references", tags=["relations"], 
-    description="Return all the document entities used as references by the (curated) metadata of a given software.")
+    description="Return all the document entities used as references by the (curated) metadata of a given software, usually developer requested citations.")
 async def get_software_references(identifier: str, page_rank: int = 0, page_size: int = 10):
     start_time = time.time()
 
     cursor = kb.db.aql.execute(
         'FOR reference IN references '
         + ' FILTER reference._from == "software/' + identifier + '"'
+        + ' COLLECT doc_id = reference._to, source_id = reference["claims"]["P2860"][0]["references"][0]["P248"]["value"]' 
         + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) 
-        + ' RETURN reference._to', full_count=True)
+        + ' RETURN DISTINCT { document: doc_id, sources: [source_id] }', full_count=True)
     result = {}
     records = []
     stats = cursor.statistics()
@@ -555,7 +556,8 @@ async def get_software_references(identifier: str, page_rank: int = 0, page_size
 return the n-best references to a software, following the criteria of the CiteAs service 
 '''
 @router.get("/entities/software/{identifier}/citeas", tags=["recommenders"],
-    description="Return the n-best references to a software, following the number of occurences of the reference in the software mention contexts.")
+    description="Return the n-best references to a software, developer requested citations first, then " + 
+                "following the number of occurences of the reference in the software mention contexts.")
 async def get_software_citeas(identifier: str, n_best: int = 10):
     start_time = time.time()
 
@@ -570,7 +572,7 @@ async def get_software_citeas(identifier: str, n_best: int = 10):
         + ' FILTER reference._from == "software/' + identifier + '"'
         + ' COLLECT doc_id = reference._to, source_id = reference["claims"]["P2860"][0]["references"][0]["P248"]["value"]' 
         + ' LIMIT ' + str(n_best)
-        + ' RETURN { document: doc_id, sources: [source_id] }', full_count=True)
+        + ' RETURN DISTINCT { document: doc_id, sources: [source_id] }', full_count=True)
 
     for entity in cursor:
         records1.append(entity)

@@ -40,6 +40,14 @@
             return jsonData;
         };
 
+        // note: this is a basic encoding, for something comprehensive, use the he library (https://github.com/mathiasbynens/he)
+        var encodedStr = function(rawStr) {
+            return rawStr.replace(/[\u00A0-\u9999<>\&]/g, 
+                function(i) {
+                    return '&#'+i.charCodeAt(0)+';';
+                });
+        }
+
         var showEntityMetadata = function(id) {
             // get json object for software
             getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id).then(softwareJson => {
@@ -49,9 +57,9 @@
                 metadata += '<div style="padding: 20px; width:100%;">'
                 metadata += '<p><table style="width:100%;"><tr><td>'
 
-                metadata += '<strong>' + record["labels"] + "</strong>";
+                metadata += '<strong>' + encodedStr(record["labels"]) + "</strong>";
                 if (record["descriptions"]) {
-                    metadata += " - " + record["descriptions"] 
+                    metadata += " - " + encodedStr(record["descriptions"]) 
                 }
 
                 metadata += '</td><td align="right"><a target="_blank" style="color:#999999;" href="' + 
@@ -71,9 +79,11 @@
                 metadata += '</div>';
                 metadata += '</div>';
 
+                $("#software-info").append(metadata);
+
                 // mention summary panel
                 if (entity_type === 'software') {
-                    metadata += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                    metadata = '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
                     metadata += '<div style="padding: 20px; width:100%;"><table><tr><td><strong>Mentions</strong></td><td>&nbsp;&nbsp;</td> '
                     metadata += '<td><div id="mention-summary"/></td>'
                     metadata += '</tr></table></div>';
@@ -90,40 +100,357 @@
                             localMentionData += es_entity_fields['number_mentions'] + ' mentions in ' + es_entity_fields['number_documents'] + ' documents';
                             localMentionData+= "</a>";
 
+                            localMentionData += ' <span style="color:#999999;">(click to view mentions)</span>';
+
                             $("#mention-summary").empty();
                             $("#mention-summary").append(localMentionData);
                         }
                     });
+                    $("#software-info").append(metadata);
                 }
 
                 if (record["claims"]) {
-                    Object.keys(record["claims"]).forEach(function(key) {
-                        if (key === "P18") {
-                            // image
-                            if (record["claims"][key].length > 0) {
-                                metadata += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
-                                metadata += '<div style="padding: 20px; width:100%;"><table><tr><td><strong>Gallery</strong></td><td>&nbsp;&nbsp;</td> '
+                    if ( (record["claims"]["P123"] && record["claims"]["P123"].length > 0) ||
+                         (record["claims"]["P178"] && record["claims"]["P178"].length > 0) ){
+                        
+                        // publisher or developer (in Wikidata)
+                        metadata = '<div class="panel" id="publisher" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                        metadata += '<div style="padding: 20px; width:100%;"><table><tr><td><strong>Publisher</strong></td><td>&nbsp;&nbsp;</td> ';
 
-                                // check wikipedia image based on wikimedia english page id
-                                //if (record["claims"]["P460"])
-                            
-                                for(var index in record["claims"][key]) {
-                                    //var imageUrl = "https://commons.wikimedia.org/wiki/File:" + record["claims"][key][0]["value"];
-                                    var imageUrl = "https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/" + 
-                                        record["claims"][key][index]["value"] + "&width=200";
-                                    metadata += '<td><img src="' + imageUrl + '" width="200"/></td>';
+                        metadata += '<td><div id="publisher-info"/></td><td>&nbsp;&nbsp;</td>';
 
+                        metadata += '</tr></table></div>';
+                        metadata += '</div>';
+
+                        $("#software-info").append(metadata);
+                        
+                        getJsonFile(options.kb_service_host + "/entities/software/" + id+ "?format=codemeta").then(publicationsJson => {
+                            if (publicationsJson && publicationsJson['record']) {
+                                const best_publisher = publicationsJson['record']['publisher'];
+                    
+                                var support_count = -1;
+                                var best_source = null;
+
+                                // check full entry for provenance of the best publisher
+
+                                // take WikiData publisher first, other curated source then, 
+                                // and finally if nothing else most frequent extracted
+                                if (record["claims"]["P178"] && record["claims"]["P178"].length > 0) {
+                                    for(var i in record["claims"]["P178"]) {
+                                        for(var j in record["claims"]["P178"][i]["references"]) {
+                                            var localSource = record["claims"]["P178"][i]["references"][j]["P248"]["value"];       
+                                            if (localSource === "Q2013") {
+                                                best_source = "Wikidata";   
+                                                break;
+                                            }
+                                        }
+                                        if (best_source === "Wikidata") 
+                                            break;
+                                    }
                                 }
-                                metadata += '</tr></table></div>';
-                                metadata += '</div>';
+
+                                if (best_source !== "Wikidata") {
+                                    for(var i in record["claims"]["P123"]) {
+                                        // check source
+                                        for(var j in record["claims"]["P123"][i]["references"]) {
+                                            var localSource = record["claims"]["P123"][i]["references"][j]["P248"]["value"];                            
+
+                                            if (localSource === "Q2013") {
+                                                best_source = "Wikidata";
+                                                break;
+                                            }
+                                        }
+                                        if (best_source === "Wikidata") 
+                                            break;
+                                    }
+                                }
+
+                                if (best_source !== "Wikidata") {
+                                    for(var i in record["claims"]["P123"]) {
+                                        if (record["claims"]["P123"][i]["value"] === best_publisher) {
+                                            // check source
+                                            for(var j in record["claims"]["P123"][i]["references"]) {
+                                                var localSource = record["claims"]["P123"][i]["references"][j]["P248"]["value"];             
+                                                var localCount = record["claims"]["P123"][i]["references"][j]["P248"]["count"]; 
+                                                
+                                                if (localCount > support_count) {
+                                                    support_count = localCount;
+                                                    best_source = localSource;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                var best_source_msg = best_source;
+                                if (support_count > 1) {
+                                    best_source_msg += ', ' + support_count + ' occurences in mentions';
+                                }
+
+                                var publisherData = '<a target="_blank" href="' + 
+                                options.kb_service_host + '/frontend/index.html?Entity=organizations&q=' + encodeURI(best_publisher) + '">' + 
+                                encodedStr(best_publisher) + '</a> <span style="color:#999999;">(' + best_source_msg + ')</span>';
+
+                                $("#publisher-info").append(publisherData);
+                            }
+                        });
+                    }
+
+                    // citation panel
+                    if (entity_type === 'software') {
+                        metadata = '<div class="panel" id="citation" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                        metadata += '<div style="padding: 20px; width:100%;"><table><tr><td><strong>Citations</strong></td><td>&nbsp;&nbsp;</td> ';
+
+                        // direct software citation attempt, Force 11 style, e.g.
+                        // Druskat, S., Spaaks, J. H., Chue Hong, N., Haines, R., Baker, J., Bliven, S., Willighagen, E., Pérez-Suárez, D., & Konovalov, A. (2021). 
+                        // Citation File Format (Version 1.2.0) [Computer software]. https://doi.org/10.5281/zenodo.5171937
+                        
+                        metadata += '<td style="padding-bottom: 10px; padding-top: 10px;"><div id="direct-software-citation"/></td><td>&nbsp;&nbsp;</td></tr>';
+
+                        getJsonFile(options.kb_service_host + "/entities/software/" + id+ "?format=codemeta").then(publicationsJson => {
+                            if (publicationsJson && publicationsJson['record']) {
+                                var directCitation = '';
+                                var start = true;
+                                const publication = publicationsJson['record']
+                                if (publication['author']) {
+                                    for(var i in publication['author']) {
+                                        if (!start) 
+                                            directCitation += ', ';
+                                        directCitation += publication['author'][i]['name'];
+                                        start = false;
+                                    }
+                                } else if (publication['contributor']) {
+                                    for(var i in publication['contributor']) {
+                                        if (!start) 
+                                            directCitation += ', ';
+                                        directCitation += publication['contributor'][i]['name'];
+                                        start = false;
+                                    }
+                                }
+
+                                if (publication['date']) {
+                                    if (!start) 
+                                        directCitation += ' ';
+                                    directCitation += '(' + publication['date'] + ').';
+                                    start = false;
+                                } else {
+                                    if (!start) 
+                                        directCitation += ".";
+                                }
+
+                                if (publication['name']) {
+                                    if (!start) 
+                                        directCitation += ' ';
+                                    directCitation += publication['name'][0] + " [Computer software].";
+                                    start = false;
+                                }
+
+                                if (publication['codeRepository']) {
+                                    if (!start) 
+                                        directCitation += ' ';
+                                    directCitation += publication['codeRepository'];
+                                    start = false;
+                                } else if (publication['url']) {
+                                    if (!start) 
+                                        directCitation += ' ';
+                                    directCitation += publication['url'];
+                                    start = false;
+                                }
+
+                                $("#direct-software-citation").append(encodedStr(directCitation)+' <span style="color:#999999;">(software citation)</span>');
+                            }
+                        });
+
+                        // KB curated reference, if any
+                        metadata += '<tr><td></td><td></td><td><div id="software-references"/></td><td>&nbsp;&nbsp;</td></tr>';
+                        getJsonFile(options.kb_service_host + "/entities/software/" + id + "/references").then(publicationsJson => {
+                            // list of documents used as reference in the software metadata, most of the time there is no
+                            // such reference
+                            if (publicationsJson && publicationsJson.records && publicationsJson.records.length > 0) {
+                                for(var i in publicationsJson.records) {
+                                    const count = publicationsJson.records[i]["size"];
+                                    getJsonFile(options.kb_service_host + "/entities/" + publicationsJson.records[i]["document"]).then(publicationJson => {                                        
+                                        const publication = publicationJson["record"];                                        
+                                        var localReferenceData = formatReference(publication);
+                                        localReferenceData += ' <span style="color:#999999;">(from software metadata)</span>';
+                                        localReferenceData += ' <a target="_blank" style="color:#999999;" href="' + 
+                                            options.kb_service_host + "/entities/" + publication["_id"] +'"><i class="fa fa-file"></i></a>';
+
+                                    $("#software-references").append("<p>" + localReferenceData + "</p>");
+                                    });
+                                }
+                            } else {
+                                $("#software-references").parent().parent().hide();
+                            }
+                        });
+
+                        // KB most frequent cited article together with the mentions
+                        metadata += '<tr><td></td><td></td><td><div id="best-reference"/></td><td>&nbsp;&nbsp;</td></tr>';
+                        getJsonFile(options.kb_service_host + "/entities/software/" + id+ "/citeas?n_best=2").then(publicationsJson => {
+                            var nothing = true;
+                            if (publicationsJson && publicationsJson.records && publicationsJson.records.length > 0) {
+                                for(var i in publicationsJson.records) {
+
+                                    const count = publicationsJson.records[i]["size"];
+                                    if (count && count >0) {
+                                        getJsonFile(options.kb_service_host + "/entities/" + publicationsJson.records[i]["document"]).then(publicationJson => {
+                                            const publication = publicationJson["record"];
+                                            var localPublicationData = formatReference(publication);
+                                            if (localPublicationData.length > 10) {
+                                                localPublicationData += ' <span style="color:#999999;">(' + count + ' citations in mentions)</span>';
+                                                localPublicationData += ' <a target="_blank" style="color:#999999;" href="' + 
+                                                    options.kb_service_host + "/entities/" + publication["_id"] +'"><i class="fa fa-file"></i></a>';
+
+                                                $("#best-reference").append("<p>" + localPublicationData + "</p>");
+                                            }
+                                        });
+                                        nothing = false;
+                                    }
+                                }
+                            } 
+                            if (nothing) {
+                                $("#best-reference").parent().parent().hide();
+                            }
+                        });
+
+                        // in any case, add a citeAs link
+                        metadata += '<tr><td></td><td></td><td><table><tr><td style="width:85px;"><a target="_blank" href="' + 
+                                'http://citeas.org/cite/' + encodeURI(record["labels"]) + 
+                                '/"><img src="data/images/citeas.png" alt="CiteAs" width="85px"/></a></td> <td><div id="citeas-reference"/></td></tr></table></td><td></td></tr>';
+                        getJsonFile("https://api.citeas.org/product/" + encodeURI(record["labels"]) + "?email=patrice.lopez@science-miner.com").then(publicationCiteAsJson => {
+                            if (publicationCiteAsJson && publicationCiteAsJson["citations"] && publicationCiteAsJson["citations"].length>0) {
+                                var localCiteAsData = publicationCiteAsJson["citations"][0]["citation"];
+                                $("#citeas-reference").append(localCiteAsData);
+                            }
+                        });
+
+                        metadata += '</table></div>';
+                        metadata += '</div>';
+
+                        $("#software-info").append(metadata);
+                    }
+                
+                    if ((record["claims"]["P18"] && record["claims"]["P18"].length > 0) 
+                            || (record["claims"]["P154"] && record["claims"]["P154"].length > 0)) {
+                        // images
+                        metadata = '<div class="panel" id="gallery" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                        metadata += '<div style="padding: 20px; width:100%;"><table><tr><td><strong>Gallery</strong></td><td>&nbsp;&nbsp;</td> ';
+
+                        // TBD: check wikipedia image based on wikimedia english page id
+                        //if (record["claims"]["P460"])
+                        
+                        if (record["claims"]["P154"] && record["claims"]["P154"].length > 0) {
+                            for(var index in record["claims"]["P154"]) {
+                                // logo
+                                var imageUrl = "https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/" + 
+                                    record["claims"]["P154"][index]["value"] + "&width=200";
+                                metadata += '<td><img src="' + imageUrl + '" width="200"/></td><td>&nbsp;&nbsp;</td>';
+
                             }
                         }
-                    });
+                        if (record["claims"]["P18"] && record["claims"]["P18"].length > 0) {
+                            for(var index in record["claims"]["P18"]) {
+                                // images
+                                var imageUrl = "https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/" + 
+                                    record["claims"]["P18"][index]["value"] + "&width=200";
+                                metadata += '<td><img src="' + imageUrl + '" width="200"/></td><td>&nbsp;&nbsp;</td>';
+
+                            }
+                        }
+                        metadata += '</tr></table></div>';
+                        metadata += '</div>';
+                        $("#software-info").append(metadata);
+                    }
                 }
                 
-                metadata += "</div></div>"
+                metadata = "</div></div>"
                 $("#software-info").append(metadata);
             });
+        }
+
+        var formatReference = function(publication) {
+            var localPublicationData = '';
+            var started = false;
+
+            if (publication["metadata"]["title"] && publication["metadata"]["title"].length > 0) {
+                localPublicationData += "<i>" + publication["metadata"]["title"][0] + "</i>";
+                started = true;
+            }
+
+            if (publication["metadata"]["author"] && publication["metadata"]["author"].length > 0) {
+                var firstAuthor = publication["metadata"]["author"][0];
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += publication["metadata"]["author"][0]["family"] + ' et al.';
+                started = true;
+            }
+
+            if (publication["metadata"]["container-title"] && publication["metadata"]["container-title"].length > 0) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += publication["metadata"]["container-title"][0];
+                started = true;
+            }
+
+            if (publication["metadata"]["issued"] && publication["metadata"]["issued"]["date=parts"] && 
+                publication["metadata"]["issued"]["date=parts"].length > 0) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += publication["metadata"]["issued"]["date=parts"][0];
+                started = true;
+            } else if (publication["metadata"]["published-online"] && publication["metadata"]["published-online"]["date=parts"] && 
+                publication["metadata"]["published-online"]["date=parts"].length > 0) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += publication["metadata"]["published-online"]["date=parts"][0];
+                started = true;
+            } else if (publication["metadata"]["date"]) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += publication["metadata"]["date"];
+                started = true;
+            }
+
+            if (publication["metadata"]["publisher"]) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += publication["metadata"]["publisher"];
+                started = true;
+            }
+
+            if (publication["metadata"]["DOI"]) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += 'DOI: <a target="_blank" href="https://doi.org/' +  
+                    publication["metadata"]["DOI"] + '">' + publication["metadata"]["DOI"] + '</a>';
+                started = true;
+            }
+
+            if (publication["metadata"]["pmid"]) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += 'PMID: ' + publication["metadata"]["pmid"];
+                started = true;
+            }
+
+            if (publication["metadata"]["pmcid"]) {
+                if (started) {
+                    localPublicationData += ", ";
+                }
+                localPublicationData += 'PMC ID: <a target="_blank" href="https://www.ncbi.nlm.nih.gov/pmc/articles/' + 
+                    publication["metadata"]["pmcid"] + '">' + publication["metadata"]["pmcid"] + '</a>';
+                started = true;
+            }
+
+            return localPublicationData;
         }
 
         // for getting wikipedia page image

@@ -156,7 +156,7 @@ var buildrecord = function (index, node) {
         }
         result += '</a>'
     
-        //result += '</td><td style="width:20%;"><a target="_blank" href="' + kb_url  + '/entities/' + type +'/' + id + '/mentions">'
+        
         result += '</td><td style="width:30%;"><a target="_blank" href="mentions.html?id=' + id;
 
         if ( $('.facetview_filterselected').attr('href') == 'persons') {
@@ -168,7 +168,9 @@ var buildrecord = function (index, node) {
         } else{
             result += '&type=' + 'software' + '">'
         }
-        result += jsonObject[record_metadata.number_mentions] + ' mentions in ' + jsonObject[record_metadata.number_documents] + ' documents';
+        if (jsonObject[record_metadata.number_mentions] && jsonObject[record_metadata.number_documents]) {
+            result += jsonObject[record_metadata.number_mentions] + ' mentions in ' + jsonObject[record_metadata.number_documents] + ' documents';
+        }
         result += '</td></tr></table>';
     }
 
