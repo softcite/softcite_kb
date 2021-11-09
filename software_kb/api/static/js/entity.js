@@ -537,7 +537,7 @@
                     .height(h+10)
                     .bottom(30)
                     .left(10)
-                    .right(0)
+                    .right(5)
                     .top(3);
 
             // no more than 10 textual elements (so years) on the X axis
