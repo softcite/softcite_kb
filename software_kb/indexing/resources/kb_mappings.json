@@ -86,6 +86,10 @@
         "doc_count": {
           "type": "integer",
           "index": "false"  
+        },
+        "mention_count": {
+          "type": "integer",
+          "index": "false"  
         }
       }
     }

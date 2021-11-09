@@ -160,7 +160,8 @@ class Indexer(CommonArangoDB):
             page_size = 1000
             nb_pages = (total_results // page_size)+1
 
-            timeline = {}
+            timeline_mentions = {}
+            timeline_documents = {}
 
             for page_rank in range(0, nb_pages):
 
@@ -179,16 +180,21 @@ class Indexer(CommonArangoDB):
                                 mention_context = the_context["value"]
                                 if len(mention_context)>0:
                                     contexts.append(mention_context)
-                                    if not mention["_from"] in documents:
-                                        documents.append(mention["_from"])
                                     if mention["_from"] != previous_doc_id:
                                         year = self.extract_year(mention["_from"])
                                         previous_doc_id = mention["_from"]
                                     if year != None:
-                                        if year in timeline:
-                                            timeline[year] += 1
+                                        if year in timeline_mentions:
+                                            timeline_mentions[year] += 1
                                         else:
-                                            timeline[year] = 1
+                                            timeline_mentions[year] = 1
+                                    if not mention["_from"] in documents:
+                                        documents.append(mention["_from"])
+                                        if year != None:
+                                            if year in timeline_documents:
+                                                timeline_documents[year] += 1
+                                            else:
+                                                timeline_documents[year] = 1
 
             if len(contexts) > 0:
                 doc['contexts'] = contexts
@@ -202,8 +208,8 @@ class Indexer(CommonArangoDB):
             # time distribution of mentions
             timeline_array = []
 
-            for key in timeline:
-                timeline_array.append( {"key": key, "doc_count": timeline[key] } );
+            for key in timeline_documents:
+                timeline_array.append( {"key": key, "doc_count": timeline_documents[key], "mention_count": timeline_mentions[key] } );
             doc['timeline'] = timeline_array
 
             if "claims" in entity:

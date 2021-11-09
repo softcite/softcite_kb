@@ -87,11 +87,12 @@
                     metadata += '<div style="padding: 20px; width:100%;"><table width="100%">'+
                     '<tr><td><div style="width:60px;overflow: hidden;"><strong>Mentions</strong></div></td><td>&nbsp;&nbsp;</td> '
                     metadata += '<td><div id="mention-summary"/></td><td><div id="timeline"/></td>'+
-                    '<td> <div style="width:100px;overflow: hidden;" id="info-timeline"/></td></tr></table></div>'
+                    '<td> <div style="width:150px;overflow: hidden;" id="info-timeline"/></td></tr></table></div>'
                     metadata += '</div>';
 
                     const local_es_query_json = 
-                        '{ "_source": false, "fields": ["number_mentions", "number_documents", "timeline.key", "timeline.doc_count"], "query": { "terms": { "_id": [ "' + id + '" ] } } }';
+                        '{ "_source": false, "fields": ["number_mentions", "number_documents", "timeline.key", '+
+                        '"timeline.doc_count", "timeline.mention_count"], "query": { "terms": { "_id": [ "' + id + '" ] } } }';
                     const get_es_url = options.kb_service_host + "/search/software-kb/_search";
                     getJsonFileWithData(get_es_url, local_es_query_json).then(responseJson => {
                         if (responseJson && responseJson['hits'] && responseJson['hits']['hits'] && responseJson['hits']['hits'].length == 1) {
@@ -598,7 +599,7 @@
                     .event("mouseover", function (d) {
                         var year = entries[this.index].key;
                         var count = entries[this.index].doc_count;
-                        $("#info-timeline").append('<strong>' + count + "</strong> mentions in <strong>" + year + "</strong>");
+                        $("#info-timeline").append('<strong>' + count + "</strong> documents in <strong>" + year + "</strong>");
                     })
 
                     .event("mouseout", function (d) {
