@@ -600,7 +600,7 @@ async def get_software_citeas(identifier: str, n_best: int = 10):
     for record1 in records1:
         # check if present in records2
         for record2 in records2:
-            if record2['_id'] == record1['_id']:
+            if record2['document'] == record1['document']:
                 # merge
                 record1['sources'].extend(record2['sources'])
                 break
