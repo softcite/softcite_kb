@@ -9,6 +9,8 @@ from software_kb.common.arango_common import CommonArangoDB
 from software_kb.kb.knowledge_base import knowledgeBase
 import yaml
 import argparse
+import datetime
+from tqdm import tqdm
 
 settings_path = "software_kb/indexing/resources/settings.json";
 mappings_path = "software_kb/indexing/resources/kb_mappings.json";
@@ -61,17 +63,18 @@ class Indexer(CommonArangoDB):
         #self.index_collection(self.kb.documents, "documents")
         #print("number of indexed documents:", self.kb.documents.count())
 
+        print("\nnumber of organization entities to index:", self.kb.organizations.count())
         self.index_collection(self.kb.organizations, "organizations")
-        print("number of indexed organizations:", self.kb.organizations.count())
-
+        
+        print("\nnumber of license entities to index:", self.kb.licenses.count())
         self.index_collection(self.kb.licenses, "licenses")
-        print("number of indexed licenses:", self.kb.licenses.count())
-
+        
+        print("\nnumber of person entities to index:", self.kb.persons.count())
         self.index_collection(self.kb.persons, "persons")
-        print("number of indexed persons:", self.kb.persons.count())
-
+        
+        print("\nnumber of software entities to index:", self.kb.software.count())
         self.index_collection(self.kb.software, "software")        
-        print("number of indexed software:", self.kb.software.count())
+        
 
     def index_collection(self, collection, collection_name):
         page_size = self.config['elasticsearch']['batch_size']
@@ -81,7 +84,7 @@ class Indexer(CommonArangoDB):
 
         print("entries:", total_entries, ", nb. steps:", nb_pages)
 
-        for page_rank in range(0,nb_pages):
+        for page_rank in tqdm(range(0,nb_pages)):
             cursor = self.kb.db.aql.execute(
                 'FOR doc IN ' + collection_name + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size) + ' RETURN doc', ttl=3600
             )
@@ -157,6 +160,8 @@ class Indexer(CommonArangoDB):
             page_size = 1000
             nb_pages = (total_results // page_size)+1
 
+            timeline = {}
+
             for page_rank in range(0, nb_pages):
 
                 cursor = self.kb.db.aql.execute(
@@ -165,6 +170,8 @@ class Indexer(CommonArangoDB):
                         + ' LIMIT ' + str(page_rank*page_size) + ', ' + str(page_size)
                         + ' RETURN mention')
 
+                year = None 
+                previous_doc_id = None 
                 for mention in cursor:
                     if "claims" in mention and "P7081" in mention["claims"]:
                         for the_context in mention["claims"]["P7081"]:
@@ -174,6 +181,14 @@ class Indexer(CommonArangoDB):
                                     contexts.append(mention_context)
                                     if not mention["_from"] in documents:
                                         documents.append(mention["_from"])
+                                    if mention["_from"] != previous_doc_id:
+                                        year = self.extract_year(mention["_from"])
+                                        previous_doc_id = mention["_from"]
+                                    if year != None:
+                                        if year in timeline:
+                                            timeline[year] += 1
+                                        else:
+                                            timeline[year] = 1
 
             if len(contexts) > 0:
                 doc['contexts'] = contexts
@@ -183,6 +198,13 @@ class Indexer(CommonArangoDB):
 
             # number of citing documents for software 
             doc['number_documents'] = len(documents)
+
+            # time distribution of mentions
+            timeline_array = []
+
+            for key in timeline:
+                timeline_array.append( {"key": key, "doc_count": timeline[key] } );
+            doc['timeline'] = timeline_array
 
             if "claims" in entity:
                 if "P275" in entity["claims"]:
@@ -297,6 +319,27 @@ class Indexer(CommonArangoDB):
                 doc["all"] += " " + context
 
         return doc
+
+    def extract_year(self, document_id):
+        '''
+        Extract the publication year of a document (earliest publication date), if available
+        '''
+        document_entity_item = self.kb.documents.get(document_id)
+        year = None
+        if "metadata" in document_entity_item:
+            if "issued" in document_entity_item["metadata"]:
+                year = document_entity_item["metadata"]["issued"]["date-parts"][0][0]
+            elif "published-online" in document_entity_item["metadata"]:
+                year = document_entity_item["metadata"]["published-online"]["date-parts"][0][0]
+        if year != None:
+            try:
+                #local_date = datetime.datetime(int(year),1,1) 
+                #return int((local_date - datetime.datetime(1970, 1, 1)).total_seconds())
+                return int(year)
+            except:
+                return None
+        else:
+            return None
 
 if __name__ == '__main__':
     # stand alone mode, run the application

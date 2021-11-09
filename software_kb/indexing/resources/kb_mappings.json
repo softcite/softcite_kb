@@ -75,6 +75,19 @@
     },
     "number_documents": {
       "type": "integer"  
+    },
+    "timeline": {
+      "type": "nested",
+      "properties": {
+        "key": {
+          "type": "integer",
+          "index": "false"
+        },
+        "doc_count": {
+          "type": "integer",
+          "index": "false"  
+        }
+      }
     }
   }
 }
