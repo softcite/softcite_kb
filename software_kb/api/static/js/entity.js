@@ -121,98 +121,177 @@
                         }
                     });
                     $("#software-info").append(metadata);
-                }
 
-                if (record["claims"]) {
-                    if ( (record["claims"]["P123"] && record["claims"]["P123"].length > 0) ||
-                         (record["claims"]["P178"] && record["claims"]["P178"].length > 0) ) {
+                    if (record["claims"]) {
+                        if ( (record["claims"]["P123"] && record["claims"]["P123"].length > 0) ||
+                             (record["claims"]["P178"] && record["claims"]["P178"].length > 0) ) {
+                            
+                            // publisher or developer (in Wikidata)
+                            metadata = '<div class="panel" id="publisher" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                            metadata += '<div style="padding: 20px; width:100%;"><table>'+
+                            '<tr><td><div style="width:60px;overflow: hidden;"><strong>Publisher</strong></div></td><td>&nbsp;&nbsp;</td> ';
+
+                            metadata += '<td><div id="publisher-info"/></td><td>&nbsp;&nbsp;</td>';
+
+                            metadata += '</tr></table></div>';
+                            metadata += '</div>';
+
+                            $("#software-info").append(metadata);
+                            
+                            getJsonFile(options.kb_service_host + "/entities/software/" + id+ "?format=codemeta").then(publicationsJson => {
+                                if (publicationsJson && publicationsJson['record']) {
+                                    const best_publisher = publicationsJson['record']['publisher'];
                         
-                        // publisher or developer (in Wikidata)
-                        metadata = '<div class="panel" id="publisher" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
-                        metadata += '<div style="padding: 20px; width:100%;"><table>'+
-                        '<tr><td><div style="width:60px;overflow: hidden;"><strong>Publisher</strong></div></td><td>&nbsp;&nbsp;</td> ';
+                                    var support_count = -1;
+                                    var best_source = null;
 
-                        metadata += '<td><div id="publisher-info"/></td><td>&nbsp;&nbsp;</td>';
+                                    // check full entry for provenance of the best publisher
 
-                        metadata += '</tr></table></div>';
-                        metadata += '</div>';
-
-                        $("#software-info").append(metadata);
-                        
-                        getJsonFile(options.kb_service_host + "/entities/software/" + id+ "?format=codemeta").then(publicationsJson => {
-                            if (publicationsJson && publicationsJson['record']) {
-                                const best_publisher = publicationsJson['record']['publisher'];
-                    
-                                var support_count = -1;
-                                var best_source = null;
-
-                                // check full entry for provenance of the best publisher
-
-                                // take WikiData publisher first, other curated source then, 
-                                // and finally if nothing else most frequent extracted
-                                if (record["claims"]["P178"] && record["claims"]["P178"].length > 0) {
-                                    for(var i in record["claims"]["P178"]) {
-                                        for(var j in record["claims"]["P178"][i]["references"]) {
-                                            var localSource = record["claims"]["P178"][i]["references"][j]["P248"]["value"];       
-                                            if (localSource === "Q2013") {
-                                                best_source = "Wikidata";   
-                                                break;
+                                    // take WikiData publisher first, other curated source then, 
+                                    // and finally if nothing else most frequent extracted
+                                    if (record["claims"]["P178"] && record["claims"]["P178"].length > 0) {
+                                        for(var i in record["claims"]["P178"]) {
+                                            for(var j in record["claims"]["P178"][i]["references"]) {
+                                                var localSource = record["claims"]["P178"][i]["references"][j]["P248"]["value"];       
+                                                if (localSource === "Q2013") {
+                                                    best_source = "Wikidata";   
+                                                    break;
+                                                }
                                             }
-                                        }
-                                        if (best_source === "Wikidata") 
-                                            break;
-                                    }
-                                }
-
-                                if (best_source !== "Wikidata") {
-                                    for(var i in record["claims"]["P123"]) {
-                                        // check source
-                                        for(var j in record["claims"]["P123"][i]["references"]) {
-                                            var localSource = record["claims"]["P123"][i]["references"][j]["P248"]["value"];                            
-
-                                            if (localSource === "Q2013") {
-                                                best_source = "Wikidata";
+                                            if (best_source === "Wikidata") 
                                                 break;
-                                            }
                                         }
-                                        if (best_source === "Wikidata") 
-                                            break;
                                     }
-                                }
 
-                                if (best_source !== "Wikidata") {
-                                    for(var i in record["claims"]["P123"]) {
-                                        if (record["claims"]["P123"][i]["value"] === best_publisher) {
+                                    if (best_source !== "Wikidata") {
+                                        for(var i in record["claims"]["P123"]) {
                                             // check source
                                             for(var j in record["claims"]["P123"][i]["references"]) {
-                                                var localSource = record["claims"]["P123"][i]["references"][j]["P248"]["value"];             
-                                                var localCount = record["claims"]["P123"][i]["references"][j]["P248"]["count"]; 
-                                                
-                                                if (localCount > support_count) {
-                                                    support_count = localCount;
-                                                    best_source = localSource;
+                                                var localSource = record["claims"]["P123"][i]["references"][j]["P248"]["value"];                            
+
+                                                if (localSource === "Q2013") {
+                                                    best_source = "Wikidata";
+                                                    break;
+                                                }
+                                            }
+                                            if (best_source === "Wikidata") 
+                                                break;
+                                        }
+                                    }
+
+                                    if (best_source !== "Wikidata") {
+                                        for(var i in record["claims"]["P123"]) {
+                                            if (record["claims"]["P123"][i]["value"] === best_publisher) {
+                                                // check source
+                                                for(var j in record["claims"]["P123"][i]["references"]) {
+                                                    var localSource = record["claims"]["P123"][i]["references"][j]["P248"]["value"];             
+                                                    var localCount = record["claims"]["P123"][i]["references"][j]["P248"]["count"]; 
+                                                    
+                                                    if (localCount > support_count) {
+                                                        support_count = localCount;
+                                                        best_source = localSource;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+
+                                    var best_source_msg = best_source;
+                                    if (support_count > 1) {
+                                        best_source_msg += ', ' + support_count + ' occurences in mentions';
+                                    }
+
+                                    var publisherData = '<a target="_blank" href="' + 
+                                    options.kb_service_host + '/frontend/index.html?Entity=organizations&q=' + encodeURI(best_publisher) + '">' + 
+                                    encodedStr(best_publisher) + '</a> <span style="color:#999999;">(' + best_source_msg + ')</span>';
+
+                                    $("#publisher-info").append(publisherData);
+                                }
+                            });
+                        }
+
+                        var repo_url = null;
+                        var local_source = null;
+
+                        if ( (record["claims"]["P1324"] && record["claims"]["P1324"].length > 0) ) {
+                            var repo_sources = [];
+
+                            // code source/project repository
+                            repo_url = record["claims"]["P1324"][0]['value'];
+                            repo_url = repo_url.replace(" ", "");
+                            repo_url = '<a target="_blank" href="' + repo_url + '">' + encodedStr(repo_url) + '</a>';
+                            
+                            for (var j in record["claims"]["P1324"][0]["references"]) {
+                                var local_source = record["claims"]["P1324"][0]["references"][j]["P248"]["value"];     
+                                   
+                                if (local_source === "Q2013") {
+                                    local_source = "Wikidata";   
+                                } else if (local_source === "Q2086703") {
+                                    local_source = "CRAN"; 
                                 }
 
-                                var best_source_msg = best_source;
-                                if (support_count > 1) {
-                                    best_source_msg += ', ' + support_count + ' occurences in mentions';
-                                }
-
-                                var publisherData = '<a target="_blank" href="' + 
-                                options.kb_service_host + '/frontend/index.html?Entity=organizations&q=' + encodeURI(best_publisher) + '">' + 
-                                encodedStr(best_publisher) + '</a> <span style="color:#999999;">(' + best_source_msg + ')</span>';
-
-                                $("#publisher-info").append(publisherData);
+                                if (local_source != null && local_source.length > 0)
+                                    repo_sources.push(local_source);
                             }
-                        });
-                    }
 
-                    
-                    if (entity_type === 'software') {
+                            local_source = '';
+                            for(var j in repo_sources) {
+                                if (j != 0) {
+                                    local_source += ', ';
+                                } 
+                                local_source += repo_sources[j];
+                            }
+
+                            local_source = ' <span style="color:#999999;">(' + local_source + ')</span>';
+                        } else if ( (record["claims"]["P854"] && record["claims"]["P854"].length > 0) ) {
+                            // if none, we can check the extracted URLs with repo prefixes (e.g. https://github.com) and a string similarity
+                            // between the package/software name and the repo project name
+                            for(var j in record["claims"]["P854"]) {
+                                const local_url = record["claims"]["P854"][j]['value'];
+                                if (local_url.indexOf("github.com") != -1 || local_url.indexOf("gitlab.com") != -1 || 
+                                    local_url.indexOf("bitbucket.org") != -1) {
+                                    // this is a good candidate, check the project name
+                                    repo_url = local_url;
+                                    repo_url = 'best candidate: <a target="_blank" href="' + repo_url + '">' + encodedStr(repo_url) + '</a>';
+                                    var repo_sources = [];
+                                    for (var k in record["claims"]["P854"][j]["references"]) {
+                                        var local_source = record["claims"]["P854"][j]["references"][k]["P248"]["value"];     
+                                           
+                                        if (local_source === "Q2013") {
+                                            local_source = "Wikidata";   
+                                        } else if (local_source === "Q2086703") {
+                                            local_source = "CRAN"; 
+                                        } 
+
+                                        if (local_source != null && local_source.length > 0)
+                                            repo_sources.push(local_source);
+                                    }
+
+                                    local_source = '';
+                                    for(var k in repo_sources) {
+                                        if (k != 0) {
+                                            local_source += ', ';
+                                        } 
+                                        local_source += repo_sources[k];
+                                    }
+
+                                    local_source = ' <span style="color:#999999;">(' + local_source + ')</span>';
+                                }
+                            }
+                        }
+
+                        if (repo_url != null) {
+                            metadata = '<div class="panel" id="repo" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                            metadata += '<div style="padding: 20px; width:100%;"><table style="width:100%;">'+
+                                '<tr><td style="width:70px;"><div style="width:70px;overflow: hidden;"><strong>Repository</strong></div></td>'+
+                                '<td>' + repo_url + local_source + '</td></tr>';
+                            metadata += '</table></div>';
+                            metadata += '</div>';
+
+                            $("#software-info").append(metadata);
+                        }
+
+
                         metadata = '<div class="panel" id="citation1" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
                         metadata += '<div style="padding: 20px; width:100%;"><table style="width:100%;">'+
                             '<tr><td><div style="width:60px;overflow: hidden;"><strong>How is it cited?</strong></div></td>'+
