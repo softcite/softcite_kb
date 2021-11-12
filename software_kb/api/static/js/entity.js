@@ -85,10 +85,12 @@
                 if (entity_type === 'software') {
                     metadata = '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
                     metadata += '<div style="padding: 20px; width:100%;"><table width="100%">'+
-                    '<tr><td><div style="width:60px;overflow: hidden;"><strong>Mentions</strong></div></td><td>&nbsp;&nbsp;</td> '
+                        '<tr><td><div style="width:60px;overflow: hidden;"><strong>Mentions</strong></div></td><td>&nbsp;&nbsp;</td> ';
                     metadata += '<td><div id="mention-summary"/></td><td><div id="timeline"/></td>'+
-                    '<td> <div style="width:150px;overflow: hidden;" id="info-timeline"/></td></tr></table></div>'
-                    metadata += '</div>';
+                        '<td> <div style="width:150px;overflow: hidden;" id="info-timeline"/></td></tr></table>';
+                    metadata += '</div></div>';
+                    
+                    $("#software-info").append(metadata);
 
                     const local_es_query_json = 
                         '{ "_source": false, "fields": ["number_mentions", "number_documents", "timeline.key", '+
@@ -120,7 +122,6 @@
                             }
                         }
                     });
-                    $("#software-info").append(metadata);
 
                     if (record["claims"]) {
                         if ( (record["claims"]["P123"] && record["claims"]["P123"].length > 0) ||
@@ -291,7 +292,6 @@
                             $("#software-info").append(metadata);
                         }
 
-
                         metadata = '<div class="panel" id="citation1" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
                         metadata += '<div style="padding: 20px; width:100%;"><table style="width:100%;">'+
                             '<tr><td><div style="width:60px;overflow: hidden;"><strong>How is it cited?</strong></div></td>'+
@@ -343,6 +343,10 @@
                                 '/"><img src="data/images/citeas.png" alt="CiteAs" width="85px"/></a></td>'+
                                 '<td><div id="citeas-reference"/></td></tr></table>' +
                             '</td></tr>';
+                        metadata += '</table></div>';
+                        metadata += '</div>';
+
+                        $("#software-info").append(metadata);
                         
                         // KB curated reference, if any
                         //metadata += '<tr><td></td><td></td><td><div id="software-references"/></td><td>&nbsp;&nbsp;</td></tr>';
@@ -369,8 +373,6 @@
                         // Druskat, S., Spaaks, J. H., Chue Hong, N., Haines, R., Baker, J., Bliven, S., Willighagen, E., Pérez-Suárez, D., & Konovalov, A. (2021). 
                         // Citation File Format (Version 1.2.0) [Computer software]. https://doi.org/10.5281/zenodo.5171937
                         
-                        //metadata += '<td style="padding-bottom: 10px; padding-top: 10px;"><div id="direct-software-citation"/></td><td>&nbsp;&nbsp;</td></tr>';
-
                         getJsonFile(options.kb_service_host + "/entities/software/" + id+ "?format=codemeta").then(publicationsJson => {
                             if (publicationsJson && publicationsJson['record']) {
                                 var directCitation = '';
@@ -427,9 +429,6 @@
                         });
 
                         // in any case, add a citeAs link
-                        //var local_citeas_metadata = '';
-                        //$("#software-citation-request").append("<p>" + local_citeas_metadata + "</p>");
-
                         getJsonFile("https://api.citeas.org/product/" + encodeURI(record["labels"]) + "?email=patrice.lopez@science-miner.com").then(publicationCiteAsJson => {
                             if (publicationCiteAsJson && publicationCiteAsJson["citations"] && publicationCiteAsJson["citations"].length>0) {
                                 var localCiteAsData = publicationCiteAsJson["citations"][0]["citation"];
@@ -458,10 +457,7 @@
                             }
                         });
 
-                        metadata += '</table></div>';
-                        metadata += '</div>';
-
-                        $("#software-info").append(metadata);
+                        
                     }
 
                     if ((record["claims"]["P18"] && record["claims"]["P18"].length > 0) 
@@ -497,9 +493,6 @@
                         $("#software-info").append(metadata);
                     }
                 }
-                
-                metadata = "</div></div>"
-                $("#software-info").append(metadata);
             });
         }
 
