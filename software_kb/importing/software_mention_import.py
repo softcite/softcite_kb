@@ -10,7 +10,7 @@
 import requests
 import argparse
 import json
-from harvester import Harvester
+from software_kb.importing.harvester import Harvester
 from arango import ArangoClient
 import re
 import os
@@ -128,6 +128,46 @@ class Software_mention_import(Harvester):
                 collection.insert(json_object)
         except:
             print("failed to ingest json input:", json_string)
+
+    def get_document_annotations(self, document_id):
+        '''
+        Return the annotations for a given document, with page dimentions. This is similar
+        as what the softcite software mention recognizer is returning and allows to
+        visualize the mentions from the KB only. 
+        '''
+        result = {}
+
+        # first get document record for page dimentions
+        doc_record = self.documents.get('documents/' + document_id)
+
+        if doc_record == None or not 'pages' in doc_record:
+            return result
+
+        result['pages'] = doc_record['pages']
+        result['md5'] = doc_record['md5']
+        result['mentions'] = []
+        result['references'] = []
+
+        # retrieve all the annotations for this document
+        cursor = self.db.aql.execute(
+            'FOR annotation IN annotations FILTER annotation["document"]["$oid"] == "' + document_id + '" RETURN annotation', ttl=3600
+        )
+
+        for annotation in cursor:
+            del annotation['document']
+            result['mentions'].append(annotation)
+
+        # retrieve the references information
+        cursor = self.db.aql.execute(
+            'FOR reference IN references FILTER reference["document"]["$oid"] == "' + document_id + '" RETURN reference', ttl=3600
+        )
+
+        for reference in cursor:
+            del reference['document']
+            result['references'].append(reference)
+
+
+        return result
 
 def _is_number(s):
     try:

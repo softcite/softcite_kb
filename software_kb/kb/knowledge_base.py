@@ -42,7 +42,14 @@ class knowledgeBase(CommonArangoDB):
     # for mapping Wikidata property to person roles
     relator_map = None
 
+    # for displaying source annotations on PDF easily, an handle to the software mention import database
+    software_mentions = None
+
+    # keep track of the original config file used to initialize the KB
+    config_path = None
+
     def __init__(self, config_path="./config.yaml"):
+        self.config_path = config_path
         self.load_config(config_path)
         self.init_naming()
 
