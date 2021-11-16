@@ -823,7 +823,7 @@
                         // accordion-toggle collapsed: put the chevron icon down when starting the page; accordion-toggle : put the chevron icon up
                         string += "<a class='accordion-toggle collapsed' data-toggle='collapse' data-parent='#accordionParentReferences-" + pageIndex + "-" + r + 
                             "' href='#collapseElementReferences-"+ pageIndex + "-" + r + "' style='outline:0;'>";
-                        string += "<h5 class='panel-title' style='font-weight:normal;'>" + entity['references'][r]['label'] + " " + localLabel + "</h5>";
+                        string += "<h5 class='panel-title' style='font-weight:normal; font-size:13px'>" + entity['references'][r]['label'] + " " + localLabel + "</h5>";
                         string += "</a>";
                         string += "</div>";
                         // panel-collapse collapse: hide the content of statemes when starting the page; panel-collapse collapse in: show it
