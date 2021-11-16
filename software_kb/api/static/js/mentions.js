@@ -82,7 +82,8 @@
                         publication["metadata"]["DOI"] + '">' + publication["metadata"]["DOI"] + '</a>';
 
                 if (publication["metadata"]["pmid"])
-                    localPublicationData += ', PMID: ' + publication["metadata"]["pmid"]
+                    localPublicationData += ', PMID: <a target="_blank" href="https://pubmed.ncbi.nlm.nih.gov/' + 
+                        publication["metadata"]["pmid"]  + '/">' + publication["metadata"]["pmid"] + '</a>';
 
                 if (publication["metadata"]["pmcid"])
                     localPublicationData += ', PMC ID: <a target="_blank" href="https://www.ncbi.nlm.nih.gov/pmc/articles/' + 
@@ -91,7 +92,7 @@
                 localPublicationData += ' <a target="_blank" style="color:#999999;" href="' + 
                     options.kb_service_host + "/entities/" + document_id +'"><i class="fa fa-file"></i></a>';
 
-                localPublicationData += '</td><td style="width: 150px; border-style: solid; border-width: 1px; border-color: #bbb;">' +
+                localPublicationData += '</td><td>&nbsp;&nbsp;</td><td style="width: 150px; border-style: solid; border-width: 1px; background-color: #EEEEEE; border-color: #EEEEEE;">' +
                     '<a target="_blank" href="' + 
                         options.kb_service_host + '/frontend/document.html?id=' + document_id.replace("documents/","") + 
                         '"><table style="width: 100%;"><tr><td style="text-align:center;">'+
