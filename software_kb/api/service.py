@@ -84,6 +84,11 @@ def get_app(server_config) -> FastAPI:
     async def shutdown() -> None:
         print("Software Knowledge Base API service stopped")
 
+    @server.exception_handler(Exception)
+    async def validation_exception_handler(request, exc):
+        print(str(exc))
+        return PlainTextResponse("Something went wrong", status_code=400)
+
     return server
 
 def init_kb(config_path):

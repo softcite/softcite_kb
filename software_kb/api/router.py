@@ -1,9 +1,14 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import PlainTextResponse, RedirectResponse
+from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 import time 
 from software_kb.kb.converter import convert_to_simple_format, convert_to_wikidata, convert_to_codemeta
+from software_kb.importing.software_mention_import import Software_mention_import
 from enum import Enum
 import httpx
+from utils import unpaywalling_doi, pdf_streamer
+import requests
 
 router = APIRouter()
 
@@ -360,6 +365,95 @@ async def get_document_software(identifier: str, page_rank: int = 0, page_size: 
         records.append(entity)
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
+
+    return result
+
+
+'''
+return a ranked list of best urls for direct access to the PDF of a given document
+'''
+@router.get("/entities/documents/{identifier}/urls", tags=["entities"], 
+    description="Return a ranked list of best urls for direct access to the PDF of a given document.")
+async def get_document_urls(identifier: str):
+    start_time = time.time()
+
+    doc_record = kb.kb_graph.vertex('documents/' + identifier)
+
+    result = {}
+    records = []
+    doi = None
+
+    if doc_record != None and "metadata" in doc_record and "DOI" in doc_record["metadata"]:
+        doi = doc_record["metadata"]["DOI"]
+
+    if doi != None:
+        # call unpaywall
+        records = unpaywalling_doi(kb.config["unpaywall"]["unpaywall_base"], kb.config["unpaywall"]["unpaywall_email"], doi)
+
+    result['records'] = records
+    result['full_count'] = len(records)
+    result['runtime'] = round(time.time() - start_time, 3)
+
+    return result
+
+
+'''
+Stream the best available PDF for a given document, if available
+'''
+@router.get("/entities/documents/{identifier}/pdf", tags=["entities"], 
+    description="Stream the best available PDF for a given document, if available.")
+async def get_document_pdf(identifier: str):
+    start_time = time.time()
+
+    doc_record = kb.kb_graph.vertex('documents/' + identifier)
+    result = {}
+
+    doi = None
+    if doc_record != None and "metadata" in doc_record and "DOI" in doc_record["metadata"]:
+        doi = doc_record["metadata"]["DOI"]
+
+    if doi != None:
+        # call unpaywall
+        records = unpaywalling_doi(kb.config["unpaywall"]["unpaywall_base"], kb.config["unpaywall"]["unpaywall_email"], doi)
+
+        if len(records)>0:
+            url = None
+            for record in records:
+                if record.find('ncbi.nlm.nih.gov/pmc') != -1:
+                    url = record 
+                    break
+
+            if url == None:
+                url = records[0]
+ 
+            return StreamingResponse(pdf_streamer(url), media_type="application/pdf")
+
+    # note: to do, handling errors - I don't know how to do it with a StreamingResponse because the response
+    # has already started when the error is raised 
+
+    raise HTTPException(status_code=404, detail="could not find an online PDF resource for the document")
+
+
+'''
+Return the found software mentions as layout-ready annotations for the PDF corresponding to the given document.
+See https://grobid.readthedocs.io/en/latest/Coordinates-in-PDF/#coordinate-system-in-the-pdf for more information
+on the coordinate system for the PDF annotations
+'''
+@router.get("/entities/documents/{identifier}/annotations", tags=["relations"], 
+    description="Return the found software mentions as layout-ready annotations for the PDF corresponding to the given document.")
+async def get_document_annotations(identifier: str):
+    start_time = time.time()
+
+    # basically we simply return the source annotations as imported in the mentions collection
+    if kb.software_mentions == None:
+        kb.software_mentions = Software_mention_import(kb.config_path)
+    records = kb.software_mentions.get_document_annotations(identifier)
+
+    result = {}
+
+    result['records'] = [ records ]
+    result['runtime'] = round(time.time() - start_time, 3)
+    result['full_count'] = 1
 
     return result
 
