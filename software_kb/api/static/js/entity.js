@@ -662,22 +662,26 @@
                     .height(function (d) {
                         return y(d.doc_count);
                     })
+                    //.fillStyle(fillDefaultColorLight)
+                    .def("fillStyle", fillDefaultColorLight)
                     // Make the chart curve smooth
                     .interpolate('cardinal')
                     // Divide the chart into "segments" (needed for interactivity)
                     .segmented(true)
                     .strokeStyle("#fff")
-                    .fillStyle(fillDefaultColorLight)
-
+                    
                     // On "mouse down", perform action, such as filtering the results...
                     .event("mouseover", function (d) {
+                        $("#info-timeline").empty();
+                        //this.fillStyle(fillDefaultColor);
                         var year = entries[this.index].key;
                         var count = entries[this.index].doc_count;
                         $("#info-timeline").append('<strong>' + count + "</strong> documents in <strong>" + year + "</strong>");
                     })
 
                     .event("mouseout", function (d) {
-                        $("#info-timeline").empty();
+                        //$("#info-timeline").empty();
+                        //this.fillStyle(fillDefaultColorLight);
                     })
 
                     // Add thick stroke to the chart
