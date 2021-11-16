@@ -42,6 +42,8 @@
 
         // note: this is a basic encoding, for something comprehensive, use the he library (https://github.com/mathiasbynens/he)
         var encodedStr = function(rawStr) {
+            if (typeof rawStr !== 'string')
+                return rawStr;
             return rawStr.replace(/[\u00A0-\u9999<>\&]/g, 
                 function(i) {
                     return '&#'+i.charCodeAt(0)+';';
