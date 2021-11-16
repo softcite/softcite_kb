@@ -1,0 +1,19 @@
+{
+    "description": "Profile of a collection of full texts",
+    "name": "CORD-19",
+    "version": "2021-07-26", 
+    "harvester": "article-dataset-builder",
+    "documents": {
+        "total_entries": 0,
+        "total_distinct_entries": 0,
+        "total_harvested": 0,
+        "distribution_entries_per_year" : {
+            "2021": 0,
+            "2020":0
+        }, 
+        "distribution_harvested_per_year" : {
+            "2021": 0,
+            "2020":0
+        }
+    }
+}

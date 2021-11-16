@@ -65,6 +65,8 @@
 
                 var localPublicationData = '<div class="row" style="margin-left: 20px; margin-right:20px; padding:10px;">' 
 
+                localPublicationData += '<table style="width: 100%"><tr><td>'
+
                 localPublicationData += "<i>" + publication["metadata"]["title"][0] + "</i>";
                 if (publication["metadata"]["author"] && publication["metadata"]["author"].length > 0) {
                     var firstAuthor = publication["metadata"]["author"][0];
@@ -88,6 +90,14 @@
 
                 localPublicationData += ' <a target="_blank" style="color:#999999;" href="' + 
                     options.kb_service_host + "/entities/" + document_id +'"><i class="fa fa-file"></i></a>';
+
+                localPublicationData += '</td><td style="width: 150px; border-style: solid; border-width: 1px; border-color: #bbb;">' +
+                    '<a target="_blank" href="' + 
+                        options.kb_service_host + '/frontend/document.html?id=' + document_id.replace("documents/","") + 
+                        '"><table style="width: 100%;"><tr><td style="text-align:center;">'+
+                        '<table style="width: 100%;"><tr><td style="text-align:center;">View mentions</td></tr><td>in PDF</td></tr></table>'+
+                        '</td><td><img width="30px" src="data/images/view.png"/>'+
+                        '</td></tr></table></a></td></tr></table>';
 
                 localPublicationData += "</div>";
 
