@@ -51,7 +51,7 @@ var buildrecord = function (index, node) {
         } 
     }
     result += '</div>';
-    result += '<div class="col-md-10" class="height:100%;" id="myCollapsible_' + index + '" style="white-space:normal;left:-10px;">';
+    result += '<div class="col-md-10" class="height:100%;" id="myCollapsible_' + index + '" style="white-space:normal; padding-right: 0px;">';
 
     // date
     var date;
