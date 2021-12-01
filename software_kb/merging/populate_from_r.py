@@ -75,9 +75,11 @@ def populate_r(stagingArea, collection, source_ref):
 
         software['labels'] = package['Package']
         # wikidata description are short phrase, so it correspond to R package title, 
-        software['descriptions'] = package['Title']
+        if "Title" in package:
+            software['descriptions'] = package['Title']
         # for the actual package description, there is no "content summary" property, so we introduce a field "summary"
-        software['summary'] = package['Description']
+        if 'Description' in package:
+            software['summary'] = package['Description']
         #software['id'] = package['_key']
 
         if stagingArea.db.name == "CRAN":
