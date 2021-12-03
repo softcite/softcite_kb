@@ -76,6 +76,12 @@
     "number_documents": {
       "type": "integer"  
     },
+    "number_software": {
+      "type": "integer"  
+    },
+    "software": {
+      "type": "keyword"
+    },
     "timeline": {
       "type": "nested",
       "properties": {

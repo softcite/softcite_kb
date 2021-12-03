@@ -16,6 +16,10 @@ settings_path = "software_kb/indexing/resources/settings.json";
 mappings_path = "software_kb/indexing/resources/kb_mappings.json";
 crossref_mappings_path = "software_kb/indexing/resources/crossref_mappings.json";
 
+# as an alternative to indexing a max number of contexts, we could use ES sub-documents
+# to index them all
+MAX_INDEXED_CONTEXTS_PER_SOFTWARE = 20000
+
 class Indexer(CommonArangoDB):
 
     def __init__(self, config_path="./config.yaml", reset=False):
@@ -104,7 +108,7 @@ class Indexer(CommonArangoDB):
             helpers.bulk(self.es, 
                 actions, 
                 index=self.config['elasticsearch']['index_name'], 
-                chunk_size=500,
+                chunk_size=250,
                 refresh=True)
 
     def flatten(self, entity, collection_name):
@@ -162,6 +166,7 @@ class Indexer(CommonArangoDB):
 
             timeline_mentions = {}
             timeline_documents = {}
+            nb_contexts = 0 
 
             for page_rank in range(0, nb_pages):
 
@@ -179,7 +184,11 @@ class Indexer(CommonArangoDB):
                             if "value" in the_context:
                                 mention_context = the_context["value"]
                                 if len(mention_context)>0:
-                                    contexts.append(mention_context)
+                                    nb_contexts += 1
+
+                                    if len(contexts) < MAX_INDEXED_CONTEXTS_PER_SOFTWARE:
+                                        contexts.append(mention_context)
+                                    
                                     if mention["_from"] != previous_doc_id:
                                         year = self.extract_year(mention["_from"])
                                         previous_doc_id = mention["_from"]
@@ -200,7 +209,7 @@ class Indexer(CommonArangoDB):
                 doc['contexts'] = contexts
 
             # number of mentions for software 
-            doc['number_mentions'] = len(contexts)
+            doc['number_mentions'] = nb_contexts
 
             # number of citing documents for software 
             doc['number_documents'] = len(documents)
@@ -256,6 +265,14 @@ class Indexer(CommonArangoDB):
             # get contexts of software co-authored by the person
             contexts = []
             documents = []
+            software = []
+
+            cursor = self.kb.db.aql.execute(
+                'FOR actor IN actors '
+                    + ' FILTER actor._from == "' + entity["_id"] + '" && (SPLIT(actor._to, "/", 1)[0]) IN ["software"] '
+                    + ' RETURN DISTINCT actor._to', full_count=True)
+            for soft in cursor:
+                software.append(soft)
 
             cursor = self.kb.db.aql.execute(
                 'FOR actor IN actors '
@@ -295,6 +312,12 @@ class Indexer(CommonArangoDB):
 
             if len(contexts) > 0:
                 doc['contexts'] = contexts
+
+            if len(software) > 0:
+                doc['software'] = software
+
+            # number of software the person has contributed to  
+            doc['number_software'] = len(software)
 
             # number of mentions for software 
             doc['number_mentions'] = len(contexts)
