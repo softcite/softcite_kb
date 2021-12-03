@@ -12,6 +12,7 @@ var record_metadata = {
     date: "date",
     number_mentions: "number_mentions",
     number_documents: "number_documents",
+    number_software: "number_software",
     descriptions: "descriptions",
     summary: "summary"
 };

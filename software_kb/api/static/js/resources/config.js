@@ -18,8 +18,6 @@ var defaults = {
     search_index: 'elasticsearch',
     
     kb_service_host: 'http://0.0.0.0:8050',
-    //kb_service_host: 'http://192.168.1.106:8050',
-    //kb_service_port: 8050,
 
     // a query parameter added to each query to the search engine
     query_parameter: "q", // the query parameter if required for setting to the search URL

@@ -116,6 +116,87 @@
             var document_id = document_record["document_id"];
             var nb_mentions_in_document = document_record["nb_doc_mentions"];
 
+            // sorting local mentions
+            /*mention_records.sort(function(x, y) {
+                // we sort by number of annotations in the mention snippet, then by the length of the snippet
+                // number of annotations
+                console.log(x)
+                console.log(y)
+                const mentionX = x["record"]
+                const mentionY = y["record"]
+                var nbAnnotationsX = 0;
+                if (mentionX["claims"]["P6166"] && mentionX["claims"]["P6166"].length > 0 
+                            && mentionX["claims"]["P6166"][0]["value"]) {
+                    // software name annotation
+                    nbAnnotationsX++;
+                }
+                if (mentionX["claims"]["P348"] && mentionX["claims"]["P348"].length > 0 
+                            && mentionX["claims"]["P348"][0]["value"]) {
+                    // version
+                    nbAnnotationsX++;
+                }
+                if (mentionX["claims"]["P123"] && mentionX["claims"]["P123"].length > 0 
+                            && mentionX["claims"]["P123"][0]["value"]) {
+                    // publisher
+                    nbAnnotationsX++;
+                }
+                if (mentionX["claims"]["P854"] && mentionX["claims"]["P6166"].length > 0 
+                            && mentionX["claims"]["P854"][0]["value"]) {
+                    // url
+                    nbAnnotationsX++;
+                }
+
+                var nbAnnotationsY = 0;
+                if (mentionY["claims"]["P6166"] && mentionY["claims"]["P6166"].length > 0 
+                            && mentionY["claims"]["P6166"][0]["value"]) {
+                    // software name annotation
+                    nbAnnotationsY++;
+                }
+                if (mentionY["claims"]["P348"] && mentionY["claims"]["P348"].length > 0 
+                            && mentionY["claims"]["P348"][0]["value"]) {
+                    // version
+                    nbAnnotationsY++;
+                }
+                if (mentionY["claims"]["P123"] && mentionY["claims"]["P123"].length > 0 
+                            && mentionY["claims"]["P123"][0]["value"]) {
+                    // publisher
+                    nbAnnotationsY++;
+                }
+                if (mentionY["claims"]["P854"] && mentionY["claims"]["P6166"].length > 0 
+                            && mentionY["claims"]["P854"][0]["value"]) {
+                    // url
+                    nbAnnotationsY++;
+                }
+
+                if (nbAnnotationsX < nbAnnotationsY) {
+                    return -1;
+                }
+                if (nbAnnotationsX > nbAnnotationsY) {
+                    return 1;
+                }
+
+                // if same number of annotations, we look at the snippet length
+                var snippetLengthX = 0
+                if (mentionX["claims"]["P7081"] && mentionX["claims"]["P7081"].length > 0 && mentionX["claims"]["P7081"][0]["value"]) {
+                    const snippetX = mentionX["claims"]["P7081"][0]["value"];
+                    snippetLengthX = snippetX.length;
+                }
+                
+                var snippetLengthY = 0
+                if (mentionY["claims"]["P7081"] && mentionY["claims"]["P7081"].length > 0 && mentionY["claims"]["P7081"][0]["value"]) {
+                    const snippetY = mentionY["claims"]["P7081"][0]["value"];
+                    snippetLengthY = snippetY.length;
+                }
+
+                if (snippetLengthX < snippetLengthY) {
+                    return -1;
+                }
+                if (snippetLengthX > snippetLengthY) {
+                    return 1;
+                }
+                return 0;
+            });*/
+
             for(var mention_record in mention_records) {
                 var mention_id = mention_records[mention_record];
 

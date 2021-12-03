@@ -159,6 +159,7 @@ var buildrecord = function (index, node) {
         
         result += '</td><td style="width:30%;"><a target="_blank" href="mentions.html?id=' + id;
 
+        /*
         if ( $('.facetview_filterselected').attr('href') == 'persons') {
             result += '&type=' + 'persons' + '">'
         } else if ( $('.facetview_filterselected').attr('href') == 'organizations') {
@@ -168,8 +169,20 @@ var buildrecord = function (index, node) {
         } else{
             result += '&type=' + 'software' + '">'
         }
-        if (jsonObject[record_metadata.number_mentions] && jsonObject[record_metadata.number_documents]) {
-            result += jsonObject[record_metadata.number_mentions] + ' mentions in ' + jsonObject[record_metadata.number_documents] + ' documents';
+        */
+        
+        result += '&type=' + type + '">'
+        if (type === "persons") {
+            console.log(jsonObject[record_metadata])
+            if (jsonObject[record_metadata.number_mentions] && jsonObject[record_metadata.number_documents]) {
+                result += 'contributed to ' +  jsonObject[record_metadata.number_software] +  
+                          ' software mentioned ' +  jsonObject[record_metadata.number_mentions] + 
+                          ' times in ' + jsonObject[record_metadata.number_documents] + ' documents';
+            }
+        } else if (type === "software") {
+            if (jsonObject[record_metadata.number_mentions] && jsonObject[record_metadata.number_documents]) {
+                result += jsonObject[record_metadata.number_mentions] + ' mentions in ' + jsonObject[record_metadata.number_documents] + ' documents';
+            }
         }
         result += '</td></tr></table>';
     }
