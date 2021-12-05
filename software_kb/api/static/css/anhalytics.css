@@ -26,8 +26,6 @@ body {
     box-shadow: none;
 }
 
-a{color:#D42C2C;text-decoration:none;}   
-
 #facetview_presentation h1 {
     color: #696565;
     font-size: 22.4px;
@@ -137,15 +135,24 @@ h3 {
     line-height: 1.43;
 }
 
-/*a:focus, a:hover, a:active {
-    color: #3367d6;
-    text-decoration: underline;
-}*/
+a {
+    color:#D42C2C;
+    text-decoration:none;
+}   
+a:focus {
+    outline:thin dotted #BC0E0E;
+    outline:5px auto -webkit-focus-ring-color;
+    outline-offset:-2px;
+}
+a:hover,a:active,a:visited,a:link { 
+    outline:0;
+    color:#BC0E0E;
+}
 
-#facetview_rightcol a:focus{outline:thin dotted #BC0E0E;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px;}
-#facetview_rightcol a:hover,a:active{outline:0;color:#BC0E0E;}
-#facetview_rightcol a{color:#D42C2C;text-decoration:none;}                
-#facetview_rightcol a:hover{text-decoration:underline;}
+a:hover {
+    color:#BC0E0E;
+    text-decoration:underline;
+}
 
 /* PL: tables */ 
 

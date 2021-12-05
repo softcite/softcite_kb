@@ -26,10 +26,15 @@ var elasticSearchSearchQuery = function () {
     var filtered = false; // true if a filter at least applies to the query
     var queried_fields = []; // list of queried fields for highlights   
     
-    //sorting field
-    var number_mentions = record_metadata.number_mentions;
+    //sorting field by mentions
+    /*var number_mentions = record_metadata.number_mentions;
     var sort_obj = {};
-    sort_obj[number_mentions] = {"order": "desc"};
+    sort_obj[number_mentions] = {"order": "desc"};*/
+
+    //sorting field by nb of citing documents
+    var number_documents = record_metadata.number_documents;
+    var sort_obj = {};
+    sort_obj[number_documents] = {"order": "desc"};
 
     // fields to be returned
     var textFieldsNPLReturned = new Array();

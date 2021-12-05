@@ -30,7 +30,10 @@
 
                 metadata = '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
                 metadata += '<div style="padding: 20px;">'
-                metadata += '<p><strong>' + record["labels"] + "</strong>";
+                metadata += '<p><strong>' +
+                            '<a target="_blank" href="' + 
+                            options.kb_service_host + '/frontend/entity.html?id=' + id + '&type=' + entity_type + '">' + 
+                            record["labels"] + '</a></strong>';
                 if (record["descriptions"]) {
                     metadata += " - " + record["descriptions"] 
                 }
@@ -107,14 +110,18 @@
             });
         }
 
-        var displayResult = function(rank, document_record) {
+        var displayResult = function(theRank, document_record) {
 
-            mention_records = document_record["mentions"]
+            const rank = theRank;
+            const mention_records = document_record["mentions"]
             var localDocumentData = '<div class="row" id="document-' + rank + '"></div>';
             $("#mention-"+rank).empty();
             $("#mention-"+rank).append(localDocumentData);
-            var document_id = document_record["document_id"];
-            var nb_mentions_in_document = document_record["nb_doc_mentions"];
+            var bestTwo = '<div id="best-two-' + rank + '"></div>';
+            $("#mention-"+rank).append(bestTwo);
+
+            const document_id = document_record["document_id"];
+            const nb_mentions_in_document = mention_records.length
 
             // sorting local mentions
             /*mention_records.sort(function(x, y) {
@@ -197,8 +204,25 @@
                 return 0;
             });*/
 
+            var string = "";
+            if (nb_mentions_in_document>2) {
+                string += "<div class='panel-group' id='accordionParentStatements"+ rank +"'>";
+                string += "<div class='panel panel-default'>";
+                string += "<div class='panel-heading' style='background-color:#FFF;color:#70695C;border:padding:0px;font-size:small;'>";
+                // accordion-toggle collapsed: put the chevron icon down when starting the page; accordion-toggle : put the chevron icon up
+                string += "<a class='accordion-toggle collapsed' data-toggle='collapse' data-parent='#accordionParentStatements"+ rank +"' href='#collapseElementMentions"+ rank + "' style='outline:0;'>";
+                string += "<h5 class='panel-title' style='font-weight:normal; font-size:13px'>show other " + (nb_mentions_in_document-2) + " mentions</h5>";
+                string += "</a>";
+                string += "</div>";
+                // panel-collapse collapse: hide the content of statemes when starting the page; panel-collapse collapse in: show it
+                string += "<div id='collapseElementMentions"+ rank +"' class='panel-collapse collapse'>";
+                string += "</div></div></div>";
+                $("#mention-"+rank).append(string);
+            }
+            
             for(var mention_record in mention_records) {
-                var mention_id = mention_records[mention_record];
+                const pos_record = mention_record;
+                var mention_id = mention_records[pos_record];
 
                 getJsonFile(options.kb_service_host + "/relations/" + mention_id).then(mentionJson => {
                     var mention = mentionJson["record"]
@@ -293,8 +317,11 @@
                     }
 
                     localMentionData += '</div><div class="row" style="margin-left: 20px; margin-right:20px; background-color: #FFFFFF; border: 1px; padding:5px;"></div>'
-                    
-                    $("#mention-"+rank).append(localMentionData);
+                    if (pos_record >= 2)
+                        $("#collapseElementMentions"+ rank).append(localMentionData);
+                    else {
+                        $("#best-two-"+rank).append(localMentionData);
+                    } 
                 });
             }
             displayDocument(rank, document_id);
@@ -303,10 +330,6 @@
         // get json object for software
         var showEntityMentions = function(id) {
             // get json object for software
-
-            console.log(options.kb_service_host + "/entities/"+entity_type+"/"+id+
-                "/mentions?page_rank=" + options.paging.rank + "&page_size=" + 
-                options.paging.size + "&ranker=group_by_document");
 
             getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id+
                 "/mentions?page_rank=" + options.paging.rank + "&page_size=" + 
@@ -339,9 +362,9 @@
                     documentData += '<div class="row" style="text-align: center;">no mention</div>'
                     documentData += "</div></div>"
                 } else {
-                    console.log(records)
+                    //console.log(records)
                     for (var record in records) {
-                        console.log(records[record])
+                        //console.log(records[record])
                         documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
                         documentData += '<div style="padding: 20px;" id="mention-' + record + '">'
                         documentData += "</div></div>";
