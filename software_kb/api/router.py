@@ -7,7 +7,7 @@ from software_kb.kb.converter import convert_to_simple_format, convert_to_wikida
 from software_kb.importing.software_mention_import import Software_mention_import
 from enum import Enum
 import httpx
-from utils import unpaywalling_doi, pdf_streamer
+from utils import unpaywalling_doi, pdf_streamer, sortMentionWithContexts
 import requests
 
 router = APIRouter()
@@ -242,6 +242,11 @@ async def get_software_mentions(identifier: str, page_rank: int = 0, page_size: 
         result['page_size'] = page_size
         for entity in cursor:
             records.append(entity)
+
+        # further rank present local mentions
+        for record in records:
+            record['mentions'] = sortMentionWithContexts(kb, record['mentions'])
+
         result['records'] = records
         result['runtime'] = round(time.time() - start_time, 3)
         return result
