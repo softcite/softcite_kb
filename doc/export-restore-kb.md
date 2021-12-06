@@ -1,14 +1,15 @@
 ## Export the ArangoDB Knowledge Base DB
 
-Exporting only the final KB database (the `root` username is given as example): 
+Exporting only the final KB database and the _naming_ database (the `root` username is given as example): 
 
 ```console
-arangodump --server.username root --server.database kb --output-directory "dump"
+arangodump --server.username root --server.database kb --output-directory "dump-kb"
+arangodump --server.username root --server.database naming --output-directory "dump-naming"
 ```
 
-Only the final KB is required to run the KB server and the KB frontend. 
+Only the final KB and naming DB are required to run the KB server and the KB frontend. 
 
-Exporting all the databases (the `root` username is given as example):
+Or exporting all the databases (the `root` username is given as example):
 
 ```console
 arangodump --server.username root --all-databases true --output-directory "dump"

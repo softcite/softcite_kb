@@ -23,8 +23,25 @@
             return jsonData;
         };
 
+        async function getJsonFileWithData(url, data) {
+            let response = await fetch(
+                url, { 
+                    method: "POST", 
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: data 
+                }
+            );
+            let responsejson = await response.json();
+            let str = JSON.stringify(responsejson);
+            let jsonData = JSON.parse(str);
+            return jsonData;
+        };
+
         var showEntityMetadata = function(id) {
-            // get json object for software
+            // get json object for the entity
             getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id).then(softwareJson => {
                 record = softwareJson["record"];
 
@@ -246,60 +263,157 @@
             displayDocument(rank, document_id);
         }
 
-        // get json object for software
-        var showEntityMentions = function(id) {
-            // get json object for software
+        var displaySoftware = function(theRank, record) {
 
-            getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id+
-                "/mentions?page_rank=" + options.paging.rank + "&page_size=" + 
-                options.paging.size + "&ranker=group_by_document").then(mentionsJson => {
-                records = mentionsJson["records"];
+            const rank = theRank;
+            var localSoftwareData = '<div class="row" id="software-info-' + rank + '"></div>';
+            $("#software-"+rank).empty();
+            $("#software-"+rank).append(localSoftwareData);
 
-                nbDocuments = mentionsJson["full_count"]
-                from = mentionsJson["page_rank"]*mentionsJson["page_size"]
-                to = from + records.length
+            const local_es_query_json = 
+                '{ "_source": false, "fields": ["labels", "descriptions", "number_mentions", "number_documents"], '+
+                '"query": { "terms": { "_id": [ "' + record["_id"].replace("software/","") + '" ] } } }';
+            const get_es_url = options.kb_service_host + "/search/software-kb/_search";
+            getJsonFileWithData(get_es_url, local_es_query_json).then(responseJson => {
+                if (responseJson && responseJson['hits'] && responseJson['hits']['hits'] && responseJson['hits']['hits'].length == 1) {
+                    const es_entity_fields = responseJson['hits']['hits'][0]['fields']
 
-                var from = options.paging.rank * options.paging.size;
-                var size = options.paging.size;
-                !size ? size = 10 : "";
-                var to = from + size;
-                nbDocuments< to ? to = nbDocuments : "";
+                    var softwareData = '<div style="padding-left: 20px;"><table width="100%"><tr><td width="60%">';
 
-                var meta = metaTmpl.replace(/{{from}}/g, from);
-                meta = meta.replace(/{{to}}/g, to);
-                meta = meta.replace(/{{total}}/g, addCommas("" + nbDocuments));
-                $('#facetview_metadata').html("").append(meta);
-                $('#facetview_decrement').bind('click', decrement);
-                from < size ? $('#facetview_decrement').html('..') : "";
-                $('#facetview_increment').bind('click', increment);
-                nbDocuments <= to ? $('#facetview_increment').html('..') : "";
-
-                documentData = ""
-                if (nbDocuments == 0) {
-                    documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
-                    documentData += '<div style="padding: 20px;">'
-                    documentData += '<div class="row" style="text-align: center;">no mention</div>'
-                    documentData += "</div></div>"
-                } else {
-                    //console.log(records)
-                    for (var record in records) {
-                        //console.log(records[record])
-                        documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
-                        documentData += '<div style="padding: 20px;" id="mention-' + record + '">'
-                        documentData += "</div></div>";
+                    softwareData += "<p><strong>";
+                    softwareData += '<a target="_blank" href="' + 
+                        options.kb_service_host  + '/frontend/entity.html?type=software&id=' + record["_id"].replace("software/","") + '" >' +
+                       es_entity_fields["labels"]+"</a></strong> - " + es_entity_fields["descriptions"] + "</p>";
+                    
+                    softwareData += "<p><b>roles:</b> ";
+                    for (var rolePos in record["roles"]) {
+                        if (rolePos != 0)
+                            softwareData += ", ";
+                        softwareData += record["roles"][rolePos]['codemeta'];
                     }
-                }
+                    softwareData += "</p></td><td>&nbsp;&nbsp;</td><td>";
 
-                documentData += "</div></div>"
-                $("#mentions-content").empty();
-                $("#mentions-content").append(documentData);
+                    var localMentionData = '<a target="_blank" href="mentions.html?id=' + record["_id"].replace("software/","") + '&type=software">';
+                    localMentionData += es_entity_fields['number_mentions'] + ' mentions in ' + es_entity_fields['number_documents'] + ' documents';
+                    localMentionData += "</a>";
+                    localMentionData += ' <span style="color:#999999;">(click to view mentions)</span>';
+                    
+                    softwareData += localMentionData + "</td></tr></table>";
 
-                if (nbDocuments > 0) {
-                    for (var record in records) {
-                        displayResult(record, records[record]);
-                    }
+                    softwareData += "</div>";
+                    
+                    $("#software-info-"+rank).append(softwareData);                    
                 }
             });
+        }
+
+        // get json object for software
+        var showEntityMentions = function(id) {
+            
+            // get json object for software
+            if (entity_type === 'software') {
+                getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id+
+                    "/mentions?page_rank=" + options.paging.rank + "&page_size=" + 
+                    options.paging.size + "&ranker=group_by_document").then(mentionsJson => {
+                    records = mentionsJson["records"];
+
+                    nbDocuments = mentionsJson["full_count"]
+                    from = mentionsJson["page_rank"]*mentionsJson["page_size"]
+                    to = from + records.length
+
+                    var from = options.paging.rank * options.paging.size;
+                    var size = options.paging.size;
+                    !size ? size = 10 : "";
+                    var to = from + size;
+                    nbDocuments< to ? to = nbDocuments : "";
+
+                    var meta = metaTmpl.replace(/{{from}}/g, from);
+                    meta = meta.replace(/{{to}}/g, to);
+                    meta = meta.replace(/{{total}}/g, addCommas("" + nbDocuments));
+                    $('#facetview_metadata').html("").append(meta);
+                    $('#facetview_decrement').bind('click', decrement);
+                    from < size ? $('#facetview_decrement').html('..') : "";
+                    $('#facetview_increment').bind('click', increment);
+                    nbDocuments <= to ? $('#facetview_increment').html('..') : "";
+
+                    documentData = ""
+                    if (nbDocuments == 0) {
+                        documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                        documentData += '<div style="padding: 20px;">'
+                        documentData += '<div class="row" style="text-align: center;">no mention</div>'
+                        documentData += "</div></div>"
+                    } else {
+                        //console.log(records)
+                        for (var record in records) {
+                            //console.log(records[record])
+                            documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                            documentData += '<div style="padding: 20px;" id="mention-' + record + '">'
+                            documentData += "</div></div>";
+                        }
+                    }
+
+                    documentData += "</div></div>"
+                    $("#mentions-content").empty();
+                    $("#mentions-content").append(documentData);
+
+                    if (nbDocuments > 0) {
+                        for (var record in records) {
+                            displayResult(record, records[record]);
+                        }
+                    }
+                });
+            } else if (entity_type === 'persons') {
+                getJsonFile(options.kb_service_host + "/entities/"+entity_type+"/"+id+
+                    "/software?page_rank=" + options.paging.rank + "&page_size=" + 
+                    options.paging.size).then(mentionsJson => {
+                    records = mentionsJson["records"];
+
+                    nbDocuments = mentionsJson["full_count"]
+                    from = mentionsJson["page_rank"]*mentionsJson["page_size"]
+                    to = from + records.length
+
+                    var from = options.paging.rank * options.paging.size;
+                    var size = options.paging.size;
+                    !size ? size = 10 : "";
+                    var to = from + size;
+                    nbDocuments< to ? to = nbDocuments : "";
+
+                    var meta = metaTmpl.replace(/{{from}}/g, from);
+                    meta = meta.replace(/{{to}}/g, to);
+                    meta = meta.replace(/{{total}}/g, addCommas("" + nbDocuments));
+                    $('#facetview_metadata').html("").append(meta);
+                    $('#facetview_decrement').bind('click', decrement);
+                    from < size ? $('#facetview_decrement').html('..') : "";
+                    $('#facetview_increment').bind('click', increment);
+                    nbDocuments <= to ? $('#facetview_increment').html('..') : "";
+
+                    documentData = ""
+                    if (nbDocuments == 0) {
+                        documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                        documentData += '<div style="padding: 20px;">'
+                        documentData += '<div class="row" style="text-align: center;">no software</div>'
+                        documentData += "</div></div>"
+                    } else {
+                        //console.log(records)
+                        for (var record in records) {
+                            //console.log(records[record])
+                            documentData += '<div class="panel" style="margin-bottom:20!important; background-color:#ffffff; border: 1px;">';
+                            documentData += '<div style="padding: 20px;" id="software-' + record + '">'
+                            documentData += "</div></div>";
+                        }
+                    }
+
+                    documentData += "</div></div>"
+                    $("#mentions-content").empty();
+                    $("#mentions-content").append(documentData);
+
+                    if (nbDocuments > 0) {
+                        for (var record in records) {
+                            displaySoftware(record, records[record]);
+                        }
+                    }
+                });
+            }
         }
 
         var decrement = function (event) {
@@ -324,6 +438,10 @@
         options.paging.size = 10;
 
         showEntityMetadata(entity_id);
+        $("#facetview_metadata").append(
+                '<div class="row" style="width: 100%; padding:10px; text-align: center;">' +
+                '<p style="color:#BC0E0E;">fetching mentions...</p></div>'
+        );
         showEntityMentions(entity_id);
     }
 

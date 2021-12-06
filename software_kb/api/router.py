@@ -541,9 +541,14 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
         result['full_count'] = stats['fullCount']
     result['page_rank'] = page_rank
     result['page_size'] = page_size
+    software_map = {}
     for entity in cursor:
-        record = {}
-        record['_id'] = entity['soft_id']
+        if entity['soft_id'] in software_map:
+            record = software_map[entity['soft_id']]
+        else:
+            record = {}
+            record['_id'] = entity['soft_id']
+        
         # get the role of the person regarding the software work
         roles = []
         if "the_role" in entity:
@@ -553,9 +558,16 @@ async def get_person_software(identifier: str, page_rank: int = 0, page_size: in
                     roles.append(role)
 
         if len(roles) > 0:
-            record['roles'] = roles
+            if 'roles' in record:
+                record['roles'] = record['roles'] + roles
+            else:
+                record['roles'] = roles
 
-        records.append(record)
+        software_map[entity['soft_id']] = record
+
+    for key in software_map:
+        records.append(software_map[key])
+
     result['records'] = records
     result['runtime'] = round(time.time() - start_time, 3)
     

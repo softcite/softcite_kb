@@ -111,7 +111,7 @@
             //$("#document-result").empty();
             $("#document-result").append(
                 '<div class="row" style="width: 68%; padding:10px; text-align: center;">' +
-                '<font color="red">fetching PDF...</font></div>'
+                '<p style="color:#BC0E0E;">fetching PDF...</p></div>'
             );
 
             // display the local PDF
@@ -131,6 +131,10 @@
                     //$('#requestResult').html('');
                     nbPages = pdf.numPages;
                     $("#document-result").empty();
+                    $("#document-result").append(
+                        '<div class="row" style="width: 72%; padding:10px; text-align: center;">' +
+                        '<p style="color:#BC0E0E;">fetching annotations...</p></div>'
+                    );
 
                     // Loop from 1 to total_number_of_pages in PDF document
                     for (var i = 1; i <= nbPages; i++) {
@@ -235,7 +239,7 @@
                 }).catch(error => {
                     $("#document-result").empty();
                     $("#document-result").append(
-                        '<div class="row" style="width: 68%; padding:10px; text-align: center;">' +
+                        '<div class="row" style="width: 72%; padding:10px; text-align: center;">' +
                         '<font color="red">Failed to render online PDF: ' + error.message + ' </font></div>'
                     );
                 });

@@ -148,11 +148,20 @@ a:hover,a:active,a:visited,a:link {
     outline:0;
     color:#BC0E0E;
 }
-
 a:hover {
     color:#BC0E0E;
     text-decoration:underline;
 }
+
+#facetview_filters a {
+    color:#000000;
+    text-decoration:none;
+}  
+#facetview_filters a:hover {
+    color:#000000;
+    text-decoration:underline;
+}  
+
 
 /* PL: tables */ 
 
