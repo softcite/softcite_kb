@@ -212,17 +212,26 @@ pre, pre.prettyprint {
     .atv { color: #060 }
 }
 
-/*a:focus{outline:thin dotted #BC0E0E;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px;}
-a:hover,a:active{outline:0;color:#BC0E0E;}
-a{color:#767676;text-decoration:none;}                
-a:hover{color:#BC0E0E;text-decoration:underline;}*/
-
 h3{ color:#70695C; }
 
 a.section-not-active { color: #848484; }
 a.section-active { color: #BC0E0E; }
 span.section-not-active { color: #848484; }
 span.section-active { color: #BC0E0E; }
+
+.index {
+    color:#D42C2C;
+    text-decoration:none;
+}
+
+.index:active,.index:visited,.index:link { 
+    outline:0;
+    color:#BC0E0E;
+}
+.index:hover {
+    color:#BC0E0E;
+    text-decoration:underline;
+}
 
 .info-sense-box,.details-list {
     margin:1px 1;padding:5px 2px 3px 2px;border:1px solid #87A1A8;background-color:#87A1A8;border-radius:5px;
