@@ -138,7 +138,7 @@ class Indexer(CommonArangoDB):
             for person_id in cursor:
                 # get the person object
                 person_json = self.kb.kb_graph.vertex(person_id)
-                if not person_json['labels'] in authors:
+                if person_json != None and not person_json['labels'] in authors:
                     authors.append(person_json['labels'])
                     authors_full.append(person_json['labels'])
                     if "id" in person_json:
