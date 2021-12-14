@@ -222,7 +222,10 @@
                             // code source/project repository
                             repo_url = record["claims"]["P1324"][0]['value'];
                             repo_url = repo_url.replace(" ", "");
-                            repo_url = '<a target="_blank" href="' + repo_url + '">' + encodedStr(repo_url) + '</a>';
+                            repo_url_link = repo_url;
+                            if (repo_url_link.startsWith("github"))
+                                repo_url_link = "https://" + repo_url_link;
+                            repo_url = '<a target="_blank" href="' + repo_url_link + '">' + encodedStr(repo_url) + '</a>';
                             
                             for (var j in record["claims"]["P1324"][0]["references"]) {
                                 var local_source = record["claims"]["P1324"][0]["references"][j]["P248"]["value"];     
@@ -255,7 +258,12 @@
                                     local_url.indexOf("bitbucket.org") != -1) {
                                     // this is a good candidate, check the project name
                                     repo_url = local_url;
-                                    repo_url = 'best candidate: <a target="_blank" href="' + repo_url + '">' + encodedStr(repo_url) + '</a>';
+
+                                    repo_url_link = repo_url;
+                                    if (repo_url_link.startsWith("github") || repo_url_link.startsWith("gitlab") || repo_url_link.startsWith("bitbucket") )
+                                        repo_url_link = "https://" + repo_url_link;
+
+                                    repo_url = 'best candidate: <a target="_blank" href="' + repo_url_link + '">' + encodedStr(repo_url) + '</a>';
                                     var repo_sources = [];
                                     for (var k in record["claims"]["P854"][j]["references"]) {
                                         var local_source = record["claims"]["P854"][j]["references"][k]["P248"]["value"];     
