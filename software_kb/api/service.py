@@ -13,6 +13,7 @@ import argparse
 from pathlib import Path
 from router import router, set_kb
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 '''
