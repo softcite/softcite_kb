@@ -119,7 +119,7 @@ def process_r_author_field(author_field):
         persons.append(person)
 
     persons = [ pers for pers in persons if not len(pers) == 0 ]
-    return persons
+    return clean_person_field(persons)
 
 
 def process_author_field(author_field):
@@ -208,7 +208,7 @@ def process_author_field(author_field):
         
     persons = [ pers for pers in persons if not len(pers) == 0 ]
     
-    return persons
+    return clean_person_field(persons)
 
 def process_maintainer_field(maintainer_field):
     '''
@@ -282,3 +282,24 @@ def clean_field(string):
     string = string.replace("\t", " ")
     string = re.sub(r"\s+", " ", string)
     return string.strip()
+
+filter_person_values = ["inc"]
+
+def clean_person_field(persons):
+    '''
+    This is a final cleaning for CRAN author field, which appears quite noisy. 
+    TBD: call Grobid author model to more properly segment and normalize person names
+    '''
+    for person in persons:
+        person = person.strip()
+        if person.startswith("and"):
+            person = person[3:].strip()
+        if person.endswith("."):
+            person = person[:-1].strip()
+
+        if person in filter_person_values:
+            continue
+        final_persons.append(person.strip())
+
+    return final_persons
+    
