@@ -88,7 +88,7 @@ CORS:
     - "Origin"
 
 ## web API settings
-web_api:
+api:
   port: 8080 
   host: "localhost"
   # to specify a custom default header in the response
