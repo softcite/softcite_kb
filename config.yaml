@@ -95,7 +95,6 @@ web_api:
   #header: 
   reload: false 
   log_level: "debug"
-  reload: false
   # the following is used in the generated API documentation
   version: "0.2"
   name: "Software KB web API"
