@@ -2094,7 +2094,7 @@ must <span class="caret"></span>\
 //                }
 //            });
 
-            if (options.use_delay || options.use_url_parameters)
+            //if (options.use_delay || options.use_url_parameters)
                 whenready();
         });
 
