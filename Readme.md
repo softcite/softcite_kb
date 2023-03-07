@@ -1,5 +1,8 @@
 # A Knowledge Base for Research Software
 
+[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![Demo cloud.science-miner.com/software_kb/frontend](https://img.shields.io/website-up-down-green-red/https/cloud.science-miner.com/software_kb/frontend.svg)](https://cloud.science-miner.com/software_kb/frontend)
+
 **[Work In Progress]** This project is under development
 
 This repository contains the tools for creating, populating, updating and accessing a Knowledge Base dedicated to research software. It is expected to include as well as a set of Knowledge graph services for various data disambiguation, ranking, analytics, recommendation and data discovery. 
@@ -34,13 +37,13 @@ source env/bin/activate
 Install the dependencies:
 
 ```sh
-pip3 install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 Finally install the project in editable state
 
 ```sh
-pip3 install -e .
+python3 -m pip install -e .
 ```
 
 ## Create the Knowledge Base
@@ -285,7 +288,33 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://localhost:8050 (Press CTRL+C to quit)
 ```
 
-The documentation of the service is available at `http(s)://*host*:*port*/docs`, e.g. `http://localhost:8050/docs` (based on Swagger), for ReDoc documentation style, use `http://localhost:8050/redoc`).
+The documentation of the REST web services is available at `http(s)://*host*:*port*/docs`, e.g. `http://localhost:8050/docs` (based on Swagger), for ReDoc documentation style, use `http://localhost:8050/redoc`).
+
+### Search front-end to explore the created knowledge base
+
+Once the service started (see above), a faceted search web application is also available at `http(s)://*host*:*port*/frontend`, e.g. `http://localhost:8050/frontend` for exploration of the software knowledge base. The application is a simple Javascript front-end using the Softcite KB web services as back-end. 
+
+![frontend](doc/images/frontend01.png)
+
+Searching all fields is applied to all metadata fields and all mention contexts stored in the KB. Searching for a software can be done by selecting the `software` field: 
+
+![frontend](doc/images/frontend02.png)
+
+Clicking on a software entry will open the software entity view, which is the result of the aggregation of knowledge source metadata and extracted mentions:
+
+![frontend](doc/images/frontend04.png)
+
+Clicking on the mention information for this software entity will list the different mentions found in the processed documents. 
+
+![frontend](doc/images/frontend05.png)
+
+Finally, by following the link "View mentions in PDF", the identified software mentions and their attributes for aa given document will be visualized as annotation on the PDF. The PDF is fetched from the internet using Unpaywall by the KB server and the annotations imported in the KB are rendered as interactive layout on top the PDF pages. 
+
+![frontend](doc/images/frontend06.png)
+
+### Demo
+
+A public front-end demonstrator is currently available [here](https://cloud.science-miner.com/software_kb/frontend). It is using a Knowledge Base built from the processing of 2.5 millions Open Access PDF. 
 
 ## Acknowledgements
 
