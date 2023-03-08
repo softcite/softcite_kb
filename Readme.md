@@ -296,25 +296,25 @@ Once the service started (see above), a faceted search web application is also a
 
 ![frontend](doc/images/frontend01.png)
 
-Searching all fields is applied to all metadata fields and all mention contexts stored in the KB. Searching for a software can be done by selecting the `software` field: 
+Searching all fields is applied to all metadata fields and all mention contexts stored in the KB. Searching for a given software can be done by selecting the `software` field: 
 
 ![frontend](doc/images/frontend02.png)
 
-Clicking on a software entry will open the software entity view, which is the result of the aggregation of knowledge source metadata and extracted mentions:
+Clicking on a software entry will open the software entity view This view is the result of the aggregation of knowledge source metadata and extracted mentions:
 
 ![frontend](doc/images/frontend04.png)
 
-Clicking on the mention information for this software entity will list the different mentions found in the processed documents. 
+Clicking on the mention information from the software entity view will list the different mentions found in the processed documents. 
 
 ![frontend](doc/images/frontend05.png)
 
-Finally, by following the link "View mentions in PDF", the identified software mentions and their attributes for aa given document will be visualized as annotation on the PDF. The PDF is fetched from the internet using Unpaywall by the KB server and the annotations imported in the KB are rendered as interactive layout on top the PDF pages. 
+Finally, by following the link "View mentions in PDF", the extracted software mentions and their attributes for a given document are visualized as annotations on the document PDF. The PDF is fetched from the internet using Unpaywall by the KB server and the annotations stored in the KB are rendered as interactive layout on top the different PDF pages. 
 
 ![frontend](doc/images/frontend06.png)
 
 ### Demo
 
-A public front-end demonstrator is currently available [here](https://cloud.science-miner.com/software_kb/frontend). It is using a Knowledge Base built from the processing of 2.5 millions Open Access PDF. 
+A public front-end demonstrator is currently available [here](https://cloud.science-miner.com/software_kb/frontend). It is using a Knowledge Base built from the processing of 2.5 millions Open Access PDF using the Softcite software mention recognizer version 0.7.0 from 2021. A larger set of Open Access publications with the latest improved version of the recognizer is ongoing in year 2023. 
 
 ## Acknowledgements
 
