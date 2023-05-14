@@ -126,8 +126,8 @@ class Software_mention_import(Harvester):
             if not collection.has(json_object['_id']):
                 json_object['tenants'] = tags
                 collection.insert(json_object)
-        except:
-            print("failed to ingest json input:", json_string)
+        except Exception as e:
+            print("failed to ingest json input:", json_string, e)
 
     def get_document_annotations(self, document_id):
         '''

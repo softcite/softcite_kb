@@ -34,7 +34,10 @@ class Indexer(CommonArangoDB):
             # refresh nodes after a node fails to respond
             sniff_on_connection_fail=True,
             # and also every 60 seconds
-            sniffer_timeout=60
+            sniffer_timeout=60,
+            timeout=30, 
+            max_retries=10, 
+            retry_on_timeout=True
         )
         #keepAlive: false,
         #suggestCompression: true
