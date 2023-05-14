@@ -1,7 +1,7 @@
 # A Knowledge Base for Research Software
 
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
-[![Demo cloud.science-miner.com/software_kb/frontend](https://img.shields.io/website-up-down-green-red/https/cloud.science-miner.com/software_kb/frontend.svg)](https://cloud.science-miner.com/software_kb/frontend)
+[![Demo cloud.science-miner.com/software_kb/frontend](https://img.shields.io/website-up-down-green-red/https/cloud.science-miner.com/software_kb/frontend.svg)](https://cloud.science-miner.com/software_kb/frontend/index.html)
 
 **[Work In Progress]** This project is under development
 
